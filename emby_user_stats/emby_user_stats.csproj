@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.3;</TargetFrameworks>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Pages\config.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Pages\config.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="mediabrowser.server.core" Version="3.3.13" />
+    <PackageReference Include="SQLitePCL.pretty.core" Version="1.1.8" />
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
+  </Target>
+</Project>
