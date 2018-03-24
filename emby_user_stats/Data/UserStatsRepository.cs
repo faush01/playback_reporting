@@ -99,7 +99,7 @@ namespace emby_user_stats.Data
             string sql_query = "SELECT strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
                                "FROM UserUsageActions " +
                                "WHERE DateCreated >= @start_date " +
-                               "AND UserId = @user_id " +
+                               //"AND UserId = @user_id " +
                                "AND ActionType = 'play_started' " +
                                "GROUP BY date " +
                                "ORDER BY date ASC";
@@ -111,8 +111,8 @@ namespace emby_user_stats.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@start_date", start_date);
-                        statement.TryBind("@user_id", user_id);
+                        statement.TryBind("@start_date", "2017-01-01");// start_date);
+                        //statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
                             ReportDayUsage test = new ReportDayUsage();
