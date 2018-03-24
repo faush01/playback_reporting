@@ -6,10 +6,10 @@
 		</div>
 
 		<script>
-
+			//"https://d3js.org/d3.v4.min"
 			require.config({
 				paths: {
-					d3: "https://d3js.org/d3.v4.min"
+					d3: "configurationpage?name=d3.v4.min.js"
 				}
 			});
 
@@ -34,7 +34,7 @@
 					.x(function (d) { return x(d.Date); })
 					.y(function (d) { return y(d.Count); });
 
-				d3.json("http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/Activity", function (error, data) {
+				d3.json("/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/Activity", function (error, data) {
 					if (error) throw error;
 
 					for (index = 0; index < data.length; ++index) {

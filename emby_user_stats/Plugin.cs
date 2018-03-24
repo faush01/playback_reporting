@@ -29,6 +29,11 @@ namespace emby_user_stats
                     Name = "MainConfig",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.config.html",
                     EnableInMainMenu = true
+                },
+                new PluginPageInfo
+                {
+                    Name = "d3.v4.min.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.d3.v4.min.js"
                 }
             };
         }
