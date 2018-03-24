@@ -1,4 +1,5 @@
-﻿using MediaBrowser.Controller;
+﻿using emby_user_stats.Api;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Querying;
@@ -91,6 +92,39 @@ namespace emby_user_stats.Data
             result.Items = list.ToArray();
 
             return result;
+        }
+
+        public List<ReportDayUsage> GetUsageForUser(string start_date, string user_id)
+        {
+            string sql_query = "SELECT strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
+                               "FROM UserUsageActions " +
+                               "WHERE DateCreated >= @start_date " +
+                               "AND UserId = @user_id " +
+                               "AND ActionType = 'play_started' " +
+                               "GROUP BY date " +
+                               "ORDER BY date ASC";
+
+            List<ReportDayUsage> items = new List<ReportDayUsage>();
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql_query))
+                    {
+                        statement.TryBind("@start_date", start_date);
+                        statement.TryBind("@user_id", user_id);
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            ReportDayUsage test = new ReportDayUsage();
+                            test.Date = row[0].ToString();
+                            test.Count = row[1].ToInt();
+                            items.Add(test);
+                        }
+                    }
+                }
+            }
+
+            return items;
         }
     }
 }

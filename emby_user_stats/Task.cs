@@ -35,7 +35,7 @@ namespace emby_user_stats
 
             await System.Threading.Tasks.Task.Run(() =>
             {
-                _logger.Info("User Activity Loaded");
+                _logger.Info("User Activity Task Run");
 
             }, cancellationToken);
 

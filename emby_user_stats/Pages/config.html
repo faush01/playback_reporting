@@ -1,27 +1,84 @@
-<!DOCTYPE html>
-
-<html>
-
-<head>
-
-	<title>User Usage Statistics</title>
-
-</head>
-
-<body>
-
-	<div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton">
-		<div data-role="content">
-			<div class="content-primary">
-				<form class="userUsageStatsConfigurationForm">
-					<div>
-						<button is="emby-button" type="submit" class="raised button-submit block"><span>Save</span></button>
-					</div>
-				</form>
-			</div>
+<div data-role="page" class="page type-interior pluginConfigurationPage userUsageStatsPage" data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton">
+	<div data-role="content">
+		<div class="content-primary">
+			<h2>This is a test</h2>
+			<svg width="960" height="500"></svg>
 		</div>
+
+		<script>
+
+			require.config({
+				paths: {
+					d3: "https://d3js.org/d3.v4.min"
+				}
+			});
+
+			require(["d3"], function (d3) {
+				//alert("Require D3 Done: " + d3.version);
+
+				var svg = d3.select("svg");
+				var margin = { top: 20, right: 20, bottom: 30, left: 50 };
+				var width = +svg.attr("width") - margin.left - margin.right;
+				var height = +svg.attr("height") - margin.top - margin.bottom;
+				var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+				var parseTime = d3.timeParse("%Y-%m-%d");
+
+				var x = d3.scaleTime()
+					.rangeRound([0, width]);
+
+				var y = d3.scaleLinear()
+					.rangeRound([height, 0]);
+
+				var line = d3.line()
+					.x(function (d) { return x(d.Date); })
+					.y(function (d) { return y(d.Count); });
+
+				d3.json("http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/Activity", function (error, data) {
+					if (error) throw error;
+
+					for (index = 0; index < data.length; ++index) {
+						console.log("Before: " + data[index].Date);
+						data[index].Date = parseTime(data[index].Date)
+						console.log("After: " + data[index].Date);
+					}
+
+					x.domain(d3.extent(data, function (d) { return d.Date; }));
+					y.domain(d3.extent(data, function (d) { return d.Count; }));
+
+					g.append("g")
+						.attr("transform", "translate(0," + height + ")")
+						.call(d3.axisBottom(x))
+						.select(".domain")
+						.remove();
+
+					g.append("g")
+						.call(d3.axisLeft(y))
+						.append("text")
+						.attr("fill", "#000")
+						.attr("transform", "rotate(-90)")
+						.attr("y", 6)
+						.attr("dy", "0.71em")
+						.attr("text-anchor", "end")
+						.text("Play Counts");
+
+					g.append("path")
+						.datum(data)
+						.attr("fill", "none")
+						.attr("stroke", "steelblue")
+						.attr("stroke-linejoin", "round")
+						.attr("stroke-linecap", "round")
+						.attr("stroke-width", 1.5)
+						.attr("d", line);
+
+				});
+
+			});
+
+
+		</script>
+
+
 	</div>
+</div>
 
-</body>
-
-</html>
