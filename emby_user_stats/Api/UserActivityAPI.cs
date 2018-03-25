@@ -1,5 +1,6 @@
 ﻿using emby_user_stats.Data;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
@@ -24,6 +25,14 @@ namespace emby_user_stats.Api
         public string filter { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/30/PlayActivity
+    [Route("/user_usage_stats/{NumberOfDays}/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
+    public class GetUsageStats : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        public int NumberOfDays { get; set; }
+    }
+
     public class UserActivityAPI : IService
     {
 
@@ -31,18 +40,21 @@ namespace emby_user_stats.Api
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _config;
+        private readonly IUserManager _userManager;
 
         private IUserStatsRepository Repository;
 
         public UserActivityAPI(ILogger logger, 
             IFileSystem fileSystem,
             IServerConfigurationManager config,
-            IJsonSerializer jsonSerializer)
+            IJsonSerializer jsonSerializer,
+            IUserManager userManager)
         {
             _logger = logger;
             _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
+            _userManager = userManager;
 
             var repo = new UserStatsRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
@@ -53,6 +65,47 @@ namespace emby_user_stats.Api
         {
             var results = Repository.GetUsageForUser(activity.StartDate, activity.UserID);
             return results;
+        }
+
+        public object Get(GetUsageStats activity)
+        {
+            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays);
+
+            List<Dictionary<string, object>> user_usage_data = new List<Dictionary<string, object>>();
+            foreach (string user_id in results.Keys)
+            {
+                Dictionary<string, int> user_usage = results[user_id];
+
+                // fill in missing dates for time period
+                SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
+                DateTime from_date = DateTime.UtcNow.Subtract(new TimeSpan(activity.NumberOfDays, 0, 0, 0));
+                while(from_date < DateTime.UtcNow)
+                {
+                    string date_string = from_date.ToString("yyyy-MM-dd");
+                    if(user_usage.ContainsKey(date_string) == false)
+                    {
+                        userUsageByDate.Add(date_string, 0);
+                    }
+                    else
+                    {
+                        userUsageByDate.Add(date_string, user_usage[date_string]);
+                    }
+
+                    from_date = from_date.Add(new TimeSpan(1, 0, 0, 0));
+                }
+
+                Guid user_guid = new Guid(user_id);
+                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+
+                Dictionary<string, object> user_data = new Dictionary<string, object>();
+                user_data.Add("user_id", user_id);
+                user_data.Add("user_name", user.Name);
+                user_data.Add("user_usage", userUsageByDate);
+
+                user_usage_data.Add(user_data);
+            }
+
+            return user_usage_data;
         }
 
     }

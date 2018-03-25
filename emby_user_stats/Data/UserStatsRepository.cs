@@ -99,7 +99,7 @@ namespace emby_user_stats.Data
             string sql_query = "SELECT strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
                                "FROM UserUsageActions " +
                                "WHERE DateCreated >= @start_date " +
-                               //"AND UserId = @user_id " +
+                               "AND UserId = @user_id " +
                                "AND ActionType = 'play_started' " +
                                "GROUP BY date " +
                                "ORDER BY date ASC";
@@ -111,8 +111,8 @@ namespace emby_user_stats.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@start_date", "2017-01-01");// start_date);
-                        //statement.TryBind("@user_id", user_id);
+                        statement.TryBind("@start_date", start_date);
+                        statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
                             ReportDayUsage test = new ReportDayUsage();
@@ -125,6 +125,49 @@ namespace emby_user_stats.Data
             }
 
             return items;
+        }
+
+        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays)
+        {
+            string sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
+                               "FROM UserUsageActions " +
+                               "WHERE DateCreated >= @start_date " +
+                               "AND ActionType = 'play_started' " +
+                               "GROUP BY UserId, date " +
+                               "ORDER BY UserId, date ASC";
+
+            DateTime from_date = DateTime.UtcNow.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql_query))
+                    {
+                        statement.TryBind("@start_date", from_date.ToString("yyyy-MM-dd"));
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            string user_id = row[0].ToString();
+                            Dictionary<string, int> uu = null;
+                            if (usage.ContainsKey(user_id))
+                            {
+                                uu = usage[user_id];
+                            }
+                            else
+                            {
+                                uu = new Dictionary<string, int>();
+                                usage.Add(user_id, uu);
+                            }
+                            string date_string = row[1].ToString();
+                            int count_int = row[2].ToInt();
+                            uu.Add(date_string, count_int);
+                        }
+                    }
+                }
+            }
+
+            return usage;
         }
     }
 }
