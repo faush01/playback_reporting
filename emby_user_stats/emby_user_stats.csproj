@@ -6,10 +6,12 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\config.html" />
+    <None Remove="Pages\config.js" />
     <None Remove="Pages\d3.v4.min.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\config.html" />
+    <EmbeddedResource Include="Pages\config.js" />
     <EmbeddedResource Include="Pages\d3.v4.min.js" />
   </ItemGroup>
   <ItemGroup>

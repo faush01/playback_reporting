@@ -32,6 +32,11 @@ namespace emby_user_stats
                 },
                 new PluginPageInfo
                 {
+                    Name = "ConfigJs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.config.js"
+                },
+                new PluginPageInfo
+                {
                     Name = "d3.v4.min.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.d3.v4.min.js"
                 }
