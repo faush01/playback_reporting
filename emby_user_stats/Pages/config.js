@@ -138,6 +138,9 @@
                 },
                 onClick: function (e) {
                     var activePoint = my_bar_chart.getElementAtEvent(e)[0];
+                    if (!activePoint) {
+                        return;
+                    }
                     var data = activePoint._chart.data;
                     var datasetIndex = activePoint._datasetIndex;
                     var label = data.datasets[datasetIndex].label;
@@ -185,28 +188,25 @@
         var user_report_on_date = document.getElementById("user_report_on_date");
         user_report_on_date.innerHTML = data_label;
 
-        var table = document.getElementById("user_usage_report_table");
-
-        while (table.hasChildNodes()) {
-            table.removeChild(table.firstChild);
-        }
+        var table_body = document.getElementById("user_usage_report_results");
+        var row_html = "";
 
         for (var index = 0; index < usage_data.length; ++index) {
-            
             var item_details = usage_data[index];
+            row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
-            var rowCount = table.rows.length;
-            var row = table.insertRow(rowCount - 1);
+            row_html += "<td>" + item_details.Time + "</td>";
 
-            var cell1 = row.insertCell(0);
-            cell1.innerHTML = item_details.Type;
+            row_html += "<td><a href='/web/itemdetails.html?id=" + item_details.Id + "'>";
+            row_html += item_details.Name;
+            row_html += "</a></td>";
 
-            var cell2 = row.insertCell(0);
-            cell2.innerHTML = item_details.Name;
+            row_html += "<td>" + item_details.Type + "</td>";
 
-            var cell3 = row.insertCell(0);
-            cell3.innerHTML = item_details.Time;
+            row_html += "</tr>";
         }
+        table_body.innerHTML = row_html;
+
     }
 
     return function (view, params) {

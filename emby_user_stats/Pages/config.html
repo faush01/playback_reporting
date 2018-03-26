@@ -8,8 +8,16 @@
 				<canvas id="user_stats_chart_canvas"></canvas>
 			</div>
 			<div>
-				Play report for user : <span id="user_report_user_name" style="font-weight: bold;"></span> on <span id="user_report_on_date" style="font-weight: bold;"></span>
+				User : <span id="user_report_user_name" style="font-weight: bold;"></span> (<span id="user_report_on_date"></span>)
 				<table cellpadding="6" id="user_usage_report_table">
+					<thead>
+						<tr style="text-align: left;">
+							<th class="detailTableHeaderCell" data-priority="2">Time</th>
+							<th class="detailTableHeaderCell" data-priority="1">Name</th>
+							<th class="detailTableHeaderCell" data-priority="3">Type</th>
+						</tr>
+					</thead>
+					<tbody class="resultBody" id="user_usage_report_results"></tbody>
 				</table>
 			</div>
 		</div>
