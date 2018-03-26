@@ -94,16 +94,16 @@ namespace emby_user_stats.Data
             return result;
         }
 
-        public List<string> GetUsageForUser(string date, string user_id)
+        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id)
         {
-            string sql_query = "SELECT ItemId, ItemType, COUNT(1) AS Count " +
+            string sql_query = "SELECT DateCreated, ItemId, ItemType " +
                                "FROM UserUsageActions " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
                                "AND ActionType = 'play_stopped' " +
-                               "GROUP BY ItemId, ItemType ";
+                               "ORDER BY DateCreated";
 
-            List<string> items = new List<string>();
+            List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
             using (WriteLock.Read())
             {
                 using (var connection = CreateConnection(true))
@@ -115,8 +115,14 @@ namespace emby_user_stats.Data
                         statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_id = row[0].ToString();
-                            items.Add(item_id);
+                            string item_id = row[1].ToString();
+
+                            Dictionary<string, string> item = new Dictionary<string, string>();
+                            item["Time"] = row[0].ReadDateTime().ToString("HH:mm");
+                            item["Id"] = row[1].ToString();
+                            item["Type"] = row[2].ToString();
+
+                            items.Add(item);
                         }
                     }
                 }

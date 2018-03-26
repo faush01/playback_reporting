@@ -66,14 +66,14 @@ namespace emby_user_stats.Api
 
         public object Get(GetUserReportData report)
         {
-            var results = Repository.GetUsageForUser(report.Date, report.UserID);
+            List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID);
 
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
-            foreach(string item_id in results)
+            foreach(Dictionary<string, string> item_data in results)
             {
                 Dictionary<string, object> item_info = new Dictionary<string, object>();
-
+                string item_id = item_data["Id"];
                 Guid item_giud = new Guid(item_id);
                 MediaBrowser.Controller.Entities.BaseItem item = _libraryManager.GetItemById(item_giud);
 
@@ -81,6 +81,8 @@ namespace emby_user_stats.Api
                 {
                     item_info["Name"] = item.Name;
                     item_info["Id"] = item.Id;
+                    item_info["Type"] = item_data["Type"];
+                    item_info["Time"] = item_data["Time"];
                 }
                 else
                 {

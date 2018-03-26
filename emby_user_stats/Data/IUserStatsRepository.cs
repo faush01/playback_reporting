@@ -9,7 +9,7 @@ namespace emby_user_stats.Data
     {
         void AddUserAction(UserAction entry);
         QueryResult<UserAction> GetUserActions(DateTime? minDate, int? startIndex, int? limit);
-        List<string> GetUsageForUser(string date, string user_id);
+        List<Dictionary<string, string>> GetUsageForUser(string date, string user_id);
         Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays);
     }
 }

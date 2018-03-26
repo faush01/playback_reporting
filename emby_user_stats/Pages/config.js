@@ -1,6 +1,14 @@
 ﻿define([], function () {
     'use strict';
 
+    ApiClient.getUserActivity = function (url_to_get) {
+        return this.ajax({
+            type: "GET",
+            url: url_to_get,
+            dataType: "json"
+        });
+    };	
+
     ApiClient.getAllUserActivity = function () {
         return this.ajax({
             type: "GET",
@@ -138,14 +146,67 @@
                     var user_id = data.user_id_list[datasetIndex];
                     console.log(label, user_id, data_label, value);
 
-                    var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
-                    Dashboard.navigate(href);
+                    display_user_report(label, user_id, data_label);
+                    //var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
+                    //Dashboard.navigate(href);
                 }
             }
         });
 
         console.log("Chart Done");
 
+    }
+
+    function display_user_report(user_name, user_id, data_label) {
+        console.log("Building User Report");
+
+        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems"
+        console.log("User Report Details Url: " + url_to_get);
+
+        ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
+            //alert("Loaded Data: " + JSON.stringify(usage_data));
+            populate_report(user_name, data_label, usage_data);
+        });
+
+    }
+
+    function populate_report(user_name, data_label, usage_data) {
+
+        if (!usage_data) {
+            alert("No Data!");
+            return;
+        }
+
+        console.log("Processing User Report: " + JSON.stringify(usage_data));
+
+        var user_name_span = document.getElementById("user_report_user_name");
+        user_name_span.innerHTML = user_name;
+
+        var user_report_on_date = document.getElementById("user_report_on_date");
+        user_report_on_date.innerHTML = data_label;
+
+        var table = document.getElementById("user_usage_report_table");
+
+        while (table.hasChildNodes()) {
+            table.removeChild(table.firstChild);
+        }
+
+        for (var index = 0; index < usage_data.length; ++index) {
+            
+            var item_details = usage_data[index];
+
+            var rowCount = table.rows.length;
+            var row = table.insertRow(rowCount - 1);
+
+            var cell1 = row.insertCell(0);
+            cell1.innerHTML = item_details.Type;
+
+            var cell2 = row.insertCell(0);
+            cell2.innerHTML = item_details.Name;
+
+            var cell3 = row.insertCell(0);
+            cell3.innerHTML = item_details.Time;
+        }
     }
 
     return function (view, params) {
