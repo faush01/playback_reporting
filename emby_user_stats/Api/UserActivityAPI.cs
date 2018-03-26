@@ -78,8 +78,8 @@ namespace emby_user_stats.Api
 
                 // fill in missing dates for time period
                 SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
-                DateTime from_date = DateTime.UtcNow.Subtract(new TimeSpan(activity.NumberOfDays, 0, 0, 0));
-                while(from_date < DateTime.UtcNow)
+                DateTime from_date = DateTime.Now.Subtract(new TimeSpan(activity.NumberOfDays, 0, 0, 0));
+                while(from_date < DateTime.Now)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");
                     if(user_usage.ContainsKey(date_string) == false)

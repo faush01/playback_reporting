@@ -87,7 +87,7 @@ namespace emby_user_stats
             AddUserAction(new UserAction
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Date = DateTime.UtcNow,
+                Date = DateTime.Now,
                 UserId = e.Users[0].Id.ToString("N"),
                 ItemId = e.Item.Id.ToString("N"),
                 ItemType = e.MediaInfo.Type,
@@ -120,7 +120,7 @@ namespace emby_user_stats
             AddUserAction(new UserAction
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Date = DateTime.UtcNow,
+                Date = DateTime.Now,
                 UserId = e.Users[0].Id.ToString("N"),
                 ItemId = e.Item.Id.ToString("N"),
                 ItemType = e.MediaInfo.Type,

@@ -136,7 +136,7 @@ namespace emby_user_stats.Data
                                "GROUP BY UserId, date " +
                                "ORDER BY UserId, date ASC";
 
-            DateTime from_date = DateTime.UtcNow.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+            DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             using (WriteLock.Read())
