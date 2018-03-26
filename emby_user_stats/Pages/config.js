@@ -212,10 +212,10 @@
     return function (view, params) {
 
         // init code here
-
+        // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
-            require(['https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js'], function (d3) {
+            require(['configurationpage?name=Chart.bundle.min.js'], function (d3) {
 
                 ApiClient.getAllUserActivity().then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
