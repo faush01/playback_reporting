@@ -99,7 +99,7 @@
         */
 
         var ctx = document.getElementById('user_stats_chart_canvas').getContext('2d');
-        window.myBar = new Chart(ctx, {
+        var my_bar_chart = new Chart(ctx, {
             type: 'bar',
             data: userUsageChartData,//barChartData,
             options: {
@@ -117,8 +117,21 @@
                         stacked: true,
                     }],
                     yAxes: [{
-                        stacked: true
+                        stacked: true,
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1
+                        }
                     }]
+                },
+                onClick: function (e) {
+                    var activePoint = my_bar_chart.getElementAtEvent(e)[0];
+                    var data = activePoint._chart.data;
+                    var datasetIndex = activePoint._datasetIndex;
+                    var label = data.datasets[datasetIndex].label;
+                    var data_label = data.labels[activePoint._index];
+                    var value = data.datasets[datasetIndex].data[activePoint._index];
+                    console.log(label, data_label, value);
                 }
             }
         });
