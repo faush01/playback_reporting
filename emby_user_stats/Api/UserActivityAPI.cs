@@ -11,19 +11,6 @@ using System.Text;
 
 namespace emby_user_stats.Api
 {
-    // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/Activity
-
-    [Route("/user_usage_stats/{UserID}/{StartDate}/Activity", "GET", Summary = "Gets activity for {USER} from {StartDate} formatted as yyyy-MM-dd")]
-    public class GetUserActivity : IReturn<ReportDayUsage>
-    {
-        [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "StartDate", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "filter", Description = "Comma separated list of Collection Types to filter (movies,tvshows,music,musicvideos,boxsets", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
-        public string UserID { get; set; }
-        public string StartDate { get; set; }
-        public string filter { get; set; }
-    }
 
     // http://localhost:8096/emby/user_usage_stats/30/PlayActivity
     [Route("/user_usage_stats/{NumberOfDays}/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
@@ -31,6 +18,19 @@ namespace emby_user_stats.Api
     {
         [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
         public int NumberOfDays { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
+    [Route("/user_usage_stats/{UserID}/{Date}/GetItems", "GET", Summary = "Gets activity for {USER} for {Date} formatted as yyyy-MM-dd")]
+    public class GetUserReportData : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "StartDate", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "filter", Description = "Comma separated list of Collection Types to filter (movies,tvshows,music,musicvideos,boxsets", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
+        public string UserID { get; set; }
+        public string Date { get; set; }
+        public string filter { get; set; }
     }
 
     public class UserActivityAPI : IService
@@ -41,6 +41,7 @@ namespace emby_user_stats.Api
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _config;
         private readonly IUserManager _userManager;
+        private readonly ILibraryManager _libraryManager;
 
         private IUserStatsRepository Repository;
 
@@ -48,23 +49,48 @@ namespace emby_user_stats.Api
             IFileSystem fileSystem,
             IServerConfigurationManager config,
             IJsonSerializer jsonSerializer,
-            IUserManager userManager)
+            IUserManager userManager,
+            ILibraryManager libraryManager)
         {
             _logger = logger;
             _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
             _userManager = userManager;
+            _libraryManager = libraryManager;
 
             var repo = new UserStatsRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
             Repository = repo;
         }
 
-        public object Get(GetUserActivity activity)
+        public object Get(GetUserReportData report)
         {
-            var results = Repository.GetUsageForUser(activity.StartDate, activity.UserID);
-            return results;
+            var results = Repository.GetUsageForUser(report.Date, report.UserID);
+
+            List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
+
+            foreach(string item_id in results)
+            {
+                Dictionary<string, object> item_info = new Dictionary<string, object>();
+
+                Guid item_giud = new Guid(item_id);
+                MediaBrowser.Controller.Entities.BaseItem item = _libraryManager.GetItemById(item_giud);
+
+                if (item != null)
+                {
+                    item_info["Name"] = item.Name;
+                    item_info["Id"] = item.Id;
+                }
+                else
+                {
+                    item_info["Name"] = "Not Known";
+                }
+
+                user_activity.Add(item_info);
+            }
+
+            return user_activity;
         }
 
         public object Get(GetUsageStats activity)
@@ -97,9 +123,15 @@ namespace emby_user_stats.Api
                 Guid user_guid = new Guid(user_id);
                 MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
 
+                string user_name = "Not Known";
+                if(user != null)
+                {
+                    user_name = user.Name;
+                }
+
                 Dictionary<string, object> user_data = new Dictionary<string, object>();
                 user_data.Add("user_id", user_id);
-                user_data.Add("user_name", user.Name);
+                user_data.Add("user_name", user_name);
                 user_data.Add("user_usage", userUsageByDate);
 
                 user_usage_data.Add(user_data);

@@ -8,11 +8,15 @@
     <None Remove="Pages\config.html" />
     <None Remove="Pages\config.js" />
     <None Remove="Pages\d3.v4.min.js" />
+    <None Remove="Pages\user_report.html" />
+    <None Remove="Pages\user_report.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\config.html" />
     <EmbeddedResource Include="Pages\config.js" />
     <EmbeddedResource Include="Pages\d3.v4.min.js" />
+    <EmbeddedResource Include="Pages\user_report.html" />
+    <EmbeddedResource Include="Pages\user_report.js" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mediabrowser.server.core" Version="3.3.13" />

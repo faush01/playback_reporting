@@ -94,31 +94,29 @@ namespace emby_user_stats.Data
             return result;
         }
 
-        public List<ReportDayUsage> GetUsageForUser(string start_date, string user_id)
+        public List<string> GetUsageForUser(string date, string user_id)
         {
-            string sql_query = "SELECT strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
+            string sql_query = "SELECT ItemId, ItemType, COUNT(1) AS Count " +
                                "FROM UserUsageActions " +
-                               "WHERE DateCreated >= @start_date " +
+                               "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
-                               "AND ActionType = 'play_started' " +
-                               "GROUP BY date " +
-                               "ORDER BY date ASC";
+                               "AND ActionType = 'play_stopped' " +
+                               "GROUP BY ItemId, ItemType ";
 
-            List<ReportDayUsage> items = new List<ReportDayUsage>();
+            List<string> items = new List<string>();
             using (WriteLock.Read())
             {
                 using (var connection = CreateConnection(true))
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@start_date", start_date);
+                        statement.TryBind("@date_from", date + " 00:00:00");
+                        statement.TryBind("@date_to", date + " 23:59:59");
                         statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            ReportDayUsage test = new ReportDayUsage();
-                            test.Date = row[0].ToString();
-                            test.Count = row[1].ToInt();
-                            items.Add(test);
+                            string item_id = row[0].ToString();
+                            items.Add(item_id);
                         }
                     }
                 }
@@ -132,7 +130,7 @@ namespace emby_user_stats.Data
             string sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
                                "FROM UserUsageActions " +
                                "WHERE DateCreated >= @start_date " +
-                               "AND ActionType = 'play_started' " +
+                               "AND ActionType = 'play_stopped' " +
                                "GROUP BY UserId, date " +
                                "ORDER BY UserId, date ASC";
 

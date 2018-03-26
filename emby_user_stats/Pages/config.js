@@ -32,10 +32,13 @@
         }
         //console.log("Text Lables: " + JSON.stringify(text_labels));
 
+        var user_ids = []
+
         // process user usage into data for chart
         var user_usage_datasets = [];
         for (var index = 0; index < usage_data.length; ++index) {
             var user_usage = usage_data[index];
+            user_ids.push(user_usage.user_id);
             var point_data = [];
             for (var point_date in user_usage.user_usage) {
                 point_data.push(user_usage.user_usage[point_date]);
@@ -49,6 +52,7 @@
         }
 
         var userUsageChartData = {
+            user_id_list: user_ids,
             labels: text_labels,
             datasets: user_usage_datasets
         };
@@ -131,7 +135,11 @@
                     var label = data.datasets[datasetIndex].label;
                     var data_label = data.labels[activePoint._index];
                     var value = data.datasets[datasetIndex].data[activePoint._index];
-                    console.log(label, data_label, value);
+                    var user_id = data.user_id_list[datasetIndex];
+                    console.log(label, user_id, data_label, value);
+
+                    var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
+                    Dashboard.navigate(href);
                 }
             }
         });

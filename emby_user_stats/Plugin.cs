@@ -39,6 +39,16 @@ namespace emby_user_stats
                 {
                     Name = "d3.v4.min.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.d3.v4.min.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "UserUsageReport",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.html"
+                },
+                new PluginPageInfo
+                {
+                    Name = "UserReportJS",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.js"
                 }
             };
         }
