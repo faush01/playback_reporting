@@ -81,13 +81,15 @@ namespace emby_user_stats.Api
                 {
                     item_info["Name"] = item.Name;
                     item_info["Id"] = item.Id;
-                    item_info["Type"] = item_data["Type"];
-                    item_info["Time"] = item_data["Time"];
+
                 }
                 else
                 {
                     item_info["Name"] = "Not Known";
                 }
+
+                item_info["Type"] = item_data["Type"];
+                item_info["Time"] = item_data["Time"];
 
                 user_activity.Add(item_info);
             }

@@ -197,10 +197,14 @@
 
             row_html += "<td>" + item_details.Time + "</td>";
 
-            row_html += "<td><a href='/web/itemdetails.html?id=" + item_details.Id + "'>";
-            row_html += item_details.Name;
-            row_html += "</a></td>";
-
+            if (item_details.Id) {
+                row_html += "<td><a href='/web/itemdetails.html?id=" + item_details.Id + "'>";
+                row_html += item_details.Name;
+                row_html += "</a></td>";
+            }
+            else {
+                row_html += "<td>" + item_details.Name + "</td>";
+            }
             row_html += "<td>" + item_details.Type + "</td>";
 
             row_html += "</tr>";
