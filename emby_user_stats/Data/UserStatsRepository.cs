@@ -118,7 +118,7 @@ namespace emby_user_stats.Data
                             string item_id = row[1].ToString();
 
                             Dictionary<string, string> item = new Dictionary<string, string>();
-                            item["Time"] = row[0].ReadDateTime().ToString("HH:mm");
+                            item["Time"] = row[0].ReadDateTime().ToLocalTime().ToString("HH:mm");
                             item["Id"] = row[1].ToString();
                             item["Type"] = row[2].ToString();
 
