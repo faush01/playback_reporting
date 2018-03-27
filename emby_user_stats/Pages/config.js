@@ -198,7 +198,7 @@
             row_html += "<td>" + item_details.Time + "</td>";
 
             if (item_details.Id) {
-                row_html += "<td><a href='/emby/web/itemdetails.html?id=" + item_details.Id + "'>";
+                row_html += "<td><a href='itemdetails.html?id=" + item_details.Id + "'>";
                 row_html += item_details.Name;
                 row_html += "</a></td>";
             }
