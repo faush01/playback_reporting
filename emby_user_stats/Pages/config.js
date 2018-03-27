@@ -27,7 +27,7 @@
         }
 
         if (!usage_data || usage_data.length == 0) {
-            alert("No Data : " + usage_data);
+            Dashboard.alert({ message: "You have no user usage data yet, try playing back some media and then ckeck again.", title: "No usage data!" });
             return;
         }
 
@@ -198,7 +198,7 @@
             row_html += "<td>" + item_details.Time + "</td>";
 
             if (item_details.Id) {
-                row_html += "<td><a href='/web/itemdetails.html?id=" + item_details.Id + "'>";
+                row_html += "<td><a href='/emby/web/itemdetails.html?id=" + item_details.Id + "'>";
                 row_html += item_details.Name;
                 row_html += "</a></td>";
             }
