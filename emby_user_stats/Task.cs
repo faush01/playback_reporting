@@ -27,7 +27,12 @@ namespace emby_user_stats
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
-            throw new NotImplementedException();
+            var trigger = new TaskTriggerInfo
+            {
+                Type = TaskTriggerInfo.TriggerDaily,
+                TimeOfDayTicks = TimeSpan.FromHours(0).Ticks
+            }; //12am
+            return new[] { trigger };
         }
 
         public async System.Threading.Tasks.Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
