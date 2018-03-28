@@ -1,5 +1,7 @@
 ﻿using emby_user_stats.Data;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
@@ -75,11 +77,13 @@ namespace emby_user_stats.Api
                 Dictionary<string, object> item_info = new Dictionary<string, object>();
                 string item_id = item_data["Id"];
                 Guid item_giud = new Guid(item_id);
-                MediaBrowser.Controller.Entities.BaseItem item = _libraryManager.GetItemById(item_giud);
+                BaseItem item = _libraryManager.GetItemById(item_giud);
+
+                string name = GetItemName(item);
 
                 if (item != null)
                 {
-                    item_info["Name"] = item.Name;
+                    item_info["Name"] = name;
                     item_info["Id"] = item.Id;
 
                 }
@@ -95,6 +99,44 @@ namespace emby_user_stats.Api
             }
 
             return user_activity;
+        }
+
+        private string GetItemName(BaseItem item)
+        {
+            string item_name = "Not Known";
+
+            if (item == null)
+            {
+                return item_name;
+            }
+
+            if (typeof(Episode) == item.GetType())
+            {
+                Episode epp_item = item as Episode;
+                if (epp_item != null)
+                {
+                    string series_name = "Not Known";
+                    if(epp_item.Series != null && string.IsNullOrEmpty(epp_item.Series.Name) == false) {
+                        series_name = epp_item.Series.Name;
+                    }
+                    string season_no = "00";
+                    if (epp_item.Season != null && epp_item.Season.IndexNumber != null) {
+                        season_no = String.Format("{0:D2}", epp_item.Season.IndexNumber);
+                    }
+                    string epp_no = "00";
+                    if (epp_item.IndexNumber != null)
+                    {
+                        epp_no = String.Format("{0:D2}", epp_item.IndexNumber);
+                    }
+                    item_name = epp_item.Series.Name + " - s" + season_no + "e" + epp_no + " - " + epp_item.Name;
+                }
+            }
+            else
+            {
+                item_name = item.Name;
+            }
+
+            return item_name;
         }
 
         public object Get(GetUsageStats activity)
