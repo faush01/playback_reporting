@@ -19,7 +19,7 @@
 
     var color_list = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
 
-    function draw_graph(context, local_chart, usage_data) {
+    function draw_graph(view, local_chart, usage_data) {
 
         if (!local_chart) {
             alert("No Chart Lib : " + local_chart);
@@ -110,7 +110,8 @@
         };
         */
 
-        var ctx = document.getElementById('user_stats_chart_canvas').getContext('2d');
+        var chart_canvas = view.querySelector('#user_stats_chart_canvas');
+        var ctx = chart_canvas.getContext('2d');
         var my_bar_chart = new Chart(ctx, {
             type: 'bar',
             data: userUsageChartData,//barChartData,
@@ -149,7 +150,7 @@
                     var user_id = data.user_id_list[datasetIndex];
                     console.log(label, user_id, data_label, value);
 
-                    display_user_report(label, user_id, data_label);
+                    display_user_report(label, user_id, data_label, view);
                     //var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
                     //Dashboard.navigate(href);
                 }
@@ -160,7 +161,7 @@
 
     }
 
-    function display_user_report(user_name, user_id, data_label) {
+    function display_user_report(user_name, user_id, data_label, view) {
         console.log("Building User Report");
 
         var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?stamp=" + new Date().getTime();
@@ -168,12 +169,12 @@
 
         ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
             //alert("Loaded Data: " + JSON.stringify(usage_data));
-            populate_report(user_name, data_label, usage_data);
+            populate_report(user_name, data_label, usage_data, view);
         });
 
     }
 
-    function populate_report(user_name, data_label, usage_data) {
+    function populate_report(user_name, data_label, usage_data, view) {
 
         if (!usage_data) {
             alert("No Data!");
@@ -182,13 +183,13 @@
 
         console.log("Processing User Report: " + JSON.stringify(usage_data));
 
-        var user_name_span = document.getElementById("user_report_user_name");
+        var user_name_span = view.querySelector('#user_report_user_name');
         user_name_span.innerHTML = user_name;
 
-        var user_report_on_date = document.getElementById("user_report_on_date");
+        var user_report_on_date = view.querySelector('#user_report_on_date');
         user_report_on_date.innerHTML = data_label;
 
-        var table_body = document.getElementById("user_usage_report_results");
+        var table_body = view.querySelector('#user_usage_report_results');
         var row_html = "";
 
         for (var index = 0; index < usage_data.length; ++index) {
