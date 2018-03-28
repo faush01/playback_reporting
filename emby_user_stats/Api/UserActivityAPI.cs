@@ -108,8 +108,9 @@ namespace emby_user_stats.Api
 
                 // fill in missing dates for time period
                 SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
-                DateTime from_date = DateTime.Now.Subtract(new TimeSpan(activity.NumberOfDays, 0, 0, 0));
-                while(from_date < DateTime.Now)
+                DateTime from_date = DateTime.Now.AddDays(activity.NumberOfDays * -1);
+                DateTime to_date = DateTime.Now.AddDays(1);
+                while (from_date < to_date)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");
                     if(user_usage.ContainsKey(date_string) == false)
@@ -121,7 +122,7 @@ namespace emby_user_stats.Api
                         userUsageByDate.Add(date_string, user_usage[date_string]);
                     }
 
-                    from_date = from_date.Add(new TimeSpan(1, 0, 0, 0));
+                    from_date = from_date.AddDays(1);
                 }
 
                 Guid user_guid = new Guid(user_id);

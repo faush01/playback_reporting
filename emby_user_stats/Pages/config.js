@@ -12,7 +12,7 @@
     ApiClient.getAllUserActivity = function () {
         return this.ajax({
             type: "GET",
-            url: "/emby/user_usage_stats/30/PlayActivity",
+            url: "/emby/user_usage_stats/30/PlayActivity?stamp=" + new Date().getTime(),
             dataType: "json"
         });
     };
@@ -163,7 +163,7 @@
     function display_user_report(user_name, user_id, data_label) {
         console.log("Building User Report");
 
-        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems"
+        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?stamp=" + new Date().getTime();
         console.log("User Report Details Url: " + url_to_get);
 
         ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
