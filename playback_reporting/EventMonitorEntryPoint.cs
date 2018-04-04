@@ -37,7 +37,7 @@ namespace emby_user_stats
             IFileSystem fileSystem,
             IJsonSerializer jsonSerializer)
         {
-            _logger = logger.GetLogger("UserUsageStatsEntryPoint");
+            _logger = logger.GetLogger("PlaybackReporting");
             _sessionManager = sessionManager;
             _libraryManager = libraryManager;
             _userManager = userManager;

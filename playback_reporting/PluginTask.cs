@@ -21,7 +21,7 @@ namespace emby_user_stats
 
         public PluginTask(IActivityManager activity, ILogManager logger)
         {
-            _logger = logger.GetLogger("ActivityTrimTask");
+            _logger = logger.GetLogger("PlaybackReporting");
             _activity = activity;
         }
 
