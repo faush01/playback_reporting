@@ -10,11 +10,11 @@ using System.IO;
 
 namespace emby_user_stats.Data
 {
-    public class UserStatsRepository : BaseSqliteRepository, IUserStatsRepository
+    public class ActivityRepository : BaseSqliteRepository, IActivityRepository
     {
         protected IFileSystem FileSystem { get; private set; }
 
-        public UserStatsRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
+        public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
             DbFilePath = Path.Combine(appPaths.DataPath, "user_usage_stats.db");
             FileSystem = fileSystem;

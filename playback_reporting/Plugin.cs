@@ -15,9 +15,9 @@ namespace emby_user_stats
             Instance = this;
         }
 
-        public override string Name => "User Usage Statistics";
+        public override string Name => "Playback Reporting";
         public override Guid Id => new Guid("9E6EB40F-9A1A-4CA1-A299-62B4D252453E");
-        public override string Description => "Show user usage statistics";
+        public override string Description => "Show reports for playback activity";
         public static Plugin Instance { get; private set; }
 
         public IEnumerable<PluginPageInfo> GetPages()

@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 
 namespace emby_user_stats
 {
-    class Task : IScheduledTask
+    class PluginTask : IScheduledTask
     {
         private IActivityManager _activity;
         private ILogger _logger;
 
-        public string Name => "User Stats Trim";
-        public string Key => "UserUsageStatsTask";
-        public string Description => "Runs the user usage stats trim task";
-        public string Category => "Statistics";
+        public string Name => "Playback History Trim";
+        public string Key => "PlaybackHistoryTrimTask";
+        public string Description => "Runs the report history trim task";
+        public string Category => "Playback Reporting";
 
-        public Task(IActivityManager activity, ILogManager logger)
+        public PluginTask(IActivityManager activity, ILogManager logger)
         {
-            _logger = logger.GetLogger("UserUsageStats");
+            _logger = logger.GetLogger("ActivityTrimTask");
             _activity = activity;
         }
 
@@ -40,7 +40,7 @@ namespace emby_user_stats
 
             await System.Threading.Tasks.Task.Run(() =>
             {
-                _logger.Info("User Activity Task Run");
+                _logger.Info("Playback History Trim");
 
             }, cancellationToken);
 

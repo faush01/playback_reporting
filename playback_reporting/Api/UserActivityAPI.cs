@@ -45,7 +45,7 @@ namespace emby_user_stats.Api
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
 
-        private IUserStatsRepository Repository;
+        private IActivityRepository Repository;
 
         public UserActivityAPI(ILogger logger, 
             IFileSystem fileSystem,
@@ -61,7 +61,7 @@ namespace emby_user_stats.Api
             _userManager = userManager;
             _libraryManager = libraryManager;
 
-            var repo = new UserStatsRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
             Repository = repo;
         }
