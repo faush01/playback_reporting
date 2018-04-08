@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace emby_user_stats
+namespace playback_reporting
 {
     class PluginTask : IScheduledTask
     {

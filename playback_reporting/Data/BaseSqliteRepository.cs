@@ -8,7 +8,7 @@ using SQLitePCL.pretty;
 using System.Linq;
 using SQLitePCL;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public abstract class BaseSqliteRepository : IDisposable
     {

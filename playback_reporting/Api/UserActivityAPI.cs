@@ -1,4 +1,4 @@
-﻿using emby_user_stats.Data;
+﻿using playback_reporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace emby_user_stats.Api
+namespace playback_reporting.Api
 {
 
     // http://localhost:8096/emby/user_usage_stats/30/PlayActivity

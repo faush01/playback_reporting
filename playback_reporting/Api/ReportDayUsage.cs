@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace emby_user_stats.Api
+namespace playback_reporting.Api
 {
     public class ReportDayUsage
     {

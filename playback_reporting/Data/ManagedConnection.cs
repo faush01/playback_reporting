@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SQLitePCL.pretty;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public class ManagedConnection : IDisposable
     {

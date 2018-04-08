@@ -1,4 +1,4 @@
-﻿using emby_user_stats.Data;
+﻿using playback_reporting.Data;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace emby_user_stats
+namespace playback_reporting
 {
     class EventMonitorEntryPoint : IServerEntryPoint
     {
@@ -113,8 +113,28 @@ namespace emby_user_stats
                     if (session.UserId != null) session_user_id = ((Guid)session.UserId).ToString("N");
 
                     string play_method = "na";
-                    if (session.PlayState != null && session.PlayState.PlayMethod != null) play_method = session.PlayState.PlayMethod.Value.ToString();
-
+                    if (session.PlayState != null && session.PlayState.PlayMethod != null)
+                    {
+                        play_method = session.PlayState.PlayMethod.Value.ToString();
+                    }
+                    if (session.PlayState != null && session.PlayState.PlayMethod == MediaBrowser.Model.Session.PlayMethod.Transcode)
+                    {
+                        if(session.TranscodingInfo !=  null)
+                        {
+                            string video_codec = "direct";
+                            if(session.TranscodingInfo.IsVideoDirect == false)
+                            {
+                                video_codec = session.TranscodingInfo.VideoCodec;
+                            }
+                            string audio_codec = "direct";
+                            if (session.TranscodingInfo.IsAudioDirect == false)
+                            {
+                                audio_codec = session.TranscodingInfo.AudioCodec;
+                            }
+                            play_method += " (v:" + video_codec + " a:" + audio_codec + ")";
+                        }
+                    }
+                    
                     _logger.Info("StartPlaybackTimer : event_playing_id   = " + event_playing_id);
                     _logger.Info("StartPlaybackTimer : event_user_id      = " + event_user_id);
                     _logger.Info("StartPlaybackTimer : session_playing_id = " + session_playing_id);

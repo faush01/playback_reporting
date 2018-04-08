@@ -1,4 +1,4 @@
-﻿using emby_user_stats.Api;
+﻿using playback_reporting.Api;
 using MediaBrowser.Controller;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public class ActivityRepository : BaseSqliteRepository, IActivityRepository
     {

@@ -5,7 +5,7 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
 using SQLitePCL.pretty;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public static class SqliteExtensions
     {

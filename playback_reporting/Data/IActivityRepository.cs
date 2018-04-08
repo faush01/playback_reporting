@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using emby_user_stats.Api;
+using playback_reporting.Api;
 using MediaBrowser.Model.Querying;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public interface IActivityRepository
     {

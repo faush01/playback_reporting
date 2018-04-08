@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace emby_user_stats
+namespace playback_reporting
 {
     class PluginConfiguration: BasePluginConfiguration
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace emby_user_stats.Data
+namespace playback_reporting.Data
 {
     public class UserAction
     {
