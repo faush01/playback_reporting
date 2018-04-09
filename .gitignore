@@ -4,6 +4,8 @@
 
 .idea
 .vs
+IDE.config
+log
 
 #################
 ## Eclipse

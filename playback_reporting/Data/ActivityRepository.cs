@@ -16,7 +16,7 @@ namespace playback_reporting.Data
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
-            DbFilePath = Path.Combine(appPaths.DataPath, "user_usage_stats.db");
+            DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
         }
 
@@ -39,29 +39,26 @@ namespace playback_reporting.Data
         {
             using (var connection = CreateConnection())
             {
-                connection.Execute("create table if not exists UserUsageActions (" + 
-                                   "Id GUID PRIMARY KEY NOT NULL, " +
+                // ROWID 
+                connection.Execute("create table if not exists PlaybackActivity (" +
                                    "DateCreated DATETIME NOT NULL, " +
-                                   "ActionType TEXT, " +
                                    "UserId TEXT, " +
-                                   "ItemId TEXT, " + 
-                                   "ItemType TEXT" + 
+                                   "ItemId TEXT, " +
+                                   "ItemType TEXT, " +
+                                   "ItemName TEXT, " +
+                                   "PlaybackMethod TEXT, " +
+                                   "ClientName TEXT" +
                                    ")");
-                connection.Execute("create index if not exists idx_UserUsageActions on UserUsageActions(Id)");
             }
         }
 
-        public void AddUserAction(UserAction entry)
+        public void AddPlaybackAction(PlaybackInfo play_info)
         {
-            string sql_add = "replace into UserUsageActions " +
-                "(Id, UserId, ItemId, ItemType, ActionType, DateCreated) " +
+            string sql_add = "insert into PlaybackActivity " +
+                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName) " +
                 "values " +
-                "(@Id, @UserId, @ItemId, @ItemType, @ActionType, @DateCreated)";
+                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName)";
 
-            if (entry == null)
-            {
-                throw new ArgumentNullException("entry");
-            }
             using (WriteLock.Write())
             {
                 using (var connection = CreateConnection())
@@ -70,12 +67,13 @@ namespace playback_reporting.Data
                     {
                         using (var statement = db.PrepareStatement(sql_add))
                         {
-                            statement.TryBind("@Id", entry.Id.ToGuidBlob());
-                            statement.TryBind("@UserId", entry.UserId);
-                            statement.TryBind("@ItemId", entry.ItemId);
-                            statement.TryBind("@ItemType", entry.ItemType);
-                            statement.TryBind("@ActionType", entry.ActionType);
-                            statement.TryBind("@DateCreated", entry.Date.ToDateTimeParamValue());
+                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
+                            statement.TryBind("@UserId", play_info.UserId);
+                            statement.TryBind("@ItemId", play_info.ItemId);
+                            statement.TryBind("@ItemType", play_info.ItemType);
+                            statement.TryBind("@ItemName", play_info.ItemName);
+                            statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
+                            statement.TryBind("@ClientName", play_info.ClientName);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -83,24 +81,12 @@ namespace playback_reporting.Data
             }
         }
 
-        public QueryResult<UserAction> GetUserActions(DateTime? minDate, int? startIndex, int? limit)
-        {
-            var result = new QueryResult<UserAction>();
-
-            var list = new List<UserAction>();
-
-            result.Items = list.ToArray();
-
-            return result;
-        }
-
         public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id)
         {
-            string sql_query = "SELECT DateCreated, ItemId, ItemType " +
-                               "FROM UserUsageActions " +
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod " +
+                               "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
-                               "AND ActionType = 'play_stopped' " +
                                "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
@@ -121,6 +107,9 @@ namespace playback_reporting.Data
                             item["Time"] = row[0].ReadDateTime().ToLocalTime().ToString("HH:mm");
                             item["Id"] = row[1].ToString();
                             item["Type"] = row[2].ToString();
+                            item["ItemName"] = row[3].ToString();
+                            item["ClientName"] = row[4].ToString();
+                            item["PlaybackMethod"] = row[5].ToString();
 
                             items.Add(item);
                         }
@@ -134,9 +123,8 @@ namespace playback_reporting.Data
         public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays)
         {
             string sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
-                               "FROM UserUsageActions " +
+                               "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @start_date " +
-                               "AND ActionType = 'play_stopped' " +
                                "GROUP BY UserId, date " +
                                "ORDER BY UserId, date ASC";
 

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Controller.Entities.TV;
 
 namespace playback_reporting
 {
@@ -83,15 +84,6 @@ namespace playback_reporting
             // start a task to report playback started
             System.Threading.Tasks.Task.Run(() => StartPlaybackTimer(e));
 
-            AddUserAction(new UserAction
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Date = DateTime.Now,
-                UserId = e.Users[0].Id.ToString("N"),
-                ItemId = e.Item.Id.ToString("N"),
-                ItemType = e.MediaInfo.Type,
-                ActionType = "play_started"
-            });
         }
 
         public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
@@ -134,7 +126,11 @@ namespace playback_reporting
                             play_method += " (v:" + video_codec + " a:" + audio_codec + ")";
                         }
                     }
-                    
+
+                    string item_name = GetItemName(e.Item);
+                    string item_id = e.Item.Id.ToString("N");
+                    string item_type = e.MediaInfo.Type;
+
                     _logger.Info("StartPlaybackTimer : event_playing_id   = " + event_playing_id);
                     _logger.Info("StartPlaybackTimer : event_user_id      = " + event_user_id);
                     _logger.Info("StartPlaybackTimer : session_playing_id = " + session_playing_id);
@@ -142,14 +138,29 @@ namespace playback_reporting
                     _logger.Info("StartPlaybackTimer : play_method        = " + play_method);
                     _logger.Info("StartPlaybackTimer : e.ClientName       = " + e.ClientName);
                     _logger.Info("StartPlaybackTimer : e.DeviceName       = " + e.DeviceName);
+                    _logger.Info("StartPlaybackTimer : ItemName           = " + item_name);
+                    _logger.Info("StartPlaybackTimer : ItemId             = " + item_id);
+                    _logger.Info("StartPlaybackTimer : ItemType           = " + item_type);
 
                     if (event_playing_id == session_playing_id && event_user_id == session_user_id)
                     {
                         _logger.Info("StartPlaybackTimer : All matches, playback registered");
+
+                        PlaybackInfo play_info = new PlaybackInfo();
+                        play_info.Id = Guid.NewGuid().ToString("N");
+                        play_info.Date = DateTime.Now;
+                        play_info.ClientName = e.ClientName;
+                        play_info.PlaybackMethod = play_method;
+                        play_info.UserId = event_user_id;
+                        play_info.ItemId = item_id;
+                        play_info.ItemName = item_name;
+                        play_info.ItemType = item_type;
+
+                        Repository.AddPlaybackAction(play_info);
                     }
                     else
                     {
-                        _logger.Info("StartPlaybackTimer : Details do not match for play items");
+                        _logger.Info("StartPlaybackTimer : Details do not match for play item");
                     }
                 }
                 else
@@ -164,10 +175,44 @@ namespace playback_reporting
             _logger.Info("StartPlaybackTimer : Exited");
         }
 
-        private void AddUserAction(UserAction entry)
+        private string GetItemName(BaseItem item)
         {
-            _logger.Info("Adding User Action");
-            Repository.AddUserAction(entry);
+            string item_name = "Not Known";
+
+            if (item == null)
+            {
+                return item_name;
+            }
+
+            if (typeof(Episode) == item.GetType())
+            {
+                Episode epp_item = item as Episode;
+                if (epp_item != null)
+                {
+                    string series_name = "Not Known";
+                    if (epp_item.Series != null && string.IsNullOrEmpty(epp_item.Series.Name) == false)
+                    {
+                        series_name = epp_item.Series.Name;
+                    }
+                    string season_no = "00";
+                    if (epp_item.Season != null && epp_item.Season.IndexNumber != null)
+                    {
+                        season_no = String.Format("{0:D2}", epp_item.Season.IndexNumber);
+                    }
+                    string epp_no = "00";
+                    if (epp_item.IndexNumber != null)
+                    {
+                        epp_no = String.Format("{0:D2}", epp_item.IndexNumber);
+                    }
+                    item_name = epp_item.Series.Name + " - s" + season_no + "e" + epp_no + " - " + epp_item.Name;
+                }
+            }
+            else
+            {
+                item_name = item.Name;
+            }
+
+            return item_name;
         }
     }
 }

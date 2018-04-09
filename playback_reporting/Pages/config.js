@@ -27,7 +27,7 @@
         }
 
         if (!usage_data || usage_data.length == 0) {
-            Dashboard.alert({ message: "You have no user usage data yet, try playing back some media and then ckeck again.", title: "No usage data!" });
+            Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then ckeck again.", title: "No playback data!" });
             return;
         }
 
@@ -132,8 +132,13 @@
                     yAxes: [{
                         stacked: true,
                         ticks: {
+                            autoSkip: true,
                             beginAtZero: true,
-                            stepSize: 1
+                            callback: function (value, index, values) {
+                                if (Math.floor(value) === value) {
+                                    return value;
+                                }
+                            }
                         }
                     }]
                 },
@@ -187,7 +192,7 @@
         user_name_span.innerHTML = user_name;
 
         var user_report_on_date = view.querySelector('#user_report_on_date');
-        user_report_on_date.innerHTML = data_label;
+        user_report_on_date.innerHTML = "(" + data_label + ")";
 
         var table_body = view.querySelector('#user_usage_report_results');
         var row_html = "";
@@ -197,16 +202,10 @@
             row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
             row_html += "<td>" + item_details.Time + "</td>";
-
-            if (item_details.Id) {
-                row_html += "<td><a href='itemdetails.html?id=" + item_details.Id + "'>";
-                row_html += item_details.Name;
-                row_html += "</a></td>";
-            }
-            else {
-                row_html += "<td>" + item_details.Name + "</td>";
-            }
+            row_html += "<td>" + item_details.Name + "</td>";
             row_html += "<td>" + item_details.Type + "</td>";
+            row_html += "<td>" + item_details.Client + "</td>";
+            row_html += "<td>" + item_details.Method + "</td>";
 
             row_html += "</tr>";
         }

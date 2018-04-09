@@ -3,18 +3,20 @@
 	 data-controller="__plugin/ConfigJs">
 	<div data-role="content">
 		<div class="content-primary">
-			<h2>Play Statistics</h2>
+			<h2>Playback Report</h2>
 			<div style="width: 75%">
 				<canvas id="user_stats_chart_canvas"></canvas>
 			</div>
 			<div>
-				User : <span id="user_report_user_name" style="font-weight: bold;"></span> (<span id="user_report_on_date"></span>)
+				User : <span id="user_report_user_name" style="font-weight: bold;">Select a user from the chart</span> <span id="user_report_on_date"></span>
 				<table cellpadding="6" id="user_usage_report_table">
 					<thead>
 						<tr style="text-align: left;">
 							<th class="detailTableHeaderCell" data-priority="2">Time</th>
 							<th class="detailTableHeaderCell" data-priority="1">Name</th>
 							<th class="detailTableHeaderCell" data-priority="3">Type</th>
+							<th class="detailTableHeaderCell" data-priority="3">Client</th>
+							<th class="detailTableHeaderCell" data-priority="3">Method</th>
 						</tr>
 					</thead>
 					<tbody class="resultBody" id="user_usage_report_results"></tbody>
