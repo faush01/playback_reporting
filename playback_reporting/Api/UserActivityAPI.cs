@@ -82,6 +82,8 @@ namespace playback_reporting.Api
                 item_info["Type"] = item_data["Type"];
                 item_info["Client"] = item_data["ClientName"];
                 item_info["Method"] = item_data["PlaybackMethod"];
+                item_info["Device"] = item_data["DeviceName"];
+                item_info["Duration"] = item_data["PlayDuration"];
 
                 user_activity.Add(item_info);
             }

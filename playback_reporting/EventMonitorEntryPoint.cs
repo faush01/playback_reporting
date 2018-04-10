@@ -27,7 +27,9 @@ namespace playback_reporting
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
         private readonly IJsonSerializer _jsonSerializer;
-        private IActivityRepository Repository;
+
+        private Dictionary<string, PlaybackTracker> playback_trackers = null;
+        private IActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
             ILibraryManager libraryManager, 
@@ -46,11 +48,12 @@ namespace playback_reporting
             _appHost = appHost;
             _fileSystem = fileSystem;
             _jsonSerializer = jsonSerializer;
+            playback_trackers = new Dictionary<string, PlaybackTracker>();
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+
         }
 
         public void Run()
@@ -58,9 +61,55 @@ namespace playback_reporting
 
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
-            Repository = repo;
+            _repository = repo;
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
+            _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
+            _sessionManager.PlaybackProgress += _sessionManager_PlaybackProgress;
+        }
+
+        void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
+        {
+            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+            if(playback_trackers.ContainsKey(key))
+            {
+                //_logger.Info("Playback progress tracker found, processing progress : " + key);
+                PlaybackTracker tracker = playback_trackers[key];
+                tracker.ProcessProgress(e);
+            }
+            else
+            {
+                _logger.Info("Playback progress did not have a tracker : " + key);
+            }
+        }
+
+        void _sessionManager_PlaybackStop(object sender, PlaybackStopEventArgs e)
+        {
+            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+            if (playback_trackers.ContainsKey(key))
+            {
+                _logger.Info("Playback stop tracker found, processing stop : " + key);
+                PlaybackTracker tracker = playback_trackers[key];
+                tracker.ProcessStop(e);
+
+                // if playback duration was long enough save the action
+                if (tracker.TrackedPlaybackInfo.PlaybackDuration > 20)
+                {
+                    _logger.Info("Staving playback tracking activity in DB");
+                    _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
+                }
+                else
+                {
+                    _logger.Info("Playback duration not long enough, not storing activity in DB");
+                }
+
+                // remove the playback tracer from the map as we no longer need it.
+                playback_trackers.Remove(key);
+            }
+            else
+            {
+                _logger.Info("Playback stop did not have a tracker : " + key);
+            }
         }
 
         void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
@@ -81,6 +130,17 @@ namespace playback_reporting
                 return;
             }
 
+            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+            if (playback_trackers.ContainsKey(key))
+            {
+                _logger.Info("Removing existing tracker : " + key);
+                playback_trackers.Remove(key);
+            }
+            _logger.Info("Adding playback tracker : " + key);
+            PlaybackTracker tracker = new PlaybackTracker(key, _logger);
+            tracker.ProcessStart(e);
+            playback_trackers.Add(key, tracker);
+
             // start a task to report playback started
             System.Threading.Tasks.Task.Run(() => StartPlaybackTimer(e));
 
@@ -89,7 +149,7 @@ namespace playback_reporting
         public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
         {
             _logger.Info("StartPlaybackTimer : Entered");
-            await System.Threading.Tasks.Task.Delay(20000);
+            await System.Threading.Tasks.Task.Delay(10000);
 
             try
             {
@@ -142,30 +202,34 @@ namespace playback_reporting
                     _logger.Info("StartPlaybackTimer : ItemId             = " + item_id);
                     _logger.Info("StartPlaybackTimer : ItemType           = " + item_type);
 
-                    if (event_playing_id == session_playing_id && event_user_id == session_user_id)
+                    PlaybackInfo play_info = new PlaybackInfo();
+                    play_info.Id = Guid.NewGuid().ToString("N");
+                    play_info.Date = DateTime.Now;
+                    play_info.ClientName = e.ClientName;
+                    play_info.DeviceName = e.DeviceName;
+                    play_info.PlaybackMethod = play_method;
+                    play_info.UserId = event_user_id;
+                    play_info.ItemId = item_id;
+                    play_info.ItemName = item_name;
+                    play_info.ItemType = item_type;
+
+                    // update tracker with playback info
+                    string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+                    if (playback_trackers.ContainsKey(key))
                     {
-                        _logger.Info("StartPlaybackTimer : All matches, playback registered");
-
-                        PlaybackInfo play_info = new PlaybackInfo();
-                        play_info.Id = Guid.NewGuid().ToString("N");
-                        play_info.Date = DateTime.Now;
-                        play_info.ClientName = e.ClientName;
-                        play_info.PlaybackMethod = play_method;
-                        play_info.UserId = event_user_id;
-                        play_info.ItemId = item_id;
-                        play_info.ItemName = item_name;
-                        play_info.ItemType = item_type;
-
-                        Repository.AddPlaybackAction(play_info);
+                        _logger.Info("Playback tracker found, adding playback info : " + key);
+                        PlaybackTracker tracker = playback_trackers[key];
+                        tracker.TrackedPlaybackInfo = play_info;
                     }
                     else
                     {
-                        _logger.Info("StartPlaybackTimer : Details do not match for play item");
+                        _logger.Info("Playback trackler not found : " + key);
                     }
+
                 }
                 else
                 {
-                    _logger.Info("StartPlaybackTimer : session=Not Found");
+                    _logger.Info("StartPlaybackTimer : session Not Found");
                 }
             }
             catch(Exception exception)

@@ -47,7 +47,9 @@ namespace playback_reporting.Data
                                    "ItemType TEXT, " +
                                    "ItemName TEXT, " +
                                    "PlaybackMethod TEXT, " +
-                                   "ClientName TEXT" +
+                                   "ClientName TEXT, " +
+                                   "DeviceName TEXT, " +
+                                   "PlayDuration INT" +
                                    ")");
             }
         }
@@ -55,9 +57,9 @@ namespace playback_reporting.Data
         public void AddPlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "insert into PlaybackActivity " +
-                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName) " +
+                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
                 "values " +
-                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName)";
+                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration)";
 
             using (WriteLock.Write())
             {
@@ -74,6 +76,8 @@ namespace playback_reporting.Data
                             statement.TryBind("@ItemName", play_info.ItemName);
                             statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
                             statement.TryBind("@ClientName", play_info.ClientName);
+                            statement.TryBind("@DeviceName", play_info.DeviceName);
+                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -83,7 +87,7 @@ namespace playback_reporting.Data
 
         public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id)
         {
-            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod " +
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
@@ -110,6 +114,8 @@ namespace playback_reporting.Data
                             item["ItemName"] = row[3].ToString();
                             item["ClientName"] = row[4].ToString();
                             item["PlaybackMethod"] = row[5].ToString();
+                            item["DeviceName"] = row[6].ToString();
+                            item["PlayDuration"] = row[7].ToString();
 
                             items.Add(item);
                         }

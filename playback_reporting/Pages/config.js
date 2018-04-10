@@ -205,7 +205,9 @@
             row_html += "<td>" + item_details.Name + "</td>";
             row_html += "<td>" + item_details.Type + "</td>";
             row_html += "<td>" + item_details.Client + "</td>";
+            row_html += "<td>" + item_details.Device + "</td>";
             row_html += "<td>" + item_details.Method + "</td>";
+            row_html += "<td>" + item_details.Duration + "</td>";
 
             row_html += "</tr>";
         }
