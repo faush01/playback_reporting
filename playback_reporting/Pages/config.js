@@ -222,20 +222,19 @@
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
+                var data_type = view.querySelector('#data_type');
                 var movies_select = view.querySelector('#media_type_movies');
                 var series_select = view.querySelector('#media_type_series');
-                var filter_main = [];
-                if (movies_select.checked) { filter_main.push("movies"); }
-                if (series_select.checked) { filter_main.push("series"); }
 
-                var url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter_main.join(",") + "&stamp=" + new Date().getTime();
+                var url = "/emby/user_usage_stats/30/PlayActivity?filter=movies,series&data_type=count&stamp=" + new Date().getTime();
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
                 });
-                
+
                 movies_select.addEventListener("click", process_click);
                 series_select.addEventListener("click", process_click);
+                data_type.addEventListener("change", process_click);
 
                 function process_click() {
                     var table_body = view.querySelector('#user_usage_report_results');
@@ -243,7 +242,8 @@
                     var filter = [];
                     if (movies_select.checked) { filter.push("movies"); }
                     if (series_select.checked) { filter.push("series"); }
-                    var filtered_url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+                    var data_t = data_type.options[data_type.selectedIndex].value;
+                    var filtered_url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                     ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
                         draw_graph(view, d3, usage_data);
                     });

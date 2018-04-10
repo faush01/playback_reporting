@@ -5,7 +5,10 @@
 		<div class="content-primary">
 			<h2>Playback Report</h2>
 
-			<input type="checkbox" id="media_type_movies" checked>Movies <input type="checkbox" id="media_type_series" checked>TV Shows
+			<select id="data_type">
+				<option value="count">Play Count</option>
+				<option value="time">Play Time</option>
+			</select> <input type="checkbox" id="media_type_movies" checked>Movies <input type="checkbox" id="media_type_series" checked>TV Shows
 			<br />
 			<div style="width: 75%">
 				<canvas id="user_stats_chart_canvas"></canvas>

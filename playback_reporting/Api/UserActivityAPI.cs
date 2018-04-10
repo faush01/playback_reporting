@@ -20,9 +20,11 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
         [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "data_type", Description = "Data type to return (count,time)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
 
         public int NumberOfDays { get; set; }
         public string filter { get; set; }
+        public string data_type { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
@@ -106,7 +108,7 @@ namespace playback_reporting.Api
             {
                 filter_tokens = activity.filter.Split(',');
             }
-            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays, filter_tokens);
+            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays, filter_tokens, activity.data_type);
 
             List<Dictionary<string, object>> user_usage_data = new List<Dictionary<string, object>>();
             foreach (string user_id in results.Keys)
