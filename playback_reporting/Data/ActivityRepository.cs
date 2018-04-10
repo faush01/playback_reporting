@@ -119,6 +119,7 @@ namespace playback_reporting.Data
 
         public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
         {
+            bool show_all_types = false;
             List<string> type_list = new List<string>();
             foreach (string media_type in types)
             {
@@ -126,14 +127,21 @@ namespace playback_reporting.Data
                 {
                     type_list.Add("'" + type_map[media_type] + "'");
                 }
+                if ("all".Equals(media_type, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    show_all_types = true;
+                }
             }
 
             string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
-                               "AND UserId = @user_id " +
-                               "AND ItemType IN (" + string.Join(",", type_list) + ") " +
-                               "ORDER BY DateCreated";
+                               "AND UserId = @user_id ";
+            if (show_all_types == false)
+            {
+                sql_query += "AND ItemType IN (" + string.Join(",", type_list) + ") ";
+            }
+            sql_query += "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
             using (WriteLock.Read())
@@ -170,6 +178,7 @@ namespace playback_reporting.Data
 
         public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types, string data_type)
         {
+            bool show_all_types = false;
             List<string> type_list = new List<string>();
             foreach (string media_type in types)
             {
@@ -177,28 +186,27 @@ namespace playback_reporting.Data
                 {
                     type_list.Add("'" + type_map[media_type] + "'");
                 }
+                if ("all".Equals(media_type, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    show_all_types = true;
+                }
             }
 
             string sql_query = "";
-
             if (data_type == "count")
             {
-                sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
-                                               "FROM PlaybackActivity " +
-                                               "WHERE DateCreated >= @start_date " +
-                                               "AND ItemType IN (" + string.Join(",", type_list) + ") " +
-                                               "GROUP BY UserId, date " +
-                                               "ORDER BY UserId, date ASC";
+                sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count ";
             }
             else
             {
-                sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration) AS count " +
-                                               "FROM PlaybackActivity " +
-                                               "WHERE DateCreated >= @start_date " +
-                                               "AND ItemType IN (" + string.Join(",", type_list) + ") " +
-                                               "GROUP BY UserId, date " +
-                                               "ORDER BY UserId, date ASC";
+                sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration) AS count ";
             }
+            sql_query += "FROM PlaybackActivity WHERE DateCreated >= @start_date ";
+            if (show_all_types == false)
+            {
+                sql_query += "AND ItemType IN (" + string.Join(",", type_list) + ") ";
+            }
+            sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
             DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();

@@ -33,6 +33,9 @@
         }
         //console.log("Text Lables: " + JSON.stringify(text_labels));
 
+        var data_type = view.querySelector('#data_type');
+        var data_t = data_type.options[data_type.selectedIndex].value == "time";
+
         var user_ids = []
 
         // process user usage into data for chart
@@ -42,7 +45,11 @@
             user_ids.push(user_usage.user_id);
             var point_data = [];
             for (var point_date in user_usage.user_usage) {
-                point_data.push(user_usage.user_usage[point_date]);
+                var data_point = user_usage.user_usage[point_date];
+                if (data_t) {
+                    data_point = data_point / 60;
+                }
+                point_data.push(data_point);
             }
             var chart_data = {
                 label: user_usage.user_name,
@@ -162,9 +169,11 @@
     function display_user_report(user_name, user_id, data_label, view) {
         console.log("Building User Report");
 
+        var all_select = view.querySelector('#media_type_all');
         var movies_select = view.querySelector('#media_type_movies');
         var series_select = view.querySelector('#media_type_series');
         var filter = [];
+        if (all_select.checked) { filter.push("all"); }
         if (movies_select.checked) { filter.push("movies"); }
         if (series_select.checked) { filter.push("series"); }
 
@@ -206,12 +215,28 @@
             row_html += "<td>" + item_details.Client + "</td>";
             row_html += "<td>" + item_details.Device + "</td>";
             row_html += "<td>" + item_details.Method + "</td>";
-            row_html += "<td>" + item_details.Duration + "</td>";
-
+            row_html += "<td>" + seconds2time(item_details.Duration) + "</td>";
             row_html += "</tr>";
         }
         table_body.innerHTML = row_html;
+    }
 
+    function seconds2time(seconds) {
+        var h = Math.floor(seconds / 3600);
+        seconds = seconds - (h * 3600);
+        var m = Math.floor(seconds / 60);
+        var s = seconds - (m * 60);
+        var time_string = padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
+        return time_string;
+    }
+
+    function padLeft(value) {
+        if (value < 10) {
+            return "0" + value;
+        }
+        else {
+            return value;
+        }
     }
 
     return function (view, params) {
@@ -223,15 +248,17 @@
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
                 var data_type = view.querySelector('#data_type');
+                var all_select = view.querySelector('#media_type_all');
                 var movies_select = view.querySelector('#media_type_movies');
                 var series_select = view.querySelector('#media_type_series');
 
-                var url = "/emby/user_usage_stats/30/PlayActivity?filter=movies,series&data_type=count&stamp=" + new Date().getTime();
+                var url = "/emby/user_usage_stats/30/PlayActivity?filter=all,movies,series&data_type=count&stamp=" + new Date().getTime();
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
                 });
 
+                all_select.addEventListener("click", process_click);
                 movies_select.addEventListener("click", process_click);
                 series_select.addEventListener("click", process_click);
                 data_type.addEventListener("change", process_click);
@@ -240,6 +267,7 @@
                     var table_body = view.querySelector('#user_usage_report_results');
                     table_body.innerHTML = "";
                     var filter = [];
+                    if (all_select.checked) { filter.push("all"); }
                     if (movies_select.checked) { filter.push("movies"); }
                     if (series_select.checked) { filter.push("series"); }
                     var data_t = data_type.options[data_type.selectedIndex].value;
