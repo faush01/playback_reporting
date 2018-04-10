@@ -12,12 +12,14 @@ namespace playback_reporting.Data
 {
     public class ActivityRepository : BaseSqliteRepository, IActivityRepository
     {
+        private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
             DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
+            _logger = logger;
         }
 
         public void Initialize()
@@ -39,18 +41,44 @@ namespace playback_reporting.Data
         {
             using (var connection = CreateConnection())
             {
+                _logger.Info("Initialize Repository");
+
+                string sql_info = "pragma table_info('PlaybackActivity')";
+                List<string> cols = new List<string>();
+                foreach (var row in connection.Query(sql_info))
+                {
+                    string table_schema = row[1].ToString().ToLower() + ":" + row[2].ToString().ToLower();
+                    cols.Add(table_schema);
+                }
+                string actual_schema = string.Join("|", cols);
+                string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
+                if(required_schema != actual_schema)
+                {
+                    _logger.Info("PlaybackActivity table schema miss match!");
+                    _logger.Info("Expected : " + required_schema);
+                    _logger.Info("Received : " + actual_schema);
+                    _logger.Info("Dropping and recreating PlaybackActivity table");
+                    connection.Execute("drop table if exists PlaybackActivity");
+                }
+                else
+                {
+                    _logger.Info("PlaybackActivity table schema OK");
+                    _logger.Info("Expected : " + required_schema);
+                    _logger.Info("Received : " + actual_schema);
+                }
+
                 // ROWID 
                 connection.Execute("create table if not exists PlaybackActivity (" +
-                                   "DateCreated DATETIME NOT NULL, " +
-                                   "UserId TEXT, " +
-                                   "ItemId TEXT, " +
-                                   "ItemType TEXT, " +
-                                   "ItemName TEXT, " +
-                                   "PlaybackMethod TEXT, " +
-                                   "ClientName TEXT, " +
-                                   "DeviceName TEXT, " +
-                                   "PlayDuration INT" +
-                                   ")");
+                                "DateCreated DATETIME NOT NULL, " +
+                                "UserId TEXT, " +
+                                "ItemId TEXT, " +
+                                "ItemType TEXT, " +
+                                "ItemName TEXT, " +
+                                "PlaybackMethod TEXT, " +
+                                "ClientName TEXT, " +
+                                "DeviceName TEXT, " +
+                                "PlayDuration INT" +
+                                ")");
             }
         }
 
