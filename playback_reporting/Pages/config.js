@@ -2,20 +2,13 @@
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
+        console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
             type: "GET",
             url: url_to_get,
             dataType: "json"
         });
     };	
-
-    ApiClient.getAllUserActivity = function () {
-        return this.ajax({
-            type: "GET",
-            url: "/emby/user_usage_stats/30/PlayActivity?stamp=" + new Date().getTime(),
-            dataType: "json"
-        });
-    };
 
     var color_list = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
 
@@ -169,7 +162,13 @@
     function display_user_report(user_name, user_id, data_label, view) {
         console.log("Building User Report");
 
-        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?stamp=" + new Date().getTime();
+        var movies_select = view.querySelector('#media_type_movies');
+        var series_select = view.querySelector('#media_type_series');
+        var filter = [];
+        if (movies_select.checked) { filter.push("movies"); }
+        if (series_select.checked) { filter.push("series"); }
+
+        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
         console.log("User Report Details Url: " + url_to_get);
 
         ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
@@ -223,10 +222,32 @@
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                ApiClient.getAllUserActivity().then(function (usage_data) {
+                var movies_select = view.querySelector('#media_type_movies');
+                var series_select = view.querySelector('#media_type_series');
+                var filter_main = [];
+                if (movies_select.checked) { filter_main.push("movies"); }
+                if (series_select.checked) { filter_main.push("series"); }
+
+                var url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter_main.join(",") + "&stamp=" + new Date().getTime();
+                ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
                 });
+                
+                movies_select.addEventListener("click", process_click);
+                series_select.addEventListener("click", process_click);
+
+                function process_click() {
+                    var table_body = view.querySelector('#user_usage_report_results');
+                    table_body.innerHTML = "";
+                    var filter = [];
+                    if (movies_select.checked) { filter.push("movies"); }
+                    if (series_select.checked) { filter.push("series"); }
+                    var filtered_url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
+                        draw_graph(view, d3, usage_data);
+                    });
+                }
 
             });
 

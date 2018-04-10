@@ -19,7 +19,10 @@ namespace playback_reporting.Api
     public class GetUsageStats : IReturn<ReportDayUsage>
     {
         [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
         public int NumberOfDays { get; set; }
+        public string filter { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
@@ -28,7 +31,7 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         [ApiMember(Name = "StartDate", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "filter", Description = "Comma separated list of Collection Types to filter (movies,tvshows,music,musicvideos,boxsets", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
 
         public string UserID { get; set; }
         public string Date { get; set; }
@@ -68,7 +71,12 @@ namespace playback_reporting.Api
 
         public object Get(GetUserReportData report)
         {
-            List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID);
+            string[] filter_tokens = new string[0];
+            if (report.filter != null)
+            {
+                filter_tokens = report.filter.Split(',');
+            }
+            List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
 
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
@@ -93,7 +101,12 @@ namespace playback_reporting.Api
 
         public object Get(GetUsageStats activity)
         {
-            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays);
+            string[] filter_tokens = new string[0];
+            if (activity.filter != null)
+            {
+                filter_tokens = activity.filter.Split(',');
+            }
+            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays, filter_tokens);
 
             List<Dictionary<string, object>> user_usage_data = new List<Dictionary<string, object>>();
             foreach (string user_id in results.Keys)

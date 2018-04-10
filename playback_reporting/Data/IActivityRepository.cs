@@ -8,7 +8,7 @@ namespace playback_reporting.Data
     public interface IActivityRepository
     {
         void AddPlaybackAction(PlaybackInfo play_info);
-        List<Dictionary<string, string>> GetUsageForUser(string date, string user_id);
-        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays);
+        List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] filter);
+        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types);
     }
 }

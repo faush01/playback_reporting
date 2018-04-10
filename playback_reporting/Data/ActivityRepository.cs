@@ -14,12 +14,16 @@ namespace playback_reporting.Data
     {
         private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
+        private Dictionary<string, string> type_map = new Dictionary<string, string>();
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
             DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
             _logger = logger;
+
+            type_map.Add("movies", "Movie");
+            type_map.Add("series", "Episode");
         }
 
         public void Initialize()
@@ -113,12 +117,22 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id)
+        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
         {
+            List<string> type_list = new List<string>();
+            foreach (string media_type in types)
+            {
+                if (type_map.ContainsKey(media_type))
+                {
+                    type_list.Add("'" + type_map[media_type] + "'");
+                }
+            }
+
             string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
+                               "AND ItemType IN (" + string.Join(",", type_list) + ") " +
                                "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
@@ -154,11 +168,21 @@ namespace playback_reporting.Data
             return items;
         }
 
-        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays)
+        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types)
         {
+            List<string> type_list = new List<string>();
+            foreach (string media_type in types)
+            {
+                if (type_map.ContainsKey(media_type))
+                {
+                    type_list.Add("'" + type_map[media_type] + "'");
+                }
+            }
+
             string sql_query = "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @start_date " +
+                               "AND ItemType IN (" + string.Join(",", type_list) + ") " +
                                "GROUP BY UserId, date " +
                                "ORDER BY UserId, date ASC";
 
@@ -172,6 +196,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
                         statement.TryBind("@start_date", from_date.ToString("yyyy-MM-dd"));
+
                         foreach (var row in statement.ExecuteQuery())
                         {
                             string user_id = row[0].ToString();
