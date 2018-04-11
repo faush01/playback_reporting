@@ -15,7 +15,7 @@ namespace playback_reporting.Data
         public string PlaybackMethod { get; set; }
         public string ClientName { get; set; }
         public string DeviceName { get; set; }
-        public int PlaybackDuration { get; set; }
+        public int PlaybackDuration { get; set; } = 0;
 
     }
 }

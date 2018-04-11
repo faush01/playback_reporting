@@ -95,7 +95,7 @@ namespace playback_reporting
                 // if playback duration was long enough save the action
                 if (tracker.TrackedPlaybackInfo.PlaybackDuration > 20)
                 {
-                    _logger.Info("Staving playback tracking activity in DB");
+                    _logger.Info("Saving playback tracking activity in DB");
                     _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
                 }
                 else
@@ -133,6 +133,16 @@ namespace playback_reporting
             string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
             if (playback_trackers.ContainsKey(key))
             {
+                _logger.Info("Existing tracker found! : " + key);
+
+                PlaybackTracker track = playback_trackers[key];
+                if (track.TrackedPlaybackInfo != null)
+                {
+                    _logger.Info("Saving playback tracking activity in DB");
+                    track.CalculateDuration();
+                    _repository.AddPlaybackAction(track.TrackedPlaybackInfo);
+                }
+
                 _logger.Info("Removing existing tracker : " + key);
                 playback_trackers.Remove(key);
             }
@@ -149,7 +159,7 @@ namespace playback_reporting
         public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
         {
             _logger.Info("StartPlaybackTimer : Entered");
-            await System.Threading.Tasks.Task.Delay(10000);
+            await System.Threading.Tasks.Task.Delay(20000);
 
             try
             {

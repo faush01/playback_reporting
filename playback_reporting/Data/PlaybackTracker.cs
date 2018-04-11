@@ -58,12 +58,10 @@ namespace playback_reporting.Data
             event_tracking.Add(play_event);
             _logger.Info("PlaybackTracker : Adding Stop Event : " + play_event.Key.ToString());
 
-            int duration = GetDuration();
-            _logger.Info("PlaybackTracker : Calculated total play duration : " + duration);
-            TrackedPlaybackInfo.PlaybackDuration = duration;
+            CalculateDuration();
         }
 
-        private int GetDuration()
+        public void CalculateDuration()
         {
             int duration = 0;
 
@@ -91,7 +89,11 @@ namespace playback_reporting.Data
                 prev_event = e;
             }
 
-            return duration;
+            _logger.Info("PlaybackTracker : Calculated total play duration : " + duration);
+            if (TrackedPlaybackInfo != null)
+            {
+                TrackedPlaybackInfo.PlaybackDuration = duration;
+            }
         }
 
     }

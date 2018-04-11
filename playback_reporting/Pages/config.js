@@ -1,6 +1,8 @@
 ﻿define([], function () {
     'use strict';
 
+    var my_bar_chart = null; 
+
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -48,6 +50,7 @@
                 var data_point = user_usage.user_usage[point_date];
                 if (data_t) {
                     data_point = data_point / 60;
+                    data_point = precisionRound(data_point, 2);
                 }
                 point_data.push(data_point);
             }
@@ -112,7 +115,13 @@
 
         var chart_canvas = view.querySelector('#user_stats_chart_canvas');
         var ctx = chart_canvas.getContext('2d');
-        var my_bar_chart = new Chart(ctx, {
+
+        if (my_bar_chart) {
+            console.log("destroy() existing chart");
+            my_bar_chart.destroy();
+        }
+
+        my_bar_chart = new Chart(ctx, {
             type: 'bar',
             data: userUsageChartData,//barChartData,
             options: {
@@ -237,6 +246,11 @@
         else {
             return value;
         }
+    }
+
+    function precisionRound(number, precision) {
+        var factor = Math.pow(10, precision);
+        return Math.round(number * factor) / factor;
     }
 
     return function (view, params) {
