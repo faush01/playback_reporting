@@ -117,6 +117,28 @@ namespace playback_reporting.Data
             }
         }
 
+        public void UpdatePlaybackAction(PlaybackInfo play_info)
+        {
+            string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection())
+                {
+                    connection.RunInTransaction(db =>
+                    {
+                        using (var statement = db.PrepareStatement(sql_add))
+                        {
+                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
+                            statement.TryBind("@UserId", play_info.UserId);
+                            statement.TryBind("@ItemId", play_info.ItemId);
+                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                            statement.MoveNext();
+                        }
+                    }, TransactionMode);
+                }
+            }
+        }
+
         public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
         {
             bool show_all_types = false;

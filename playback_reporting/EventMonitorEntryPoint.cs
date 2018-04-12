@@ -76,6 +76,11 @@ namespace playback_reporting
                 //_logger.Info("Playback progress tracker found, processing progress : " + key);
                 PlaybackTracker tracker = playback_trackers[key];
                 tracker.ProcessProgress(e);
+                if (tracker.TrackedPlaybackInfo != null)
+                {
+                    _logger.Debug("Saving playback tracking activity in DB");
+                    _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
+                }
             }
             else
             {
@@ -93,14 +98,14 @@ namespace playback_reporting
                 tracker.ProcessStop(e);
 
                 // if playback duration was long enough save the action
-                if (tracker.TrackedPlaybackInfo.PlaybackDuration > 20)
+                if (tracker.TrackedPlaybackInfo != null)
                 {
                     _logger.Info("Saving playback tracking activity in DB");
-                    _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
+                    _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
                 }
                 else
                 {
-                    _logger.Info("Playback duration not long enough, not storing activity in DB");
+                    _logger.Info("Playback stop but TrackedPlaybackInfo not found! not storing activity in DB");
                 }
 
                 // remove the playback tracer from the map as we no longer need it.
@@ -138,14 +143,15 @@ namespace playback_reporting
                 PlaybackTracker track = playback_trackers[key];
                 if (track.TrackedPlaybackInfo != null)
                 {
-                    _logger.Info("Saving playback tracking activity in DB");
+                    _logger.Info("Saving existing playback tracking activity in DB");
                     track.CalculateDuration();
-                    _repository.AddPlaybackAction(track.TrackedPlaybackInfo);
+                    _repository.UpdatePlaybackAction(track.TrackedPlaybackInfo);
                 }
 
                 _logger.Info("Removing existing tracker : " + key);
                 playback_trackers.Remove(key);
             }
+
             _logger.Info("Adding playback tracker : " + key);
             PlaybackTracker tracker = new PlaybackTracker(key, _logger);
             tracker.ProcessStart(e);
@@ -223,17 +229,29 @@ namespace playback_reporting
                     play_info.ItemName = item_name;
                     play_info.ItemType = item_type;
 
-                    // update tracker with playback info
-                    string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-                    if (playback_trackers.ContainsKey(key))
+                    if (event_playing_id == session_playing_id && event_user_id == session_user_id)
                     {
-                        _logger.Info("Playback tracker found, adding playback info : " + key);
-                        PlaybackTracker tracker = playback_trackers[key];
-                        tracker.TrackedPlaybackInfo = play_info;
+                        _logger.Info("StartPlaybackTimer : All matches, playback registered");
+
+                        // update tracker with playback info
+                        string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+                        if (playback_trackers.ContainsKey(key))
+                        {
+                            _logger.Info("Playback tracker found, adding playback info : " + key);
+                            PlaybackTracker tracker = playback_trackers[key];
+                            tracker.TrackedPlaybackInfo = play_info;
+
+                            _logger.Info("Saving playback tracking activity in DB");
+                            _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
+                        }
+                        else
+                        {
+                            _logger.Info("Playback trackler not found : " + key);
+                        }
                     }
                     else
                     {
-                        _logger.Info("Playback trackler not found : " + key);
+                        _logger.Info("StartPlaybackTimer : Details do not match for play item");
                     }
 
                 }
