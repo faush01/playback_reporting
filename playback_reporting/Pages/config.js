@@ -22,7 +22,7 @@
         }
 
         if (!usage_data || usage_data.length == 0) {
-            Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then ckeck again.", title: "No playback data!" });
+            Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then check again.", title: "No playback data!" });
             return;
         }
 
