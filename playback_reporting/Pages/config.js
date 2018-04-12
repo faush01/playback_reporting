@@ -38,6 +38,14 @@
         var data_type = view.querySelector('#data_type');
         var data_t = data_type.options[data_type.selectedIndex].value == "time";
 
+        var chart_title = "";
+        if (data_t) {
+            chart_title = "User Playback Report (Minutes Played)";
+        }
+        else {
+            chart_title = "User Playback Report (Play Count)";
+        }
+
         var user_ids = []
 
         // process user usage into data for chart
@@ -127,7 +135,7 @@
             options: {
                 title: {
                     display: true,
-                    text: 'Playback Stats'
+                    text: chart_title
                 },
                 tooltips: {
                     mode: 'index',
