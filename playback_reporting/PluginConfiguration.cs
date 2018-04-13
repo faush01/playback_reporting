@@ -5,9 +5,8 @@ using System.Text;
 
 namespace playback_reporting
 {
-    class PluginConfiguration: BasePluginConfiguration
+    public class PluginConfiguration: BasePluginConfiguration
     {
-        public int MaxDataAge { set; get; } = 30;
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using MediaBrowser.Model.Activity;
+﻿using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Tasks;
 using System;
@@ -13,19 +14,19 @@ namespace playback_reporting
     {
         private IActivityManager _activity;
         private ILogger _logger;
+        private readonly IServerConfigurationManager _config;
 
         public string Name => "Playback History Trim";
         public string Key => "PlaybackHistoryTrimTask";
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
-        private static PluginConfiguration PluginConfiguration => Plugin.Instance.Configuration;
 
-        public PluginTask(IActivityManager activity, ILogManager logger)
+        public PluginTask(IActivityManager activity, ILogManager logger, IServerConfigurationManager config)
         {
             _logger = logger.GetLogger("PlaybackReporting");
             _activity = activity;
+            _config = config;
         }
-
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
             var trigger = new TaskTriggerInfo
@@ -43,7 +44,9 @@ namespace playback_reporting
             {
                 _logger.Info("Playback History Trim");
 
-                int max_data_age = PluginConfiguration.MaxDataAge;
+                ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+
+                int max_data_age = config.MaxDataAge;
 
                 _logger.Info("MaxDataAge : " + max_data_age);
 
