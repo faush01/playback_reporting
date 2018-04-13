@@ -1,4 +1,4 @@
-<div data-role="page" class="page type-interior pluginConfigurationPage userUsageStatsPage" 
+<div data-role="page" class="page type-interior pluginConfigurationPage withTabs" 
 	 data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton" 
 	 data-controller="__plugin/ConfigJs">
 	<div data-role="content">
@@ -8,7 +8,7 @@
 			<select id="data_type">
 				<option value="count">Play Count</option>
 				<option value="time">Play Time</option>
-			</select> <input type="checkbox" id="media_type_all" checked>All <input type="checkbox" id="media_type_movies" checked>Movies <input type="checkbox" id="media_type_series" checked>TV Shows
+			</select> <input type="checkbox" id="media_type_all" checked>All <input type="checkbox" id="media_type_movies" checked disabled>Movies <input type="checkbox" id="media_type_series" checked disabled>TV Shows
 			<br />
 			<div style="width: 75%">
 				<canvas id="user_stats_chart_canvas"></canvas>

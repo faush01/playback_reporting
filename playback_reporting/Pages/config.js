@@ -1,4 +1,4 @@
-﻿define([], function () {
+﻿define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
     var my_bar_chart = null; 
@@ -261,11 +261,30 @@
         return Math.round(number * factor) / factor;
     }
 
+    function getTabs() {
+        var tabs = [
+            {
+                href: Dashboard.getConfigurationPageUrl('MainConfig'),
+                name: 'User Playback Report'
+            }/*,
+            {
+                href: Dashboard.getConfigurationPageUrl('DayByHourReport'),
+                name: 'Day by Hour Report'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('PlaybackReportingSettings'),
+                name: 'Settings'
+            }*/];
+        return tabs;
+    }
+
     return function (view, params) {
 
         // init code here
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
+
+            libraryMenu.setTabs('playbackreporting', 0, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
@@ -289,7 +308,15 @@
                     var table_body = view.querySelector('#user_usage_report_results');
                     table_body.innerHTML = "";
                     var filter = [];
-                    if (all_select.checked) { filter.push("all"); }
+                    if (all_select.checked) {
+                        filter.push("all");
+                        movies_select.disabled = true;
+                        series_select.disabled = true;
+                    }
+                    else {
+                        movies_select.disabled = false;
+                        series_select.disabled = false;
+                    }
                     if (movies_select.checked) { filter.push("movies"); }
                     if (series_select.checked) { filter.push("series"); }
                     var data_t = data_type.options[data_type.selectedIndex].value;
