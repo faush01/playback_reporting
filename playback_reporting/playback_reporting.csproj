@@ -7,13 +7,17 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\Chart.bundle.min.js" />
-    <None Remove="Pages\config.html" />
-    <None Remove="Pages\config.js" />
+    <None Remove="Pages\playback_report_settings.html" />
+    <None Remove="Pages\playback_report_settings.js" />
+    <None Remove="Pages\user_playback_report.html" />
+    <None Remove="Pages\user_playback_report.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\Chart.bundle.min.js" />
-    <EmbeddedResource Include="Pages\config.html" />
-    <EmbeddedResource Include="Pages\config.js" />
+    <EmbeddedResource Include="Pages\playback_report_settings.html" />
+    <EmbeddedResource Include="Pages\playback_report_settings.js" />
+    <EmbeddedResource Include="Pages\user_playback_report.html" />
+    <EmbeddedResource Include="Pages\user_playback_report.js" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mediabrowser.server.core" Version="3.3.13" />

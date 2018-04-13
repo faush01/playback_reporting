@@ -19,6 +19,7 @@ namespace playback_reporting
         public override Guid Id => new Guid("9E6EB40F-9A1A-4CA1-A299-62B4D252453E");
         public override string Description => "Show reports for playback activity";
         public static Plugin Instance { get; private set; }
+        public PluginConfiguration PluginConfiguration => Configuration;
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
@@ -26,19 +27,29 @@ namespace playback_reporting
             {
                 new PluginPageInfo
                 {
-                    Name = "MainConfig",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.config.html",
+                    Name = "user_playback_report",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_playback_report.html",
                     EnableInMainMenu = true
                 },
                 new PluginPageInfo
                 {
-                    Name = "ConfigJs",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.config.js"
+                    Name = "user_playback_report.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_playback_report.js"
                 },
                 new PluginPageInfo
                 {
                     Name = "Chart.bundle.min.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.Chart.bundle.min.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "playback_report_settings",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.html"
+                },
+                new PluginPageInfo
+                {
+                    Name = "playback_report_settings.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.js"
                 }
             };
         }

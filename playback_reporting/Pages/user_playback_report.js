@@ -264,17 +264,13 @@
     function getTabs() {
         var tabs = [
             {
-                href: Dashboard.getConfigurationPageUrl('MainConfig'),
+                href: Dashboard.getConfigurationPageUrl('user_playback_report'),
                 name: 'User Playback Report'
-            }/*,
-            {
-                href: Dashboard.getConfigurationPageUrl('DayByHourReport'),
-                name: 'Day by Hour Report'
             },
             {
-                href: Dashboard.getConfigurationPageUrl('PlaybackReportingSettings'),
+                href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
-            }*/];
+            }];
         return tabs;
     }
 
@@ -284,7 +280,7 @@
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playbackreporting', 0, getTabs);
+            libraryMenu.setTabs('playback_reporting', 0, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 

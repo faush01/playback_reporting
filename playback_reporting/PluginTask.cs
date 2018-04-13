@@ -18,6 +18,7 @@ namespace playback_reporting
         public string Key => "PlaybackHistoryTrimTask";
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
+        private static PluginConfiguration PluginConfiguration => Plugin.Instance.Configuration;
 
         public PluginTask(IActivityManager activity, ILogManager logger)
         {
@@ -41,6 +42,10 @@ namespace playback_reporting
             await System.Threading.Tasks.Task.Run(() =>
             {
                 _logger.Info("Playback History Trim");
+
+                int max_data_age = PluginConfiguration.MaxDataAge;
+
+                _logger.Info("MaxDataAge : " + max_data_age);
 
             }, cancellationToken);
 

@@ -7,5 +7,7 @@ namespace playback_reporting
 {
     class PluginConfiguration: BasePluginConfiguration
     {
+        public int MaxDataAge { set; get; } = 30;
+
     }
 }
