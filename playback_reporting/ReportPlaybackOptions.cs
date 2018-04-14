@@ -6,7 +6,7 @@ namespace playback_reporting
 {
     public class ReportPlaybackOptions
     {
-        public int MaxDataAge { set; get; }
+        public int MaxDataAge { set; get; } = 3;
 
     }
 }
