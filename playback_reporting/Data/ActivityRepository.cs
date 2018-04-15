@@ -86,6 +86,143 @@ namespace playback_reporting.Data
             }
         }
 
+        public int ImportRawData(string data)
+        {
+            int count = 0;
+            _logger.Info("Loading Data");
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    StringReader sr = new StringReader(data);
+
+                    string line = sr.ReadLine();
+                    while (line != null)
+                    {
+                        string[] tokens = line.Split('\t');
+                        _logger.Info("Line Length : " + tokens.Length);
+                        if (tokens.Length != 9)
+                        {
+                            line = sr.ReadLine();
+                            continue;
+                        }
+
+                        string date = tokens[0];
+                        string user_id = tokens[1];
+                        string item_id = tokens[2];
+                        string item_type = tokens[3];
+                        string item_name = tokens[4];
+                        string play_method = tokens[5];
+                        string client_name = tokens[6];
+                        string device_name = tokens[7];
+                        string duration = tokens[8];
+
+                        //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
+
+                        string sql = "select rowid from PlaybackActivity where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
+                        using (var statement = connection.PrepareStatement(sql))
+                        {
+
+                            statement.TryBind("@DateCreated", date);
+                            statement.TryBind("@UserId", user_id);
+                            statement.TryBind("@ItemId", item_id);
+                            bool found = false;
+                            foreach (var row in statement.ExecuteQuery())
+                            {
+                                found = true;
+                                break;
+                            }
+
+                            if(found == false)
+                            {
+                                _logger.Info("Not Found, Adding");
+
+                                string sql_add = "insert into PlaybackActivity " +
+                                    "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
+                                    "values " +
+                                    "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration)";
+                                
+                                connection.RunInTransaction(db =>
+                                {
+                                    using (var add_statment = db.PrepareStatement(sql_add))
+                                    {
+                                        add_statment.TryBind("@DateCreated", date);
+                                        add_statment.TryBind("@UserId", user_id);
+                                        add_statment.TryBind("@ItemId", item_id);
+                                        add_statment.TryBind("@ItemType", item_type);
+                                        add_statment.TryBind("@ItemName", item_name);
+                                        add_statment.TryBind("@PlaybackMethod", play_method);
+                                        add_statment.TryBind("@ClientName", client_name);
+                                        add_statment.TryBind("@DeviceName", device_name);
+                                        add_statment.TryBind("@PlayDuration", duration);
+                                        add_statment.MoveNext();
+                                    }
+                                }, TransactionMode);
+                                count++;
+                            }
+                            else
+                            {
+                                //_logger.Info("Found, ignoring");
+                            }
+                        }
+
+                        line = sr.ReadLine();
+                    }
+                }
+            }
+            return count;
+        }
+
+        public string ExportRawData()
+        {
+            StringWriter sw = new StringWriter();
+
+            string sql_raw = "SELECT * FROM PlaybackActivity ORDER BY DateCreated";
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql_raw))
+                    {
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            List<string> row_data = new List<string>();
+                            for (int x = 0; x < row.Count; x++)
+                            {
+                                row_data.Add(row[x].ToString());
+                            }
+                            sw.WriteLine(string.Join("\t", row_data));
+                        }
+                    }
+                }
+            }
+            sw.Flush();
+            return sw.ToString();
+        }
+
+        public void DeleteOldData(DateTime? del_before)
+        {
+            string sql = "delete from PlaybackActivity";
+            if(del_before != null)
+            {
+                DateTime date = (DateTime)del_before;
+                sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
+            }
+
+            _logger.Info("DeleteOldData : " + sql);
+
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection())
+                {
+                    connection.RunInTransaction(db =>
+                    {
+                        db.Execute(sql);
+                    }, TransactionMode);
+                }
+            }
+        }
+
         public void AddPlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "insert into PlaybackActivity " +

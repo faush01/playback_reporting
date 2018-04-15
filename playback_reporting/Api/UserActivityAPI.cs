@@ -10,9 +10,28 @@ using MediaBrowser.Model.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 
 namespace playback_reporting.Api
 {
+    // http://localhost:8096/emby/user_usage_stats/import_backup
+    [Route("/user_usage_stats/import_backup", "POST", Summary = "Post a backup for importing")]
+    public class ImportBackup : IRequiresRequestStream, IReturnVoid
+    {
+        public Stream RequestStream { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/load_backup
+    [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
+    public class LoadBackup : IReturn<String>
+    {
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/save_backup
+    [Route("/user_usage_stats/save_backup", "GET", Summary = "Saves a backup of the playback report data to the backup path")]
+    public class SaveBackup : IReturn<ReportDayUsage>
+    {
+    }
 
     // http://localhost:8096/emby/user_usage_stats/30/PlayActivity
     [Route("/user_usage_stats/{NumberOfDays}/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
@@ -40,7 +59,7 @@ namespace playback_reporting.Api
         public string filter { get; set; }
     }
 
-    public class UserActivityAPI : IService
+    public class UserActivityAPI : IService, IRequiresRequest
     {
 
         private readonly ILogger _logger;
@@ -71,6 +90,8 @@ namespace playback_reporting.Api
             Repository = repo;
         }
 
+        public IRequest Request { get; set; }
+
         public object Get(GetUserReportData report)
         {
             string[] filter_tokens = new string[0];
@@ -82,7 +103,7 @@ namespace playback_reporting.Api
 
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
-            foreach(Dictionary<string, string> item_data in results)
+            foreach (Dictionary<string, string> item_data in results)
             {
                 Dictionary<string, object> item_info = new Dictionary<string, object>();
 
@@ -99,6 +120,87 @@ namespace playback_reporting.Api
             }
 
             return user_activity;
+        }
+
+        public void Post(ImportBackup request)
+        {
+            string headers = "";
+            foreach(var head in Request.Headers.Keys)
+            {
+                headers += head + " : " + Request.Headers[head] + "\r\n";
+            }
+            _logger.Info("Header : " + headers);
+
+            _logger.Info("Files Length : " + Request.Files.Length);
+
+            _logger.Info("ContentType : " + Request.ContentType);
+
+            Stream input_data = request.RequestStream;
+            _logger.Info("Stream Info : " + input_data.CanRead);
+
+            byte[] bytes = new byte[10000];
+            int read = input_data.Read(bytes, 0, 10000);
+            _logger.Info("Bytes Read : " + read);
+            _logger.Info("Read : " + bytes);
+        }
+
+        public object Get(LoadBackup load_baclup)
+        {
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            FileInfo fi = new FileInfo(config.BackupPath);
+            if (fi.Exists == false)
+            {
+                return new List<string>() { "Backup file does not exist" };
+            }
+
+            int count = 0;
+            try
+            {
+                string load_data = "";
+                using (StreamReader sr = new StreamReader(new FileStream(config.BackupPath, FileMode.Open)))
+                {
+                    load_data = sr.ReadToEnd();
+                }
+                count = Repository.ImportRawData(load_data);
+            }
+            catch (Exception e)
+            {
+                return new List<string>() { e.Message };
+            }
+
+            return new List<string>() { "Backup loaded " + count + " items" };
+        }
+        public object Get(SaveBackup save_baclup)
+        {
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+
+            if(string.IsNullOrEmpty(config.BackupPath))
+            {
+                return new List<string>() { "No backup path set" };
+            }
+
+            string raw_data = Repository.ExportRawData();
+
+            DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
+            _logger.Info("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
+            if ((fi.Attributes & FileAttributes.Directory) == FileAttributes.Directory && fi.Exists)
+            {
+                string backup_file = Path.Combine(config.BackupPath, "PlaybackReportingBackup.tsv");
+                config.BackupPath = backup_file;
+                _logger.Info("Appending backup file name : " + config.BackupPath);
+                _config.SaveConfiguration();
+            }
+
+            try
+            {
+                System.IO.File.WriteAllText(config.BackupPath, raw_data);
+            }
+            catch(Exception e)
+            {
+                return new List<string>() { e.Message };
+            }
+
+            return new List<string>() { "Backup saved"};
         }
 
         public object Get(GetUsageStats activity)

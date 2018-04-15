@@ -5,9 +5,9 @@
 		<div class="content-primary">
 			<h2>Playback Report Settings</h2>
 
-			Keep data for 
+			Keep data for
 			<select id="max_data_age_select">
-				<option value="0">Clear Data</option>
+				<option value="0">Clear All</option>
 				<option value="1">1 Month</option>
 				<option value="2">2 Months</option>
 				<option value="3">3 Months</option>
@@ -17,7 +17,15 @@
 				<option value="36">3 Years</option>
 				<option value="-1">Forever</option>
 			</select>
-			<br />
+
+			<p>
+				Backup Path : <span id="backup_path_label"></span><br />
+			</p>
+			<p>
+				<button id="set_backup_path">Set Backup Path</button> 
+				<button id="backup_data_now">Save Backup Data</button>
+				<button id="load_backup_data">Load Backup Data</button>
+			</p>
 
 		</div>
 	</div>

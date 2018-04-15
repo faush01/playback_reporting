@@ -1,7 +1,9 @@
 ﻿using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Tasks;
+using playback_reporting.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,17 +17,25 @@ namespace playback_reporting
         private IActivityManager _activity;
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
+        private readonly IFileSystem _fileSystem;
 
         public string Name => "Playback History Trim";
         public string Key => "PlaybackHistoryTrimTask";
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
 
-        public PluginTask(IActivityManager activity, ILogManager logger, IServerConfigurationManager config)
+        private playback_reporting.Data.IActivityRepository Repository;
+
+        public PluginTask(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
             _logger = logger.GetLogger("PlaybackReporting");
             _activity = activity;
             _config = config;
+            _fileSystem = fileSystem;
+
+            var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            repo.Initialize();
+            Repository = repo;
         }
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
@@ -42,7 +52,7 @@ namespace playback_reporting
 
             await System.Threading.Tasks.Task.Run(() =>
             {
-                _logger.Info("Playback History Trim");
+                _logger.Info("Playback Reporting Data Trim");
 
                 ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
@@ -50,6 +60,21 @@ namespace playback_reporting
 
                 _logger.Info("MaxDataAge : " + max_data_age);
 
+                if(max_data_age == -1)
+                {
+                    _logger.Info("Keep data forever, not doing any data cleanup");
+                    return;
+                }
+                else if(max_data_age == 0)
+                {
+                    _logger.Info("Removing all data");
+                    Repository.DeleteOldData(null);
+                }
+                else
+                {
+                    DateTime del_defore = DateTime.Now.AddMonths(max_data_age * -1);
+                    Repository.DeleteOldData(del_defore);
+                }
             }, cancellationToken);
 
         }
