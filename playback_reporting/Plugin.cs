@@ -50,6 +50,16 @@ namespace playback_reporting
                 {
                     Name = "playback_report_settings.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "hourly_usage_report",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.hourly_usage_report.html"
+                },
+                new PluginPageInfo
+                {
+                    Name = "hourly_usage_report.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.hourly_usage_report.js"
                 }
             };
         }

@@ -196,7 +196,7 @@ namespace playback_reporting.Api
                 string backup_file = Path.Combine(config.BackupPath, "PlaybackReportingBackup.tsv");
                 config.BackupPath = backup_file;
                 _logger.Info("Appending backup file name : " + config.BackupPath);
-                _config.SaveConfiguration();
+                _config.SaveReportPlaybackOptions(config);
             }
 
             try

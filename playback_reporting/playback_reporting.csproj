@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3;</TargetFrameworks>
-    <AssemblyVersion>1.0.6.0</AssemblyVersion>
-    <FileVersion>1.0.6.0</FileVersion>
-    <Version>1.0.6</Version>
+    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+    <FileVersion>1.0.7.0</FileVersion>
+    <Version>1.0.7</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\Chart.bundle.min.js" />
+    <None Remove="Pages\hourly_usage_report.html" />
+    <None Remove="Pages\hourly_usage_report.js" />
     <None Remove="Pages\playback_report_settings.html" />
     <None Remove="Pages\playback_report_settings.js" />
     <None Remove="Pages\user_playback_report.html" />
@@ -14,6 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\Chart.bundle.min.js" />
+    <EmbeddedResource Include="Pages\hourly_usage_report.html" />
+    <EmbeddedResource Include="Pages\hourly_usage_report.js" />
     <EmbeddedResource Include="Pages\playback_report_settings.html" />
     <EmbeddedResource Include="Pages\playback_report_settings.js" />
     <EmbeddedResource Include="Pages\user_playback_report.html" />

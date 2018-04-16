@@ -265,7 +265,11 @@
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'User Playback Report'
+                name: 'Playback Report'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
+                name: 'Hourly Usage'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),

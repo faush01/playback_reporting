@@ -35,7 +35,11 @@
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'User Playback Report'
+                name: 'Playback Report'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
+                name: 'Hourly Usage'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
@@ -71,7 +75,7 @@
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 1, getTabs);
+            libraryMenu.setTabs('playback_reporting', 2, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", showFolderPicker);

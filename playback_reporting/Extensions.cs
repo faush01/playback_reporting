@@ -11,7 +11,7 @@ namespace playback_reporting
         }
         public static void SaveReportPlaybackOptions(this IConfigurationManager manager, ReportPlaybackOptions options)
         {
-            manager.SaveConfiguration("autoorganize", options);
+            manager.SaveConfiguration("playback_reporting", options);
         }
     }
 
