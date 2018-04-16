@@ -59,6 +59,14 @@ namespace playback_reporting.Api
         public string filter { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/30/HourlyReport
+    [Route("/user_usage_stats/{NumberOfDays}/HourlyReport", "GET", Summary = "Gets a report of the averall activoty per hour")]
+    public class GetHourlyReport : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+
+        public int NumberOfDays { get; set; }
+    }
     public class UserActivityAPI : IService, IRequiresRequest
     {
 
@@ -71,7 +79,7 @@ namespace playback_reporting.Api
 
         private IActivityRepository Repository;
 
-        public UserActivityAPI(ILogger logger, 
+        public UserActivityAPI(ILogger logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
             IJsonSerializer jsonSerializer,
@@ -125,7 +133,7 @@ namespace playback_reporting.Api
         public void Post(ImportBackup request)
         {
             string headers = "";
-            foreach(var head in Request.Headers.Keys)
+            foreach (var head in Request.Headers.Keys)
             {
                 headers += head + " : " + Request.Headers[head] + "\r\n";
             }
@@ -174,7 +182,7 @@ namespace playback_reporting.Api
         {
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
-            if(string.IsNullOrEmpty(config.BackupPath))
+            if (string.IsNullOrEmpty(config.BackupPath))
             {
                 return new List<string>() { "No backup path set" };
             }
@@ -195,12 +203,12 @@ namespace playback_reporting.Api
             {
                 System.IO.File.WriteAllText(config.BackupPath, raw_data);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return new List<string>() { e.Message };
             }
 
-            return new List<string>() { "Backup saved"};
+            return new List<string>() { "Backup saved" };
         }
 
         public object Get(GetUsageStats activity)
@@ -224,7 +232,7 @@ namespace playback_reporting.Api
                 while (from_date < to_date)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");
-                    if(user_usage.ContainsKey(date_string) == false)
+                    if (user_usage.ContainsKey(date_string) == false)
                     {
                         userUsageByDate.Add(date_string, 0);
                     }
@@ -240,7 +248,7 @@ namespace playback_reporting.Api
                 MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
 
                 string user_name = "Not Known";
-                if(user != null)
+                if (user != null)
                 {
                     user_name = user.Name;
                 }
@@ -255,6 +263,26 @@ namespace playback_reporting.Api
 
             return user_usage_data;
         }
+
+        public object Get(GetHourlyReport request)
+        {
+            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.NumberOfDays);
+
+            for (int day = 0; day < 7; day++)
+            {
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    string key = day + "-" + hour.ToString("D2");
+                    if(report.ContainsKey(key) == false)
+                    {
+                        report.Add(key, 0);
+                    }
+                }
+            }
+
+            return report;
+        }
+
 
     }
 }

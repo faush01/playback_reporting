@@ -401,5 +401,64 @@ namespace playback_reporting.Data
 
             return usage;
         }
+
+        public SortedDictionary<string, int> GetHourlyUsageReport(int numberOfDays)
+        {
+            SortedDictionary<string, int> report_data = new SortedDictionary<string, int>();
+
+            DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+            string sql = "SELECT DateCreated, PlayDuration FROM PlaybackActivity WHERE DateCreated > @DateCreated";
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@DateCreated", from_date.ToString("yyyy-MM-dd"));
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            DateTime date = row[0].ReadDateTime().ToLocalTime();
+                            int duration = row[1].ToInt();
+
+                            int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
+                            _logger.Info("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
+                            while (duration > 0)
+                            {
+                                string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
+                                if (duration > seconds_left_in_hour)
+                                {
+                                    AddTimeToHours(report_data, hour_id, seconds_left_in_hour);
+                                }
+                                else
+                                {
+                                    AddTimeToHours(report_data, hour_id, duration);
+                                }
+
+                                duration = duration - seconds_left_in_hour;
+                                seconds_left_in_hour = 3600;
+                                date = date.AddHours(1);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return report_data;
+        }
+
+        private void AddTimeToHours(SortedDictionary<string, int> report_data, string key, int count)
+        {
+            _logger.Info("Adding Time : " + key + " - " + count);
+            if (report_data.ContainsKey(key))
+            {
+                report_data[key] += count;
+            }
+            else
+            {
+                report_data.Add(key, count);
+            }
+        }
     }
 }
