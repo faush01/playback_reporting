@@ -6,6 +6,8 @@
     <Version>1.0.7</Version>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Pages\breakdown_report.html" />
+    <None Remove="Pages\breakdown_report.js" />
     <None Remove="Pages\Chart.bundle.min.js" />
     <None Remove="Pages\hourly_usage_report.html" />
     <None Remove="Pages\hourly_usage_report.js" />
@@ -15,6 +17,8 @@
     <None Remove="Pages\user_playback_report.js" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Pages\breakdown_report.html" />
+    <EmbeddedResource Include="Pages\breakdown_report.js" />
     <EmbeddedResource Include="Pages\Chart.bundle.min.js" />
     <EmbeddedResource Include="Pages\hourly_usage_report.html" />
     <EmbeddedResource Include="Pages\hourly_usage_report.js" />

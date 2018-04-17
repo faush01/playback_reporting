@@ -67,6 +67,18 @@ namespace playback_reporting.Api
 
         public int NumberOfDays { get; set; }
     }
+
+    // http://localhost:8096/emby/user_usage_stats/90/ItemType/BreakdownReport
+    [Route("/user_usage_stats/{NumberOfDays}/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
+    public class GetBreakdownReport : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "BreakdownType", Description = "Breakdown type", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
+
+        public int NumberOfDays { get; set; }
+        public string BreakdownType { get; set; }
+    }
+
     public class UserActivityAPI : IService, IRequiresRequest
     {
 
@@ -276,6 +288,32 @@ namespace playback_reporting.Api
                     if(report.ContainsKey(key) == false)
                     {
                         report.Add(key, 0);
+                    }
+                }
+            }
+
+            return report;
+        }
+
+        public object Get(GetBreakdownReport request)
+        {
+            List<Dictionary<string, object>> report = Repository.GetBreakdownReport(request.NumberOfDays, request.BreakdownType);
+
+            if (request.BreakdownType == "UserId")
+            {
+                foreach (var row in report)
+                {
+                    string user_id = row["label"] as string;
+                    Guid user_guid = new Guid(user_id);
+                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+
+                    if (user != null)
+                    {
+                        row["label"] = user.Name;
+                    }
+                    else
+                    {
+                        row["label"] = "unknown";
                     }
                 }
             }

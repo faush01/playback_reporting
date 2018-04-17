@@ -272,6 +272,10 @@
                 name: 'Hourly Usage'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
+                name: 'Breakdown Report'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];

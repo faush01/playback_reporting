@@ -42,6 +42,10 @@
                 name: 'Hourly Usage'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
+                name: 'Breakdown Report'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];
@@ -75,7 +79,7 @@
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 2, getTabs);
+            libraryMenu.setTabs('playback_reporting', 3, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", showFolderPicker);

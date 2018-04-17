@@ -1,0 +1,34 @@
+﻿<div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+	 data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton"
+	 data-controller="__plugin/breakdown_report.js">
+	<div data-role="content">
+		<div class="content-primary">
+			<h2>Breakdown Report</h2>
+
+
+			<table border="0">
+				<tr>
+					<td><canvas id="User_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
+					<td><canvas id="User_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+				</tr>
+				<tr>
+					<td><canvas id="ItemType_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
+					<td><canvas id="ItemType_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+				</tr>
+				<tr>
+					<td><canvas id="PlayMethod_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
+					<td><canvas id="PlayMethod_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+				</tr>
+				<tr>
+					<td><canvas id="ClientName_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
+					<td><canvas id="ClientName_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+				</tr>
+				<tr>
+					<td><canvas id="DeviceName_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
+					<td><canvas id="DeviceName_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+				</tr>
+			</table>
+
+		</div>
+	</div>
+</div>

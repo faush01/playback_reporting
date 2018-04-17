@@ -110,6 +110,10 @@
                 name: 'Hourly Usage'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
+                name: 'Breakdown Report'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];
@@ -125,7 +129,7 @@
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
                 
-                var url = "/emby/user_usage_stats/30/HourlyReport?stamp=" + new Date().getTime();
+                var url = "/emby/user_usage_stats/90/HourlyReport?stamp=" + new Date().getTime();
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
