@@ -10,7 +10,7 @@
             url: url_to_get,
             dataType: "json"
         });
-    };	
+    };
 
     function precisionRound(number, precision) {
         var factor = Math.pow(10, precision);
@@ -19,25 +19,22 @@
 
     function draw_graph(view, local_chart, usage_data) {
 
-        var days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        console.log("data: " + usage_data);
 
         //console.log(usage_data);
         var chart_labels = [];
         var chart_data = [];
         for (var key in usage_data) {
-            //console.log(key + " " + usage_data[key]);
-            var day_index = key.substring(0, 1);
-            var day_name = days_of_week[day_index];
-            var day_hour = key.substring(2);
-            chart_labels.push(day_name + " " + day_hour);
-            chart_data.push(precisionRound(usage_data[key] / 60, 2));
+            console.log(key + " " + usage_data[key]);
+            var label = (key * 5) + "-" + ((key * 5) + 4)
+            chart_labels.push(label);
+            chart_data.push(usage_data[key]);
         }
-        chart_labels.push("00");
 
         var barChartData = {
             labels: chart_labels, //['Mon 00', 'Mon 01', 'Mon 02', 'Mon 03', 'Mon 04', 'Mon 05', 'Mon 06'],
             datasets: [{
-                label: 'Minutes',
+                label: 'Count',
                 type: "bar",
                 backgroundColor: '#c39bd3',
                 data: chart_data, // [10,20,30,40,50,60,70]
@@ -52,7 +49,7 @@
             }*/]
         };
 
-        var chart_canvas = view.querySelector('#hourly_usage_chart_canvas');
+        var chart_canvas = view.querySelector('#duration_histogram_chart_canvas');
         var ctx = chart_canvas.getContext('2d');
 
         if (my_bar_chart) {
@@ -69,7 +66,7 @@
                 },
                 title: {
                     display: true,
-                    text: "Usage by Hour"
+                    text: "Counts per 5 minute intervals"
                 },
                 tooltips: {
                     mode: 'index',
@@ -129,11 +126,11 @@
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 1, getTabs);
+            libraryMenu.setTabs('playback_reporting', 3, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
-                
-                var url = "/emby/user_usage_stats/90/HourlyReport?stamp=" + new Date().getTime();
+
+                var url = "/emby/user_usage_stats/90/DurationHistogramReport?stamp=" + new Date().getTime();
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);

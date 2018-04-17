@@ -46,6 +46,10 @@
                 name: 'Breakdown Report'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
+                name: 'Duration Histogram'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];
@@ -79,7 +83,7 @@
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 3, getTabs);
+            libraryMenu.setTabs('playback_reporting', 4, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", showFolderPicker);

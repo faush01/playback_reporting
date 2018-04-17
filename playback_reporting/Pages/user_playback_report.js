@@ -276,6 +276,10 @@
                 name: 'Breakdown Report'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
+                name: 'Duration Histogram'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];

@@ -463,13 +463,6 @@ namespace playback_reporting.Data
 
         public List<Dictionary<string, object>> GetBreakdownReport(int numberOfDays, string type)
         {
-            /*
-            SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount 
-            FROM PlaybackActivity 
-            GROUP BY CAST(PlayDuration / 300 as int)
-            ORDER BY CAST(PlayDuration / 300 as int) ASC;
-            */
-
             // UserId ItemType PlaybackMethod ClientName DeviceName
 
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
@@ -502,7 +495,45 @@ namespace playback_reporting.Data
             }
 
             return report;
-
         }
+
+        public SortedDictionary<int, int> GetDurationHistogram(int numberOfDays)
+        {
+            /*
+            SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount 
+            FROM PlaybackActivity 
+            GROUP BY CAST(PlayDuration / 300 as int)
+            ORDER BY CAST(PlayDuration / 300 as int) ASC;
+            */
+            SortedDictionary<int, int> report = new SortedDictionary<int, int>();
+            DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+            string sql =
+                "SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
+                "FROM PlaybackActivity " +
+                "WHERE DateCreated > @DateCreated " +
+                "GROUP BY CAST(PlayDuration / 300 as int) " +
+                "ORDER BY CAST(PlayDuration / 300 as int) ASC";
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@DateCreated", from_date.ToString("yyyy-MM-dd"));
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            int block_num = row[0].ToInt();
+                            int count = row[1].ToInt();
+                            report.Add(block_num, count);
+                        }
+                    }
+                }
+            }
+
+            return report;
+        }
+
     }
 }

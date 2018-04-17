@@ -16,5 +16,6 @@ namespace playback_reporting.Data
         Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types, string data_type);
         SortedDictionary<string, int> GetHourlyUsageReport(int numberOfDays);
         List<Dictionary<string, object>> GetBreakdownReport(int numberOfDays, string type);
+        SortedDictionary<int, int> GetDurationHistogram(int numberOfDays);
     }
 }

@@ -74,9 +74,16 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
         [ApiMember(Name = "BreakdownType", Description = "Breakdown type", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-
         public int NumberOfDays { get; set; }
         public string BreakdownType { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/90/DurationHistogramReport
+    [Route("/user_usage_stats/{NumberOfDays}/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
+    public class GetDurationHistogramReport : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        public int NumberOfDays { get; set; }
     }
 
     public class UserActivityAPI : IService, IRequiresRequest
@@ -321,6 +328,29 @@ namespace playback_reporting.Api
             return report;
         }
 
+        public object Get(GetDurationHistogramReport request)
+        {
+            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.NumberOfDays);
 
+            // find max
+            int max = -1;
+            foreach (int key in report.Keys)
+            {
+                if (key > max)
+                {
+                    max = key;
+                }
+            }
+
+            for(int x = 0; x < max; x++)
+            {
+                if(report.ContainsKey(x) == false)
+                {
+                    report.Add(x, 0);
+                }
+            }
+
+            return report;
+        }
     }
 }
