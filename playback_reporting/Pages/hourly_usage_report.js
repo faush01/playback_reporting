@@ -38,9 +38,18 @@
             labels: chart_labels, //['Mon 00', 'Mon 01', 'Mon 02', 'Mon 03', 'Mon 04', 'Mon 05', 'Mon 06'],
             datasets: [{
                 label: 'Minutes',
-                backgroundColor: '#FF0000',
-                data: chart_data, //[10,20,30,40,50,60,70]
-            }]
+                type: "bar",
+                backgroundColor: '#c39bd3',
+                data: chart_data, // [10,20,30,40,50,60,70]
+            }/*,
+            {
+                label: "Minutes",
+                type: "line",
+                lineTension: 0,
+                borderColor: "#8e5ea2",
+                data: chart_data, // [10,20,30,40,50,60,70],
+                fill: false
+            }*/]
         };
 
         var chart_canvas = view.querySelector('#hourly_usage_chart_canvas');
