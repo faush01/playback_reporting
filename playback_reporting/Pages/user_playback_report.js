@@ -56,10 +56,10 @@
             var point_data = [];
             for (var point_date in user_usage.user_usage) {
                 var data_point = user_usage.user_usage[point_date];
-                if (data_t) {
-                    data_point = data_point / 60;
-                    data_point = precisionRound(data_point, 2);
-                }
+                //if (data_t) {
+                //    data_point = data_point / 60;
+                //    data_point = precisionRound(data_point, 2);
+                //}
                 point_data.push(data_point);
             }
             var chart_data = {
@@ -121,6 +121,31 @@
         };
         */
 
+        function y_axis_labels(value, index, values) {
+            if (data_t) {
+                if (Math.floor(value / 10) === (value / 10)) {
+                    return seconds2time(value);
+                }
+            }
+            else {
+                return value;
+            }
+        }
+
+        function tooltip_labels(tooltipItem, data) {
+            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+
+            if (label) {
+                if (data_t) {
+                    label += "- " + seconds2time(tooltipItem.yLabel);//Math.round(tooltipItem.yLabel * 100) / 100;
+                }
+                else {
+                    label += ": " + tooltipItem.yLabel;
+                }
+            }
+            return label;
+        }
+
         var chart_canvas = view.querySelector('#user_stats_chart_canvas');
         var ctx = chart_canvas.getContext('2d');
 
@@ -151,11 +176,7 @@
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
-                            callback: function (value, index, values) {
-                                if (Math.floor(value) === value) {
-                                    return value;
-                                }
-                            }
+                            callback: y_axis_labels
                         }
                     }]
                 },
@@ -175,6 +196,11 @@
                     display_user_report(label, user_id, data_label, view);
                     //var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
                     //Dashboard.navigate(href);
+                },
+                tooltips: {
+                    callbacks: {
+                        label: tooltip_labels
+                    }
                 }
             }
         });
@@ -301,7 +327,7 @@
                 var movies_select = view.querySelector('#media_type_movies');
                 var series_select = view.querySelector('#media_type_series');
 
-                var url = "/emby/user_usage_stats/30/PlayActivity?filter=all,movies,series&data_type=count&stamp=" + new Date().getTime();
+                var url = "/emby/user_usage_stats/31/PlayActivity?filter=all,movies,series&data_type=count&stamp=" + new Date().getTime();
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
@@ -328,7 +354,7 @@
                     if (movies_select.checked) { filter.push("movies"); }
                     if (series_select.checked) { filter.push("series"); }
                     var data_t = data_type.options[data_type.selectedIndex].value;
-                    var filtered_url = "/emby/user_usage_stats/30/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                    var filtered_url = "/emby/user_usage_stats/31/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                     ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
                         draw_graph(view, d3, usage_data);
                     });
