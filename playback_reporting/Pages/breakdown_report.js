@@ -66,6 +66,18 @@
             }]
         };
 
+        function tooltip_labels(tooltipItem, data) {
+
+            var indice = tooltipItem.index; 
+            var label = data.labels[indice] || "";
+
+            if (label) {
+                label += ": " + seconds2time(data.datasets[0].data[indice]);
+            }
+
+            return label;
+        }
+
         var chart_canvas_count = view.querySelector('#' + group_type + '_breakdown_count_chart_canvas');
         var cxt_count = chart_canvas_count.getContext('2d');
         if (chart_instance_map[group_type+"_count"]) {
@@ -105,6 +117,11 @@
                 title: {
                     display: true,
                     text: group_type + ": Time"
+                },
+                tooltips: {
+                    callbacks: {
+                        label: tooltip_labels
+                    }
                 }
             }
         });
@@ -118,6 +135,24 @@
         });
 
         console.log("Charts Done");
+    }
+
+    function seconds2time(seconds) {
+        var h = Math.floor(seconds / 3600);
+        seconds = seconds - (h * 3600);
+        var m = Math.floor(seconds / 60);
+        var s = seconds - (m * 60);
+        var time_string = padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
+        return time_string;
+    }
+
+    function padLeft(value) {
+        if (value < 10) {
+            return "0" + value;
+        }
+        else {
+            return value;
+        }
     }
 
     function getTabs() {
