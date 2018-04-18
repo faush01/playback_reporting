@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 
 namespace playback_reporting.Api
 {
@@ -280,7 +281,9 @@ namespace playback_reporting.Api
                 user_usage_data.Add(user_data);
             }
 
-            return user_usage_data;
+            var sorted_data = user_usage_data.OrderBy(dict => (dict["user_name"] as string).ToLower());
+
+            return sorted_data;
         }
 
         public object Get(GetHourlyReport request)

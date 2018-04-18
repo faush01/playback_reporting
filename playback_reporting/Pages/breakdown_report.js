@@ -26,7 +26,7 @@
         var chart_data_values_time = [];
 
         data.sort(function (a, b) {
-            return ((a["count"] < b["count"]) ? -1 : ((a["count"] == b["count"]) ? 0 : 1));
+            return ((a["count"] > b["count"]) ? -1 : ((a["count"] == b["count"]) ? 0 : 1));
         });
 
         for (var index in data) {
@@ -35,7 +35,7 @@
         }
 
         data.sort(function (a, b) {
-            return ((a["time"] < b["time"]) ? -1 : ((a["time"] == b["time"]) ? 0 : 1));
+            return ((a["time"] > b["time"]) ? -1 : ((a["time"] == b["time"]) ? 0 : 1));
         });
 
         for (var index in data) {
