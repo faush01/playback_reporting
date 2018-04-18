@@ -137,7 +137,7 @@
 
             if (label) {
                 if (data_t) {
-                    label += "- " + seconds2time(tooltipItem.yLabel);//Math.round(tooltipItem.yLabel * 100) / 100;
+                    label += ": " + seconds2time(tooltipItem.yLabel);
                 }
                 else {
                     label += ": " + tooltipItem.yLabel;
