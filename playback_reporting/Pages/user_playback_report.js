@@ -333,10 +333,6 @@ define(['libraryMenu'], function (libraryMenu) {
         return tabs;
     }
 
-    function populate_filter_list(filters) {
-
-    }
-
     return function (view, params) {
 
         // init code here
@@ -347,8 +343,7 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                filter_check_list = view.querySelector('#filter_check_list');
-                populate_filter_list(filter_check_list);
+                
 
                 // get filter types form sever
                 var filter_url = "/emby/user_usage_stats/type_filter_list";
@@ -361,7 +356,10 @@ define(['libraryMenu'], function (libraryMenu) {
                         var filter_name = filter_names[x];
                         filter_items += "<input type='checkbox' id='media_type_filter_" + filter_name + "' data_fileter_name='" + filter_name + "' checked> " + filter_name + " ";
                     }
+
+                    var filter_check_list = view.querySelector('#filter_check_list');
                     filter_check_list.innerHTML = filter_items;
+
                     for (var x = 0; x < filter_names.length; x++) {
                         var filter_name = filter_names[x];
                         view.querySelector('#media_type_filter_' + filter_name).addEventListener("click", process_click);
