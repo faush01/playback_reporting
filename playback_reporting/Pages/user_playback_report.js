@@ -17,7 +17,8 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
-    var my_bar_chart = null; 
+    var my_bar_chart = null;
+    var filter_names = [];
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -232,9 +233,13 @@ define(['libraryMenu'], function (libraryMenu) {
         var movies_select = view.querySelector('#media_type_movies');
         var series_select = view.querySelector('#media_type_series');
         var filter = [];
-        if (all_select.checked) { filter.push("all"); }
-        if (movies_select.checked) { filter.push("movies"); }
-        if (series_select.checked) { filter.push("series"); }
+        for (var x = 0; x < filter_names.length; x++) {
+            var filter_name = filter_names[x];
+            var filter_checked = view.querySelector('#media_type_filter_' + filter_name).checked;
+            if (filter_checked) {
+                filter.push(filter_name)
+            }
+        }
 
         var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
         console.log("User Report Details Url: " + url_to_get);
@@ -328,6 +333,10 @@ define(['libraryMenu'], function (libraryMenu) {
         return tabs;
     }
 
+    function populate_filter_list(filters) {
+
+    }
+
     return function (view, params) {
 
         // init code here
@@ -338,43 +347,57 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                var data_type = view.querySelector('#data_type');
-                var all_select = view.querySelector('#media_type_all');
-                var movies_select = view.querySelector('#media_type_movies');
-                var series_select = view.querySelector('#media_type_series');
+                filter_check_list = view.querySelector('#filter_check_list');
+                populate_filter_list(filter_check_list);
 
-                var url = "/emby/user_usage_stats/31/PlayActivity?filter=all,movies,series&data_type=count&stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (usage_data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_graph(view, d3, usage_data);
-                });
-
-                all_select.addEventListener("click", process_click);
-                movies_select.addEventListener("click", process_click);
-                series_select.addEventListener("click", process_click);
-                data_type.addEventListener("change", process_click);
-
-                function process_click() {
-                    var table_body = view.querySelector('#user_usage_report_results');
-                    table_body.innerHTML = "";
-                    var filter = [];
-                    if (all_select.checked) {
-                        filter.push("all");
-                        movies_select.disabled = true;
-                        series_select.disabled = true;
+                // get filter types form sever
+                var filter_url = "/emby/user_usage_stats/type_filter_list";
+                ApiClient.getUserActivity(filter_url).then(function (filter_data) {
+                    filter_names = filter_data;
+                
+                    // build filter list
+                    var filter_items = "";
+                    for (var x = 0; x < filter_names.length; x++) {
+                        var filter_name = filter_names[x];
+                        filter_items += "<input type='checkbox' id='media_type_filter_" + filter_name + "' data_fileter_name='" + filter_name + "' checked> " + filter_name + " ";
                     }
-                    else {
-                        movies_select.disabled = false;
-                        series_select.disabled = false;
+                    filter_check_list.innerHTML = filter_items;
+                    for (var x = 0; x < filter_names.length; x++) {
+                        var filter_name = filter_names[x];
+                        view.querySelector('#media_type_filter_' + filter_name).addEventListener("click", process_click);
                     }
-                    if (movies_select.checked) { filter.push("movies"); }
-                    if (series_select.checked) { filter.push("series"); }
-                    var data_t = data_type.options[data_type.selectedIndex].value;
-                    var filtered_url = "/emby/user_usage_stats/31/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
-                    ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
+
+                    var data_type = view.querySelector('#data_type');
+                    data_type.addEventListener("change", process_click);
+
+                    var url = "/emby/user_usage_stats/28/PlayActivity?filter=" + filter_names.join(",") + "&data_type=count&stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (usage_data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_graph(view, d3, usage_data);
                     });
-                }
+
+                    function process_click() {
+                        var table_body = view.querySelector('#user_usage_report_results');
+                        table_body.innerHTML = "";
+
+                        var filter = [];
+                        for (var x = 0; x < filter_names.length; x++) {
+                            var filter_name = filter_names[x];
+                            var filter_checked = view.querySelector('#media_type_filter_' + filter_name).checked;
+                            if (filter_checked) {
+                                filter.push(filter_name)
+                            }
+                        }
+
+                        var data_t = data_type.options[data_type.selectedIndex].value;
+
+                        var filtered_url = "/emby/user_usage_stats/28/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                        ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
+                            draw_graph(view, d3, usage_data);
+                        });
+                    }
+
+                });
 
             });
 

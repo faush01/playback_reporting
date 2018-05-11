@@ -31,6 +31,12 @@ using System.Linq;
 
 namespace playback_reporting.Api
 {
+    // http://localhost:8096/emby/user_usage_stats/load_backup
+    [Route("/user_usage_stats/type_filter_list", "GET", Summary = "Gets types filter list items")]
+    public class TypeFilterList : IReturn<String>
+    {
+    }
+
     // http://localhost:8096/emby/user_usage_stats/import_backup
     [Route("/user_usage_stats/import_backup", "POST", Summary = "Post a backup for importing")]
     public class ImportBackup : IRequiresRequestStream, IReturnVoid
@@ -69,11 +75,11 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         [ApiMember(Name = "StartDate", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "Filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
 
         public string UserID { get; set; }
         public string Date { get; set; }
-        public string filter { get; set; }
+        public string Filter { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/30/HourlyReport
@@ -137,12 +143,18 @@ namespace playback_reporting.Api
 
         public IRequest Request { get; set; }
 
+        public object Get(TypeFilterList request)
+        {
+            List<string> filter_list = Repository.GetTypeFilterList();
+            return filter_list;
+        }
+
         public object Get(GetUserReportData report)
         {
             string[] filter_tokens = new string[0];
-            if (report.filter != null)
+            if (report.Filter != null)
             {
-                filter_tokens = report.filter.Split(',');
+                filter_tokens = report.Filter.Split(',');
             }
             List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
 
@@ -265,7 +277,7 @@ namespace playback_reporting.Api
                 // fill in missing dates for time period
                 SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
                 DateTime from_date = DateTime.Now.AddDays(activity.NumberOfDays * -1);
-                DateTime to_date = DateTime.Now.AddDays(1);
+                DateTime to_date = DateTime.Now;//.AddDays(1);
                 while (from_date < to_date)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");

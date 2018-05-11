@@ -30,16 +30,12 @@ namespace playback_reporting.Data
     {
         private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
-        private Dictionary<string, string> type_map = new Dictionary<string, string>();
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
             DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
             _logger = logger;
-
-            type_map.Add("movies", "Movie");
-            type_map.Add("series", "Episode");
         }
 
         public void Initialize()
@@ -103,6 +99,27 @@ namespace playback_reporting.Data
                                     ")");
                 }
             }
+        }
+
+        public List<string> GetTypeFilterList()
+        {
+            List<string> filter_Type_list = new List<string>();
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    string sql_query = "select distinct ItemType from PlaybackActivity";
+                    using (var statement = connection.PrepareStatement(sql_query))
+                    {
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            string type = row[0].ToString();
+                            filter_Type_list.Add(type);
+                        }
+                    }
+                }
+            }
+            return filter_Type_list;
         }
 
         public int ImportRawData(string data)
@@ -297,29 +314,18 @@ namespace playback_reporting.Data
 
         public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
         {
-            bool show_all_types = false;
-            List<string> type_list = new List<string>();
-            foreach (string media_type in types)
+            List<string> filters = new List<string>();
+            foreach (string filter in types)
             {
-                if (type_map.ContainsKey(media_type))
-                {
-                    type_list.Add("'" + type_map[media_type] + "'");
-                }
-                if ("all".Equals(media_type, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    show_all_types = true;
-                }
+                filters.Add("'" + filter + "'");
             }
 
             string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
-                               "AND UserId = @user_id ";
-            if (show_all_types == false)
-            {
-                sql_query += "AND ItemType IN (" + string.Join(",", type_list) + ") ";
-            }
-            sql_query += "ORDER BY DateCreated";
+                               "AND UserId = @user_id " +
+                               "AND ItemType IN (" + string.Join(",", filters) + ") " +
+                               "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
             using (WriteLock.Read())
@@ -356,18 +362,10 @@ namespace playback_reporting.Data
 
         public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types, string data_type)
         {
-            bool show_all_types = false;
-            List<string> type_list = new List<string>();
-            foreach (string media_type in types)
+            List<string> filters = new List<string>();
+            foreach(string filter in types)
             {
-                if (type_map.ContainsKey(media_type))
-                {
-                    type_list.Add("'" + type_map[media_type] + "'");
-                }
-                if ("all".Equals(media_type, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    show_all_types = true;
-                }
+                filters.Add("'" + filter + "'");
             }
 
             string sql_query = "";
@@ -379,11 +377,9 @@ namespace playback_reporting.Data
             {
                 sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration) AS count ";
             }
-            sql_query += "FROM PlaybackActivity WHERE DateCreated >= @start_date ";
-            if (show_all_types == false)
-            {
-                sql_query += "AND ItemType IN (" + string.Join(",", type_list) + ") ";
-            }
+            sql_query += "FROM PlaybackActivity ";
+            sql_query += "WHERE DateCreated >= @start_date ";
+            sql_query += "AND ItemType IN (" + string.Join(",", filters) + ") ";
             sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
             DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));

@@ -23,6 +23,7 @@ namespace playback_reporting.Data
 {
     public interface IActivityRepository
     {
+        List<string> GetTypeFilterList();
         int ImportRawData(string data);
         string ExportRawData();
         void DeleteOldData(DateTime? del_before);
