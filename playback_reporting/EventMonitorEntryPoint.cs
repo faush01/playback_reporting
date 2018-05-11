@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Audio;
 
 namespace playback_reporting
 {
@@ -314,6 +315,21 @@ namespace playback_reporting
                     }
                     item_name = epp_item.Series.Name + " - s" + season_no + "e" + epp_no + " - " + epp_item.Name;
                 }
+            }
+            else if (typeof(Audio) == item.GetType())
+            {
+                Audio audio_item = item as Audio;
+                string artist = "Not Known";
+                if (audio_item.AlbumArtists != null && audio_item.AlbumArtists.Length > 0)
+                {
+                    artist = string.Join(", ", audio_item.AlbumArtists);
+                }
+                string album = "Not Known";
+                if(string.IsNullOrEmpty(audio_item.Album) == false)
+                {
+                    album = audio_item.Album;
+                }
+                item_name = artist + " - " + audio_item.Name + " (" + album + ")";
             }
             else
             {
