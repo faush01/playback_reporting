@@ -44,13 +44,14 @@ namespace playback_reporting
 
         public PluginTask(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
-            _logger = logger.GetLogger("PlaybackReporting");
+            _logger = logger.GetLogger("PlaybackReporting - PluginTask");
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
 
+            _logger.Info("PluginTask Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            repo.Initialize();
+            //repo.Initialize();
             Repository = repo;
         }
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()

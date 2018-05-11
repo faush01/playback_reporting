@@ -115,22 +115,23 @@ namespace playback_reporting.Api
 
         private IActivityRepository Repository;
 
-        public UserActivityAPI(ILogger logger,
+        public UserActivityAPI(ILogManager logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
             IJsonSerializer jsonSerializer,
             IUserManager userManager,
             ILibraryManager libraryManager)
         {
-            _logger = logger;
+            _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
             _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
             _userManager = userManager;
             _libraryManager = libraryManager;
 
+            _logger.Info("UserActivityAPI Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            repo.Initialize();
+            //repo.Initialize();
             Repository = repo;
         }
 

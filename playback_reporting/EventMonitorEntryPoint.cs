@@ -56,7 +56,7 @@ namespace playback_reporting
             IFileSystem fileSystem,
             IJsonSerializer jsonSerializer)
         {
-            _logger = logger.GetLogger("PlaybackReporting");
+            _logger = logger.GetLogger("PlaybackReporting - EventMonitorEntryPoint");
             _sessionManager = sessionManager;
             _libraryManager = libraryManager;
             _userManager = userManager;
@@ -74,7 +74,7 @@ namespace playback_reporting
 
         public void Run()
         {
-
+            _logger.Info("EventMonitorEntryPoint Running");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
             _repository = repo;

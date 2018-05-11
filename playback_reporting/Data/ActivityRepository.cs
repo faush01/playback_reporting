@@ -51,54 +51,57 @@ namespace playback_reporting.Data
 
             catch (Exception ex)
             {
-                Logger.ErrorException("Error loading database file. Will reset and retry.", ex);
-                FileSystem.DeleteFile(DbFilePath);
-                InitializeInternal();
+                Logger.ErrorException("Error loading PlaybackActivity database file.", ex);
+                //FileSystem.DeleteFile(DbFilePath);
+                //InitializeInternal();
             }
         }
 
         private void InitializeInternal()
         {
-            using (var connection = CreateConnection())
+            using (WriteLock.Write())
             {
-                _logger.Info("Initialize Repository");
+                using (var connection = CreateConnection())
+                {
+                    _logger.Info("Initialize PlaybackActivity Repository");
 
-                string sql_info = "pragma table_info('PlaybackActivity')";
-                List<string> cols = new List<string>();
-                foreach (var row in connection.Query(sql_info))
-                {
-                    string table_schema = row[1].ToString().ToLower() + ":" + row[2].ToString().ToLower();
-                    cols.Add(table_schema);
-                }
-                string actual_schema = string.Join("|", cols);
-                string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
-                if(required_schema != actual_schema)
-                {
-                    _logger.Info("PlaybackActivity table schema miss match!");
-                    _logger.Info("Expected : " + required_schema);
-                    _logger.Info("Received : " + actual_schema);
-                    _logger.Info("Dropping and recreating PlaybackActivity table");
-                    connection.Execute("drop table if exists PlaybackActivity");
-                }
-                else
-                {
-                    _logger.Info("PlaybackActivity table schema OK");
-                    _logger.Info("Expected : " + required_schema);
-                    _logger.Info("Received : " + actual_schema);
-                }
+                    string sql_info = "pragma table_info('PlaybackActivity')";
+                    List<string> cols = new List<string>();
+                    foreach (var row in connection.Query(sql_info))
+                    {
+                        string table_schema = row[1].ToString().ToLower() + ":" + row[2].ToString().ToLower();
+                        cols.Add(table_schema);
+                    }
+                    string actual_schema = string.Join("|", cols);
+                    string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
+                    if (required_schema != actual_schema)
+                    {
+                        _logger.Info("PlaybackActivity table schema miss match!");
+                        _logger.Info("Expected : " + required_schema);
+                        _logger.Info("Received : " + actual_schema);
+                        _logger.Info("Dropping and recreating PlaybackActivity table");
+                        connection.Execute("drop table if exists PlaybackActivity");
+                    }
+                    else
+                    {
+                        _logger.Info("PlaybackActivity table schema OK");
+                        _logger.Info("Expected : " + required_schema);
+                        _logger.Info("Received : " + actual_schema);
+                    }
 
-                // ROWID 
-                connection.Execute("create table if not exists PlaybackActivity (" +
-                                "DateCreated DATETIME NOT NULL, " +
-                                "UserId TEXT, " +
-                                "ItemId TEXT, " +
-                                "ItemType TEXT, " +
-                                "ItemName TEXT, " +
-                                "PlaybackMethod TEXT, " +
-                                "ClientName TEXT, " +
-                                "DeviceName TEXT, " +
-                                "PlayDuration INT" +
-                                ")");
+                    // ROWID 
+                    connection.Execute("create table if not exists PlaybackActivity (" +
+                                    "DateCreated DATETIME NOT NULL, " +
+                                    "UserId TEXT, " +
+                                    "ItemId TEXT, " +
+                                    "ItemType TEXT, " +
+                                    "ItemName TEXT, " +
+                                    "PlaybackMethod TEXT, " +
+                                    "ClientName TEXT, " +
+                                    "DeviceName TEXT, " +
+                                    "PlayDuration INT" +
+                                    ")");
+                }
             }
         }
 
