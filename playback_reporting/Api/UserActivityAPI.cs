@@ -109,6 +109,14 @@ namespace playback_reporting.Api
         public int NumberOfDays { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/90/TvShowsReport
+    [Route("/user_usage_stats/{NumberOfDays}/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
+    public class GetTvShowsReport : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        public int NumberOfDays { get; set; }
+    }
+
     public class UserActivityAPI : IService, IRequiresRequest
     {
 
@@ -382,6 +390,12 @@ namespace playback_reporting.Api
                 }
             }
 
+            return report;
+        }
+
+        public object Get(GetTvShowsReport request)
+        {
+            List<Dictionary<string, object>> report = Repository.GetTvShowReport(request.NumberOfDays);
             return report;
         }
     }

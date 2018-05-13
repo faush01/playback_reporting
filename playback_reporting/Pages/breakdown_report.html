@@ -4,28 +4,73 @@
 	<div data-role="content">
 		<div class="content-primary">
 			<h2>Breakdown Report</h2>
-
+			Last <select id="report_duration">
+				<option value="7">7</option>
+				<option value="14">14</option>
+				<option value="28" selected>28</option>
+				<option value="90">90</option>
+			</select> days
 
 			<table border="0">
 				<tr>
-					<td><canvas id="User_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
-					<td><canvas id="User_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+					<td>
+						<canvas id="TvShows_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="TvShows_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="TvShows_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="TvShows_breakdown_time_chart_legend"></div>
+					</td>
 				</tr>
 				<tr>
-					<td><canvas id="ItemType_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
-					<td><canvas id="ItemType_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+					<td>
+						<canvas id="User_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="User_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="User_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="User_breakdown_time_chart_legend"></div>
+					</td>
 				</tr>
 				<tr>
-					<td><canvas id="PlayMethod_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
-					<td><canvas id="PlayMethod_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+					<td>
+						<canvas id="ItemType_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="ItemType_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="ItemType_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="ItemType_breakdown_time_chart_legend"></div>
+					</td>
 				</tr>
 				<tr>
-					<td><canvas id="ClientName_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
-					<td><canvas id="ClientName_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+					<td>
+						<canvas id="PlayMethod_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="PlayMethod_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="PlayMethod_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="PlayMethod_breakdown_time_chart_legend"></div>
+					</td>
 				</tr>
 				<tr>
-					<td><canvas id="DeviceName_breakdown_count_chart_canvas" width="450" height="300"></canvas></td>
-					<td><canvas id="DeviceName_breakdown_time_chart_canvas" width="450" height="300"></canvas></td>
+					<td>
+						<canvas id="ClientName_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="ClientName_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="ClientName_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="ClientName_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<canvas id="DeviceName_breakdown_count_chart_canvas" width="450" height="300"></canvas>
+						<div id="DeviceName_breakdown_count_chart_legend"></div>
+					</td>
+					<td>
+						<canvas id="DeviceName_breakdown_time_chart_canvas" width="450" height="300"></canvas>
+						<div id="DeviceName_breakdown_time_chart_legend"></div>
+					</td>
 				</tr>
 			</table>
 

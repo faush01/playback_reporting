@@ -45,7 +45,11 @@ define(['libraryMenu'], function (libraryMenu) {
             return ((a["count"] > b["count"]) ? -1 : ((a["count"] == b["count"]) ? 0 : 1));
         });
 
+        var count = 0;
         for (var index in data) {
+            if (count++ >= 10) {
+                break;
+            }
             chart_data_labels_count.push(data[index]["label"]);
             chart_data_values_count.push(data[index]["count"]);
         }
@@ -54,7 +58,11 @@ define(['libraryMenu'], function (libraryMenu) {
             return ((a["time"] > b["time"]) ? -1 : ((a["time"] == b["time"]) ? 0 : 1));
         });
 
+        count = 0;
         for (var index in data) {
+            if (count++ >= 10) {
+                break;
+            }
             chart_data_labels_time.push(data[index]["label"]);
             chart_data_values_time.push(data[index]["time"]);
         }
@@ -106,18 +114,32 @@ define(['libraryMenu'], function (libraryMenu) {
             options: {
                 title: {
                     display: true,
-                    text: group_type + ": PlayCount"
+                    text: group_type + " (Plays)"
+                },
+                legend: {
+                    display: false
+                },
+                legendCallback: function (chart) {
+                    var legendHtml = [];
+                    legendHtml.push('<table style="width:80%">');
+                    var item = chart.data.datasets[0];
+                    for (var i = 0; i < item.data.length; i++) {
+                        legendHtml.push('<tr>');
+                        legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
+                        legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
+                        legendHtml.push('<td>' + item.data[i] + '</td>');
+                        legendHtml.push('</tr>');
+                    }
+                    legendHtml.push('</table>');
+                    return legendHtml.join("");
                 }
             }
         });
 
-        chart_canvas_count.addEventListener("click", function () {
-            var chart = chart_instance_map[group_type + "_count"];
-            if (chart) {
-                chart.options.legend.display = !chart.options.legend.display;
-                chart.update();
-            }
-        });
+        var chart_legend_count = view.querySelector('#' + group_type + '_breakdown_count_chart_legend');
+        if (chart_legend_count != null) {
+            chart_legend_count.innerHTML = chart_instance_map[group_type + "_count"].generateLegend();
+        }
 
         if (chart_instance_map[group_type + "_time"]) {
             console.log("destroy() existing chart");
@@ -132,23 +154,37 @@ define(['libraryMenu'], function (libraryMenu) {
             options: {
                 title: {
                     display: true,
-                    text: group_type + ": Time"
+                    text: group_type + " (Time)"
                 },
                 tooltips: {
                     callbacks: {
                         label: tooltip_labels
                     }
+                },
+                legend: {
+                    display: false
+                },
+                legendCallback: function (chart) {
+                    var legendHtml = [];
+                    legendHtml.push('<table style="width:80%">');
+                    var item = chart.data.datasets[0];
+                    for (var i = 0; i < item.data.length; i++) {
+                        legendHtml.push('<tr>');
+                        legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
+                        legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
+                        legendHtml.push('<td>' + seconds2time(item.data[i]) + '</td>');
+                        legendHtml.push('</tr>');
+                    }
+                    legendHtml.push('</table>');
+                    return legendHtml.join("");
                 }
             }
         });
 
-        chart_canvas_time.addEventListener("click", function () {
-            var chart = chart_instance_map[group_type + "_time"];
-            if (chart) {
-                chart.options.legend.display = !chart.options.legend.display;
-                chart.update();
-            }
-        });
+        var chart_legend_time = view.querySelector('#' + group_type + '_breakdown_time_chart_legend');
+        if (chart_legend_time != null) {
+            chart_legend_time.innerHTML = chart_instance_map[group_type + "_time"].generateLegend();
+        }
 
         console.log("Charts Done");
     }
@@ -205,57 +241,57 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                // build user chart
-                var url = "/emby/user_usage_stats/90/UserId/BreakdownReport?stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_chart_user_count(view, d3, data, "User");
-                });
+                var report_duration = view.querySelector('#report_duration');
+                report_duration.addEventListener("change", process_click);
 
-                // build ItemType chart
-                var url = "/emby/user_usage_stats/90/ItemType/BreakdownReport?stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_chart_user_count(view, d3, data, "ItemType");
-                });
+                process_click();
 
-                // build PlaybackMethod chart
-                var url = "/emby/user_usage_stats/90/PlaybackMethod/BreakdownReport?stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_chart_user_count(view, d3, data, "PlayMethod");
-                });
+                function process_click() {
+                    var duration = report_duration.options[report_duration.selectedIndex].value;
 
-                // build ClientName chart
-                var url = "/emby/user_usage_stats/90/ClientName/BreakdownReport?stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_chart_user_count(view, d3, data, "ClientName");
-                });
+                    // build user chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/UserId/BreakdownReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "User");
+                    });
 
-                // build DeviceName chart
-                var url = "/emby/user_usage_stats/90/DeviceName/BreakdownReport?stamp=" + new Date().getTime();
-                ApiClient.getUserActivity(url).then(function (data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_chart_user_count(view, d3, data, "DeviceName");
-                });
+                    // build ItemType chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/ItemType/BreakdownReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "ItemType");
+                    });
 
-                //var toggle = view.querySelector('#toggle_ledgend_user_count');
-                //var toggle = view.querySelector('#User_breakdown_count_chart_canvas');
-                //toggle.addEventListener("click", function () {
-                //    console.log("toggle_ledgend_user_count clicked");
-                //    var chart = chart_instance_map["User_count"];
-                //    console.log("User_count " + chart);
-                //    if (chart) {
-                //        chart.options.legend.display = !chart.options.legend.display;
-                //        chart.update();
-                //    }
-                //});
-                
+                    // build PlaybackMethod chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/PlaybackMethod/BreakdownReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "PlayMethod");
+                    });
 
+                    // build ClientName chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/ClientName/BreakdownReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "ClientName");
+                    });
 
+                    // build DeviceName chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/DeviceName/BreakdownReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "DeviceName");
+                    });
+
+                    // build TvShows chart
+                    var url = "/emby/user_usage_stats/" + duration +  "/TvShowsReport?stamp=" + new Date().getTime();
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "TvShows");
+                    });
+                }
             });
-
         });
 
         view.addEventListener('viewhide', function (e) {
