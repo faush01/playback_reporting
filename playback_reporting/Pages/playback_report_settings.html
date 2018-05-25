@@ -4,7 +4,9 @@
 	<div data-role="content">
 		<div class="content-primary">
 			<h2>Playback Report Settings</h2>
-
+			<h3>
+				Data Retention
+			</h3>
 			Keep data for
 			<select id="max_data_age_select">
 				<option value="0">Clear All</option>
@@ -18,6 +20,9 @@
 				<option value="-1">Forever</option>
 			</select>
 
+			<h3>
+				Backup
+			</h3>
 			<p>
 				Backup Path : <span id="backup_path_label"></span><br />
 			</p>
@@ -26,6 +31,14 @@
 				<button id="backup_data_now">Save Backup Data</button>
 				<button id="load_backup_data">Load Backup Data</button>
 			</p>
+
+			<h3>
+				Ignored User List
+			</h3>
+			<select id="user_list_for_add">
+			</select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
+			<ul id="user_list_items">
+			</ul>
 
 		</div>
 	</div>

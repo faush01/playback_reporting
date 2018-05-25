@@ -23,6 +23,8 @@ namespace playback_reporting.Data
 {
     public interface IActivityRepository
     {
+        void ManageUserList(string action, string id);
+        List<string> GetUserList();
         List<string> GetTypeFilterList();
         int ImportRawData(string data);
         string ExportRawData();

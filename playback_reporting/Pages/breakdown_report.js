@@ -127,7 +127,7 @@ define(['libraryMenu'], function (libraryMenu) {
                         legendHtml.push('<tr>');
                         legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
                         legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
-                        legendHtml.push('<td>' + item.data[i] + '</td>');
+                        legendHtml.push('<td style="text-align: right;">' + item.data[i] + '</td>');
                         legendHtml.push('</tr>');
                     }
                     legendHtml.push('</table>');
@@ -172,7 +172,7 @@ define(['libraryMenu'], function (libraryMenu) {
                         legendHtml.push('<tr>');
                         legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
                         legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
-                        legendHtml.push('<td>' + seconds2time(item.data[i]) + '</td>');
+                        legendHtml.push('<td style="text-align: right;">' + seconds2time(item.data[i]) + '</td>');
                         legendHtml.push('</tr>');
                     }
                     legendHtml.push('</table>');
@@ -190,11 +190,17 @@ define(['libraryMenu'], function (libraryMenu) {
     }
 
     function seconds2time(seconds) {
+        var d = Math.floor(seconds / 86400);
+        seconds = seconds - (d * 86400);
         var h = Math.floor(seconds / 3600);
         seconds = seconds - (h * 3600);
         var m = Math.floor(seconds / 60);
         var s = seconds - (m * 60);
-        var time_string = padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
+        var time_string = "";
+        if (d > 0) {
+            time_string += d + ".";
+        }
+        time_string += padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
         return time_string;
     }
 

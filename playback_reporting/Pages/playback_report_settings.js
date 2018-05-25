@@ -94,6 +94,37 @@ define(['libraryMenu'], function (libraryMenu) {
         });
     }
 
+    function showUserList(view) {
+
+        var url = "/emby/user_usage_stats/user_list?stamp=" + new Date().getTime();
+        ApiClient.getUserActivity(url).then(function (user_list) {
+            //alert("Loaded Data: " + JSON.stringify(user_list));
+
+            var add_user_list = view.querySelector('#user_list_for_add');
+            var options_html = "";
+            for (var index = 0; index < user_list.length; ++index) {
+                var item_details = user_list[index];
+                //if (item_details.in_list == false) {
+                    options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                //}
+            }
+            add_user_list.innerHTML = options_html;
+
+
+            var user_list_items = view.querySelector('#user_list_items');
+            var list_html = "";
+
+            for (var index = 0; index < user_list.length; ++index) {
+                var item_details = user_list[index];
+                if (item_details.in_list == true) {
+                    list_html += "<li>" + item_details.name + "</li>";
+                }
+            }
+            user_list_items.innerHTML = list_html;
+
+        });
+    }
+
     return function (view, params) {
 
         // init code here
@@ -139,6 +170,33 @@ define(['libraryMenu'], function (libraryMenu) {
             ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
                 loadPage(view, config);
             });
+
+            // user list
+
+            var add_button = view.querySelector('#add_user_to_list');
+            add_button.addEventListener("click", function () {
+                var add_user_list = view.querySelector('#user_list_for_add');
+                var selected_user_id = add_user_list.options[add_user_list.selectedIndex].value;
+                var url = "/user_usage_stats/user_manage/add/" + selected_user_id + "?stamp=" + new Date().getTime();
+                ApiClient.getUserActivity(url).then(function (result) {
+                    //alert(result);
+                    showUserList(view);
+                });
+                
+            });
+
+            var remove_button = view.querySelector('#remove_user_from_list');
+            remove_button.addEventListener("click", function () {
+                var add_user_list = view.querySelector('#user_list_for_add');
+                var selected_user_id = add_user_list.options[add_user_list.selectedIndex].value;
+                var url = "/user_usage_stats/user_manage/remove/" + selected_user_id + "?stamp=" + new Date().getTime();
+                ApiClient.getUserActivity(url).then(function (result) {
+                    //alert(result);
+                    showUserList(view);
+                });
+            });
+
+            showUserList(view);
 
         });
 

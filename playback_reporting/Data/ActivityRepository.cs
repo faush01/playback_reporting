@@ -97,8 +97,59 @@ namespace playback_reporting.Data
                                     "DeviceName TEXT, " +
                                     "PlayDuration INT" +
                                     ")");
+
+                    connection.Execute("create table if not exists UserList (UserId TEXT)");
                 }
             }
+        }
+
+        public void ManageUserList(string action, string id)
+        {
+            string sql = "";
+            if(action == "add")
+            {
+                sql = "insert into UserList (UserId) values (@id)";
+            }
+            else
+            {
+                sql = "delete from UserList where UserId = @id";
+            }
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    connection.RunInTransaction(db =>
+                    {
+                        using (var statement = db.PrepareStatement(sql))
+                        {
+                            statement.TryBind("@id", id);
+                            statement.MoveNext();
+                        }
+                    }, TransactionMode);
+                }
+            }
+        }
+
+        public List<string> GetUserList()
+        {
+            List<string> user_id_list = new List<string>();
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    string sql_query = "select UserId from UserList";
+                    using (var statement = connection.PrepareStatement(sql_query))
+                    {
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            string type = row[0].ToString();
+                            user_id_list.Add(type);
+                        }
+                    }
+                }
+            }
+
+            return user_id_list;
         }
 
         public List<string> GetTypeFilterList()
@@ -380,6 +431,7 @@ namespace playback_reporting.Data
             sql_query += "FROM PlaybackActivity ";
             sql_query += "WHERE DateCreated >= @start_date ";
             sql_query += "AND ItemType IN (" + string.Join(",", filters) + ") ";
+            sql_query += "AND UserId not IN (select UserId from UserList) ";
             sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
             DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
@@ -422,7 +474,10 @@ namespace playback_reporting.Data
             SortedDictionary<string, int> report_data = new SortedDictionary<string, int>();
 
             DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
-            string sql = "SELECT DateCreated, PlayDuration FROM PlaybackActivity WHERE DateCreated > @DateCreated";
+            string sql = "SELECT DateCreated, PlayDuration ";
+            sql += "FROM PlaybackActivity ";
+            sql += "WHERE DateCreated > @DateCreated ";
+            sql += "AND UserId not IN (select UserId from UserList)";
 
             using (WriteLock.Read())
             {
@@ -483,7 +538,11 @@ namespace playback_reporting.Data
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
             DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
-            string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration) AS Seconds FROM PlaybackActivity WHERE DateCreated > @DateCreated GROUP BY " + type;
+            string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration) AS Seconds ";
+            sql += "FROM PlaybackActivity ";
+            sql += "WHERE DateCreated > @DateCreated ";
+            sql += "AND UserId not IN (select UserId from UserList) ";
+            sql += "GROUP BY " + type;
 
             using (WriteLock.Read())
             {
@@ -526,6 +585,7 @@ namespace playback_reporting.Data
                 "SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
                 "FROM PlaybackActivity " +
                 "WHERE DateCreated > @DateCreated " +
+                "AND UserId not IN (select UserId from UserList) " +
                 "GROUP BY CAST(PlayDuration / 300 as int) " +
                 "ORDER BY CAST(PlayDuration / 300 as int) ASC";
 
@@ -562,6 +622,7 @@ namespace playback_reporting.Data
             sql += "FROM PlaybackActivity ";
             sql += "WHERE ItemType = 'Episode' ";
             sql += "AND DateCreated > @DateCreated ";
+            sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY name";
 
             using (WriteLock.Read())

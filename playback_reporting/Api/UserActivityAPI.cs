@@ -31,6 +31,20 @@ using System.Linq;
 
 namespace playback_reporting.Api
 {
+    // http://localhost:8096/user_usage_stats/user_manage/add/1234-4321-1234
+    [Route("/user_usage_stats/user_manage/{Action}/{Id}", "GET", Summary = "Get users")]
+    public class GetUserManage : IReturn<String>
+    {
+        public string Action { get; set; }
+        public string Id { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/user_list
+    [Route("/user_usage_stats/user_list", "GET", Summary = "Get users")]
+    public class GetUserList : IReturn<String>
+    {
+    }
+
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/type_filter_list", "GET", Summary = "Gets types filter list items")]
     public class TypeFilterList : IReturn<String>
@@ -155,6 +169,34 @@ namespace playback_reporting.Api
         {
             List<string> filter_list = Repository.GetTypeFilterList();
             return filter_list;
+        }
+
+        public object Get(GetUserManage request)
+        {
+            string action = request.Action;
+            string id = request.Id;
+
+            Repository.ManageUserList(action, id);
+
+            return true;
+        }
+
+        public object Get(GetUserList request)
+        {
+            List<string> user_id_list = Repository.GetUserList();
+
+            List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
+
+            foreach (var emby_user in _userManager.Users)
+            {
+                Dictionary<string, object> user_info = new Dictionary<string, object>();
+                user_info.Add("name", emby_user.Name);
+                user_info.Add("id", emby_user.Id.ToString("N"));
+                user_info.Add("in_list", user_id_list.Contains(emby_user.Id.ToString("N")));
+                users.Add(user_info);
+            }
+
+            return users;
         }
 
         public object Get(GetUserReportData report)
