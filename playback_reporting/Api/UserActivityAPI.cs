@@ -176,7 +176,19 @@ namespace playback_reporting.Api
             string action = request.Action;
             string id = request.Id;
 
-            Repository.ManageUserList(action, id);
+            if (action == "remove_unknown")
+            {
+                List<string> user_id_list = new List<string>();
+                foreach (var emby_user in _userManager.Users)
+                {
+                    user_id_list.Add(emby_user.Id.ToString("N"));
+                }
+                Repository.RemoveUnknownUsers(user_id_list);
+            }
+            else
+            {
+                Repository.ManageUserList(action, id);
+            }
 
             return true;
         }

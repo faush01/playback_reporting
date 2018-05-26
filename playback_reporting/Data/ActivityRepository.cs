@@ -103,6 +103,24 @@ namespace playback_reporting.Data
             }
         }
 
+        public int RemoveUnknownUsers(List<string> known_user_ids)
+        {
+            string sql_query = "delete from PlaybackActivity " +
+                               "where UserId not in ('" + string.Join("', '", known_user_ids) + "') ";
+
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection())
+                {
+                    connection.RunInTransaction(db =>
+                    {
+                        db.Execute(sql_query);
+                    }, TransactionMode);
+                }
+            }
+            return 1;
+        }
+
         public void ManageUserList(string action, string id)
         {
             string sql = "";

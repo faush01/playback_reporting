@@ -167,6 +167,16 @@ define(['libraryMenu'], function (libraryMenu) {
                 });
             }
 
+            // remove unknown users button
+            var remove_unknown_button = view.querySelector('#remove_unknown_button');
+            remove_unknown_button.addEventListener("click", function () {
+                var url = "/user_usage_stats/user_manage/remove_unknown/none" + "?stamp=" + new Date().getTime();
+                ApiClient.getUserActivity(url).then(function (result) {
+                    alert("Unknown user activity removed.");
+                });
+
+            });            
+
             ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
                 loadPage(view, config);
             });

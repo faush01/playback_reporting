@@ -23,6 +23,7 @@ namespace playback_reporting.Data
 {
     public interface IActivityRepository
     {
+        int RemoveUnknownUsers(List<string> known_user_ids);
         void ManageUserList(string action, string id);
         List<string> GetUserList();
         List<string> GetTypeFilterList();

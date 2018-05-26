@@ -5,8 +5,12 @@
 		<div class="content-primary">
 			<h2>Playback Report Settings</h2>
 			<h3>
-				Data Retention
+				<strong>Data Retention</strong>
 			</h3>
+			<p>
+				Keep data for X time, this is used in the scheduled task to trim your data and keep only data within the requested time period.<br/>
+				As you add and remove users from your system playback activity for old deleted users becomes assigned to unknown, you can remove this data to clean up your reports.
+			</p>
 			Keep data for
 			<select id="max_data_age_select">
 				<option value="0">Clear All</option>
@@ -19,26 +23,34 @@
 				<option value="36">3 Years</option>
 				<option value="-1">Forever</option>
 			</select>
-
+			<p>
+				<button id="remove_unknown_button">Remove Unknown Users</button> Remove unknown or deleted users from the playback data.
+			</p>
 			<h3>
-				Backup
+				<strong>Backup</strong>
 			</h3>
+			<p>
+				You can back up all your playback activity to a TSV file, this can then later be re imported if you need to rebuild your server.<br/>
+				When you load backup data it adds to your data, this allows you to have multiple backup files and import each one as needed.<br/>
+				The saved backup data is in TSV format so can be loaded into other tools like Excel to build highly customised reports.
+			</p>
 			<p>
 				Backup Path : <span id="backup_path_label"></span><br />
 			</p>
 			<p>
-				<button id="set_backup_path">Set Backup Path</button> 
+				<button id="set_backup_path">Set Backup Path</button>
 				<button id="backup_data_now">Save Backup Data</button>
 				<button id="load_backup_data">Load Backup Data</button>
 			</p>
 
 			<h3>
-				Ignored User List
+				<strong>Ignored User List</strong>
 			</h3>
-			<select id="user_list_for_add">
-			</select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
-			<ul id="user_list_items">
-			</ul>
+			<p>
+				Users can be set to ignored so you can have test users and admins that are not included in any of the reports.
+			</p>
+			<select id="user_list_for_add"></select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
+			<ul id="user_list_items"></ul>
 
 		</div>
 	</div>
