@@ -175,6 +175,7 @@ namespace playback_reporting
             playback_trackers.Add(key, tracker);
 
             // start a task to report playback started
+            _logger.Info("Creating StartPlaybackTimer Task");
             System.Threading.Tasks.Task.Run(() => StartPlaybackTimer(e));
 
         }
@@ -193,7 +194,7 @@ namespace playback_reporting
                     string event_user_id = e.Users[0].Id.ToString("N");
 
                     string session_playing_id = "";
-                    if (session.NowPlayingItem != null) session_playing_id = session.NowPlayingItem.Id;
+                    if (session.NowPlayingItem != null) session_playing_id = session.NowPlayingItem.Id.ToString("N");
                     string session_user_id = "";
                     if (session.UserId != null) session_user_id = ((Guid)session.UserId).ToString("N");
 

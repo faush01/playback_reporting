@@ -17,6 +17,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
 using SQLitePCL.pretty;
@@ -145,14 +146,14 @@ namespace playback_reporting.Data
         /// </summary>
         /// <returns>System.Byte[][].</returns>
         /// <exception cref="System.ArgumentNullException">obj</exception>
-        public static byte[] SerializeToBytes(this IJsonSerializer json, object obj, IMemoryStreamFactory streamProvider)
+        public static byte[] SerializeToBytes(this IJsonSerializer json, object obj)
         {
             if (obj == null)
             {
                 throw new ArgumentNullException("obj");
             }
 
-            using (var stream = streamProvider.CreateNew())
+            using (var stream = new MemoryStream())
             {
                 json.SerializeToStream(obj, stream);
                 return stream.ToArray();
