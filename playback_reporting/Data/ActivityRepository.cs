@@ -669,5 +669,47 @@ namespace playback_reporting.Data
 
             return report;
         }
+
+        public List<Dictionary<string, object>> GetMoviesReport(int numberOfDays)
+        {
+            List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
+            DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+
+            string sql = "";
+            sql += "SELECT ItemName AS name, ";
+            sql += "COUNT(1) AS play_count, ";
+            sql += "SUM(PlayDuration) AS total_duarion ";
+            sql += "FROM PlaybackActivity ";
+            sql += "WHERE ItemType = 'Movie' ";
+            sql += "AND DateCreated > @DateCreated ";
+            sql += "AND UserId not IN (select UserId from UserList) ";
+            sql += "GROUP BY name";
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@DateCreated", from_date.ToString("yyyy-MM-dd"));
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            string item_label = row[0].ToString();
+                            int action_count = row[1].ToInt();
+                            int seconds_sum = row[2].ToInt();
+
+                            Dictionary<string, object> row_data = new Dictionary<string, object>();
+                            row_data.Add("label", item_label);
+                            row_data.Add("count", action_count);
+                            row_data.Add("time", seconds_sum);
+                            report.Add(row_data);
+                        }
+                    }
+                }
+            }
+
+            return report;
+        }
     }
 }

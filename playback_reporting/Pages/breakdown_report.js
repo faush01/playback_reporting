@@ -302,6 +302,14 @@ define(['libraryMenu'], function (libraryMenu) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "TvShows");
                     });
+
+                    // build Movies chart
+                    var url = "user_usage_stats/" + duration + "/MoviesReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
+                    ApiClient.getUserActivity(url).then(function (data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_chart_user_count(view, d3, data, "Movies");
+                    });
                 }
             });
         });

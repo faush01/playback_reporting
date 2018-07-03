@@ -38,5 +38,6 @@ namespace playback_reporting.Data
         List<Dictionary<string, object>> GetBreakdownReport(int numberOfDays, string type);
         SortedDictionary<int, int> GetDurationHistogram(int numberOfDays);
         List<Dictionary<string, object>> GetTvShowReport(int numberOfDays);
+        List<Dictionary<string, object>> GetMoviesReport(int numberOfDays);
     }
 }
