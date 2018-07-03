@@ -51,19 +51,19 @@ define(['libraryMenu'], function (libraryMenu) {
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback Report'
+                name: 'Playback'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly Usage'
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown Report'
+                name: 'Breakdown'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration Histogram'
+                name: 'Duration'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
@@ -73,7 +73,8 @@ define(['libraryMenu'], function (libraryMenu) {
     }
 
     function saveBackup(view) {
-        var url = "/emby/user_usage_stats/save_backup?stamp=" + new Date().getTime();
+        var url = "user_usage_stats/save_backup?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
         ApiClient.getUserActivity(url).then(function (responce_message) {
             //alert("Loaded Data: " + JSON.stringify(usage_data));
             alert(responce_message[0]);
@@ -87,7 +88,8 @@ define(['libraryMenu'], function (libraryMenu) {
     }
 
     function loadBackup(view) {
-        var url = "/emby/user_usage_stats/load_backup?stamp=" + new Date().getTime();
+        var url = "user_usage_stats/load_backup?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
         ApiClient.getUserActivity(url).then(function (responce_message) {
             //alert("Loaded Data Message : " + JSON.stringify(responce_message));
             alert(responce_message[0]);
@@ -96,7 +98,8 @@ define(['libraryMenu'], function (libraryMenu) {
 
     function showUserList(view) {
 
-        var url = "/emby/user_usage_stats/user_list?stamp=" + new Date().getTime();
+        var url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
         ApiClient.getUserActivity(url).then(function (user_list) {
             //alert("Loaded Data: " + JSON.stringify(user_list));
 
@@ -170,7 +173,8 @@ define(['libraryMenu'], function (libraryMenu) {
             // remove unknown users button
             var remove_unknown_button = view.querySelector('#remove_unknown_button');
             remove_unknown_button.addEventListener("click", function () {
-                var url = "/user_usage_stats/user_manage/remove_unknown/none" + "?stamp=" + new Date().getTime();
+                var url = "user_usage_stats/user_manage/remove_unknown/none" + "?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
                 ApiClient.getUserActivity(url).then(function (result) {
                     alert("Unknown user activity removed.");
                 });
@@ -187,7 +191,8 @@ define(['libraryMenu'], function (libraryMenu) {
             add_button.addEventListener("click", function () {
                 var add_user_list = view.querySelector('#user_list_for_add');
                 var selected_user_id = add_user_list.options[add_user_list.selectedIndex].value;
-                var url = "/user_usage_stats/user_manage/add/" + selected_user_id + "?stamp=" + new Date().getTime();
+                var url = "user_usage_stats/user_manage/add/" + selected_user_id + "?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
                 ApiClient.getUserActivity(url).then(function (result) {
                     //alert(result);
                     showUserList(view);
@@ -199,7 +204,8 @@ define(['libraryMenu'], function (libraryMenu) {
             remove_button.addEventListener("click", function () {
                 var add_user_list = view.querySelector('#user_list_for_add');
                 var selected_user_id = add_user_list.options[add_user_list.selectedIndex].value;
-                var url = "/user_usage_stats/user_manage/remove/" + selected_user_id + "?stamp=" + new Date().getTime();
+                var url = "user_usage_stats/user_manage/remove/" + selected_user_id + "?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
                 ApiClient.getUserActivity(url).then(function (result) {
                     //alert(result);
                     showUserList(view);

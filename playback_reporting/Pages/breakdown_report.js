@@ -217,19 +217,19 @@ define(['libraryMenu'], function (libraryMenu) {
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback Report'
+                name: 'Playback'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly Usage'
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown Report'
+                name: 'Breakdown'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration Histogram'
+                name: 'Duration'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
@@ -256,42 +256,48 @@ define(['libraryMenu'], function (libraryMenu) {
                     var duration = report_duration.options[report_duration.selectedIndex].value;
 
                     // build user chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/UserId/BreakdownReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/UserId/BreakdownReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "User");
                     });
 
                     // build ItemType chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/ItemType/BreakdownReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/ItemType/BreakdownReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "ItemType");
                     });
 
                     // build PlaybackMethod chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/PlaybackMethod/BreakdownReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/PlaybackMethod/BreakdownReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "PlayMethod");
                     });
 
                     // build ClientName chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/ClientName/BreakdownReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/ClientName/BreakdownReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "ClientName");
                     });
 
                     // build DeviceName chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/DeviceName/BreakdownReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/DeviceName/BreakdownReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "DeviceName");
                     });
 
                     // build TvShows chart
-                    var url = "/emby/user_usage_stats/" + duration +  "/TvShowsReport?stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/" + duration + "/TvShowsReport?stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "TvShows");

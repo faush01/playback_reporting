@@ -241,7 +241,8 @@ define(['libraryMenu'], function (libraryMenu) {
             }
         }
 
-        var url_to_get = "/emby/user_usage_stats/" + user_id + "/" + data_label + "/GetItems?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+        var url_to_get = "user_usage_stats/" + user_id + "/" + data_label + "/GetItems?filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+        url_to_get = ApiClient.getUrl(url_to_get);
         console.log("User Report Details Url: " + url_to_get);
 
         ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
@@ -312,19 +313,19 @@ define(['libraryMenu'], function (libraryMenu) {
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback Report'
+                name: 'Playback'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly Usage'
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown Report'
+                name: 'Breakdown'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration Histogram'
+                name: 'Duration'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
@@ -346,7 +347,7 @@ define(['libraryMenu'], function (libraryMenu) {
                 
 
                 // get filter types form sever
-                var filter_url = "/emby/user_usage_stats/type_filter_list";
+                var filter_url = ApiClient.getUrl("user_usage_stats/type_filter_list");
                 ApiClient.getUserActivity(filter_url).then(function (filter_data) {
                     filter_names = filter_data;
                 
@@ -368,7 +369,8 @@ define(['libraryMenu'], function (libraryMenu) {
                     var data_type = view.querySelector('#data_type');
                     data_type.addEventListener("change", process_click);
 
-                    var url = "/emby/user_usage_stats/28/PlayActivity?filter=" + filter_names.join(",") + "&data_type=count&stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/28/PlayActivity?filter=" + filter_names.join(",") + "&data_type=count&stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (usage_data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_graph(view, d3, usage_data);
@@ -389,7 +391,8 @@ define(['libraryMenu'], function (libraryMenu) {
 
                         var data_t = data_type.options[data_type.selectedIndex].value;
 
-                        var filtered_url = "/emby/user_usage_stats/28/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                        var filtered_url = "user_usage_stats/28/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                        filtered_url = ApiClient.getUrl(filtered_url);
                         ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
                             draw_graph(view, d3, usage_data);
                         });

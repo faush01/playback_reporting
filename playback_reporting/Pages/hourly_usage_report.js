@@ -154,19 +154,19 @@ define(['libraryMenu'], function (libraryMenu) {
         var tabs = [
             {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback Report'
+                name: 'Playback'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly Usage'
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown Report'
+                name: 'Breakdown'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration Histogram'
+                name: 'Duration'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
@@ -184,7 +184,8 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
                 
-                var url = "/emby/user_usage_stats/90/HourlyReport?stamp=" + new Date().getTime();
+                var url = "user_usage_stats/90/HourlyReport?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
                 ApiClient.getUserActivity(url).then(function (usage_data) {
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
                     draw_graph(view, d3, usage_data);
