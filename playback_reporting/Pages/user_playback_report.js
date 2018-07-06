@@ -20,6 +20,12 @@ define(['libraryMenu'], function (libraryMenu) {
     var my_bar_chart = null;
     var filter_names = [];
 
+    Date.prototype.toDateInputValue = (function () {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0, 10);
+    });
+
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -33,22 +39,26 @@ define(['libraryMenu'], function (libraryMenu) {
 
     function draw_graph(view, local_chart, usage_data) {
 
+        console.log("draw_graph called");
+
         if (!local_chart) {
             alert("No Chart Lib : " + local_chart);
             return;
         }
 
-        if (!usage_data || usage_data.length == 0) {
-            Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then check again.", title: "No playback data!" });
-            return;
-        }
+        //if (!usage_data || usage_data.length == 0) {
+        //    Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then check again.", title: "No playback data!" });
+        //    return;
+        //}
 
         //console.log("usage_data: " + JSON.stringify(usage_data));
 
         // get labels from the first user
         var text_labels = [];
-        for (var date_string in usage_data[0].user_usage) {
-            text_labels.push(date_string);
+        if (usage_data.length > 0) {
+            for (var date_string in usage_data[0].user_usage) {
+                text_labels.push(date_string);
+            }
         }
         //console.log("Text Lables: " + JSON.stringify(text_labels));
 
@@ -63,28 +73,25 @@ define(['libraryMenu'], function (libraryMenu) {
             chart_title = "User Playback Report (Play Count)";
         }
 
-        var user_ids = []
-
         // process user usage into data for chart
+        var user_ids = []
         var user_usage_datasets = [];
         for (var index = 0; index < usage_data.length; ++index) {
             var user_usage = usage_data[index];
-            user_ids.push(user_usage.user_id);
-            var point_data = [];
-            for (var point_date in user_usage.user_usage) {
-                var data_point = user_usage.user_usage[point_date];
-                //if (data_t) {
-                //    data_point = data_point / 60;
-                //    data_point = precisionRound(data_point, 2);
-                //}
-                point_data.push(data_point);
+            if (user_usage.user_id != "labels_user") {
+                user_ids.push(user_usage.user_id);
+                var point_data = [];
+                for (var point_date in user_usage.user_usage) {
+                    var data_point = user_usage.user_usage[point_date];
+                    point_data.push(data_point);
+                }
+                var chart_data = {
+                    label: user_usage.user_name,
+                    backgroundColor: color_list[index % 10],
+                    data: point_data
+                };
+                user_usage_datasets.push(chart_data);
             }
-            var chart_data = {
-                label: user_usage.user_name,
-                backgroundColor: color_list[index % 10],
-                data: point_data
-            };
-            user_usage_datasets.push(chart_data);
         }
 
         var userUsageChartData = {
@@ -187,6 +194,10 @@ define(['libraryMenu'], function (libraryMenu) {
                 scales: {
                     xAxes: [{
                         stacked: true,
+                        ticks: {
+                            autoSkip: false,
+                            maxTicksLimit: 10000
+                        }
                     }],
                     yAxes: [{
                         stacked: true,
@@ -344,8 +355,6 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                
-
                 // get filter types form sever
                 var filter_url = ApiClient.getUrl("user_usage_stats/type_filter_list");
                 ApiClient.getUserActivity(filter_url).then(function (filter_data) {
@@ -369,7 +378,16 @@ define(['libraryMenu'], function (libraryMenu) {
                     var data_type = view.querySelector('#data_type');
                     data_type.addEventListener("change", process_click);
 
-                    var url = "user_usage_stats/28/PlayActivity?filter=" + filter_names.join(",") + "&data_type=count&stamp=" + new Date().getTime();
+                    var end_date = view.querySelector('#end_date');
+                    //end_date.valueAsDate = new Date();
+                    end_date.value = new Date().toDateInputValue();
+                    end_date.addEventListener("change", process_click);
+
+                    var weeks = view.querySelector('#weeks');
+                    weeks.addEventListener("change", process_click);
+                    var days = parseInt(weeks.value) * 7;
+
+                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=count&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (usage_data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -391,7 +409,9 @@ define(['libraryMenu'], function (libraryMenu) {
 
                         var data_t = data_type.options[data_type.selectedIndex].value;
 
-                        var filtered_url = "user_usage_stats/28/PlayActivity?filter=" + filter.join(",") + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                        days = parseInt(weeks.value) * 7;
+
+                        var filtered_url = "user_usage_stats/PlayActivity?filter=" + filter.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                         filtered_url = ApiClient.getUrl(filtered_url);
                         ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
                             draw_graph(view, d3, usage_data);

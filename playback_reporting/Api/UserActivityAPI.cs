@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 
 namespace playback_reporting.Api
 {
@@ -70,15 +71,17 @@ namespace playback_reporting.Api
     {
     }
 
-    // http://localhost:8096/emby/user_usage_stats/30/PlayActivity
-    [Route("/user_usage_stats/{NumberOfDays}/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
+    // http://localhost:8096/emby/user_usage_stats/PlayActivity
+    [Route("/user_usage_stats/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
     public class GetUsageStats : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         [ApiMember(Name = "data_type", Description = "Data type to return (count,time)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
 
-        public int NumberOfDays { get; set; }
+        public int days { get; set; }
+        public string end_date { get; set; }
         public string filter { get; set; }
         public string data_type { get; set; }
     }
@@ -337,7 +340,22 @@ namespace playback_reporting.Api
             {
                 filter_tokens = activity.filter.Split(',');
             }
-            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.NumberOfDays, filter_tokens, activity.data_type);
+
+            DateTime end_date;
+            if (string.IsNullOrEmpty(activity.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + activity.end_date);
+                end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+            
+            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
+
+            // add empty user for labels
+            results.Add("labels_user", new Dictionary<string, int>());
 
             List<Dictionary<string, object>> user_usage_data = new List<Dictionary<string, object>>();
             foreach (string user_id in results.Keys)
@@ -346,9 +364,8 @@ namespace playback_reporting.Api
 
                 // fill in missing dates for time period
                 SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
-                DateTime from_date = DateTime.Now.AddDays(activity.NumberOfDays * -1);
-                DateTime to_date = DateTime.Now;//.AddDays(1);
-                while (from_date < to_date)
+                DateTime from_date = end_date.AddDays((activity.days * -1) + 1);
+                while (from_date <= end_date)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");
                     if (user_usage.ContainsKey(date_string) == false)
@@ -363,13 +380,19 @@ namespace playback_reporting.Api
                     from_date = from_date.AddDays(1);
                 }
 
-                Guid user_guid = new Guid(user_id);
-                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
-
                 string user_name = "Not Known";
-                if (user != null)
+                if (user_id == "labels_user")
                 {
-                    user_name = user.Name;
+                    user_name = "labels_user";
+                }
+                else
+                {
+                    Guid user_guid = new Guid(user_id);
+                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                    if (user != null)
+                    {
+                        user_name = user.Name;
+                    }
                 }
 
                 Dictionary<string, object> user_data = new Dictionary<string, object>();

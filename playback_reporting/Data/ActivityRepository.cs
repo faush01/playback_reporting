@@ -429,7 +429,7 @@ namespace playback_reporting.Data
             return items;
         }
 
-        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, string[] types, string data_type)
+        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, DateTime end_date, string[] types, string data_type)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -447,12 +447,12 @@ namespace playback_reporting.Data
                 sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration) AS count ";
             }
             sql_query += "FROM PlaybackActivity ";
-            sql_query += "WHERE DateCreated >= @start_date ";
+            sql_query += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql_query += "AND ItemType IN (" + string.Join(",", filters) + ") ";
             sql_query += "AND UserId not IN (select UserId from UserList) ";
             sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
-            DateTime from_date = DateTime.Now.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
+            DateTime start_date = end_date.Subtract(new TimeSpan(numberOfDays, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             using (WriteLock.Read())
@@ -461,7 +461,8 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@start_date", from_date.ToString("yyyy-MM-dd"));
+                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
