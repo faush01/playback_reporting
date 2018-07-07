@@ -379,7 +379,6 @@ define(['libraryMenu'], function (libraryMenu) {
                     data_type.addEventListener("change", process_click);
 
                     var end_date = view.querySelector('#end_date');
-                    //end_date.valueAsDate = new Date();
                     end_date.value = new Date().toDateInputValue();
                     end_date.addEventListener("change", process_click);
 

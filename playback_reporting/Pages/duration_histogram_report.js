@@ -146,13 +146,24 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                var url = "user_usage_stats/90/DurationHistogramReport?stamp=" + new Date().getTime();
-                url = ApiClient.getUrl(url);
-                ApiClient.getUserActivity(url).then(function (usage_data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_graph(view, d3, usage_data);
-                });
+                var end_date = view.querySelector('#end_date');
+                end_date.value = new Date().toDateInputValue();
+                end_date.addEventListener("change", process_click);
 
+                var weeks = view.querySelector('#weeks');
+                weeks.addEventListener("change", process_click);
+
+                process_click();
+
+                function process_click() {
+                    var days = parseInt(weeks.value) * 7;
+                    var url = "user_usage_stats/DurationHistogramReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
+                    ApiClient.getUserActivity(url).then(function (usage_data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_graph(view, d3, usage_data);
+                    });
+                }
             });
 
         });

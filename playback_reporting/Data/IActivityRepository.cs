@@ -33,11 +33,11 @@ namespace playback_reporting.Data
         void AddPlaybackAction(PlaybackInfo play_info);
         void UpdatePlaybackAction(PlaybackInfo play_info);
         List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] filter);
-        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int numberOfDays, DateTime end_date, string[] types, string data_type);
-        SortedDictionary<string, int> GetHourlyUsageReport(int numberOfDays);
-        List<Dictionary<string, object>> GetBreakdownReport(int numberOfDays, string type);
-        SortedDictionary<int, int> GetDurationHistogram(int numberOfDays);
-        List<Dictionary<string, object>> GetTvShowReport(int numberOfDays);
-        List<Dictionary<string, object>> GetMoviesReport(int numberOfDays);
+        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type);
+        SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date);
+        List<Dictionary<string, object>> GetBreakdownReport(int days, DateTime end_date, string type);
+        SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date);
+        List<Dictionary<string, object>> GetTvShowReport(int days, DateTime end_date);
+        List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date);
     }
 }

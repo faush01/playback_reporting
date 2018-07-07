@@ -6,14 +6,6 @@
 			<h2>User Playback Report</h2>
 
 			<span style="border: 1px solid black; padding: 5px;">
-				Report Type: &nbsp;
-				<select id="data_type">
-					<option value="count">Play Count</option>
-					<option value="time">Play Time</option>
-				</select>
-			</span>
-			&nbsp;
-			<span style="border: 1px solid black; padding: 5px;">
 				End Date:&nbsp;
 				<input type="date" id="end_date" />
 				&nbsp;Weeks:&nbsp;
@@ -32,7 +24,17 @@
 					<option value="12">12</option>
 				</select>
 			</span>
-			<br />
+			&nbsp;
+			<span style="border: 1px solid black; padding: 5px;">
+				Report Type: &nbsp;
+				<select id="data_type">
+					<option value="count">Play Count</option>
+					<option value="time">Play Time</option>
+				</select>
+			</span>
+
+			<br /><br />
+
 			<div style="width: 75%">
 				<canvas id="user_stats_chart_canvas"></canvas>
 			</div>

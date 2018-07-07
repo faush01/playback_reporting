@@ -19,6 +19,12 @@ define(['libraryMenu'], function (libraryMenu) {
 
     var my_bar_chart = null;
 
+    Date.prototype.toDateInputValue = (function () {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0, 10);
+    });
+
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -183,13 +189,25 @@ define(['libraryMenu'], function (libraryMenu) {
             libraryMenu.setTabs('playback_reporting', 1, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
-                
-                var url = "user_usage_stats/90/HourlyReport?stamp=" + new Date().getTime();
-                url = ApiClient.getUrl(url);
-                ApiClient.getUserActivity(url).then(function (usage_data) {
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
-                    draw_graph(view, d3, usage_data);
-                });
+
+                var end_date = view.querySelector('#end_date');
+                end_date.value = new Date().toDateInputValue();
+                end_date.addEventListener("change", process_click);
+
+                var weeks = view.querySelector('#weeks');
+                weeks.addEventListener("change", process_click);
+
+                process_click();
+
+                function process_click() {
+                    var days = parseInt(weeks.value) * 7;
+                    var url = "user_usage_stats/HourlyReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = ApiClient.getUrl(url);
+                    ApiClient.getUserActivity(url).then(function (usage_data) {
+                        //alert("Loaded Data: " + JSON.stringify(usage_data));
+                        draw_graph(view, d3, usage_data);
+                    });
+                }
 
             });
 

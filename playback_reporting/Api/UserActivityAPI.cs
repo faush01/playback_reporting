@@ -100,46 +100,60 @@ namespace playback_reporting.Api
     }
 
     // http://localhost:8096/emby/user_usage_stats/30/HourlyReport
-    [Route("/user_usage_stats/{NumberOfDays}/HourlyReport", "GET", Summary = "Gets a report of the averall activoty per hour")]
+    [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
     public class GetHourlyReport : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
 
-        public int NumberOfDays { get; set; }
+        public int days { get; set; }
+        public string end_date { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/90/ItemType/BreakdownReport
-    [Route("/user_usage_stats/{NumberOfDays}/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
+    // http://localhost:8096/emby/user_usage_stats/ItemType/BreakdownReport
+    [Route("/user_usage_stats/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
     public class GetBreakdownReport : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         [ApiMember(Name = "BreakdownType", Description = "Breakdown type", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        public int NumberOfDays { get; set; }
+
+        public int days { get; set; }
+        public string end_date { get; set; }
         public string BreakdownType { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/90/DurationHistogramReport
-    [Route("/user_usage_stats/{NumberOfDays}/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
+    // http://localhost:8096/emby/user_usage_stats/DurationHistogramReport
+    [Route("/user_usage_stats/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
     public class GetDurationHistogramReport : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
-        public int NumberOfDays { get; set; }
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
+        public int days { get; set; }
+        public string end_date { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/90/TvShowsReport
-    [Route("/user_usage_stats/{NumberOfDays}/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
+    // http://localhost:8096/emby/user_usage_stats/TvShowsReport
+    [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
     public class GetTvShowsReport : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
-        public int NumberOfDays { get; set; }
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
+        public int days { get; set; }
+        public string end_date { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/90/MoviesReport
-    [Route("/user_usage_stats/{NumberOfDays}/MoviesReport", "GET", Summary = "Gets Movies counts")]
+    // http://localhost:8096/emby/user_usage_stats/MoviesReport
+    [Route("/user_usage_stats/MoviesReport", "GET", Summary = "Gets Movies counts")]
     public class GetMoviesReport : IReturn<ReportDayUsage>
     {
-        [ApiMember(Name = "NumberOfDays", Description = "Number of Days", IsRequired = true, DataType = "int", ParameterType = "path", Verb = "GET")]
-        public int NumberOfDays { get; set; }
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
+        public int days { get; set; }
+        public string end_date { get; set; }
     }
 
     public class UserActivityAPI : IService, IRequiresRequest
@@ -410,7 +424,18 @@ namespace playback_reporting.Api
 
         public object Get(GetHourlyReport request)
         {
-            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.NumberOfDays);
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.days, end_date);
 
             for (int day = 0; day < 7; day++)
             {
@@ -429,7 +454,18 @@ namespace playback_reporting.Api
 
         public object Get(GetBreakdownReport request)
         {
-            List<Dictionary<string, object>> report = Repository.GetBreakdownReport(request.NumberOfDays, request.BreakdownType);
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            List<Dictionary<string, object>> report = Repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
 
             if (request.BreakdownType == "UserId")
             {
@@ -455,7 +491,18 @@ namespace playback_reporting.Api
 
         public object Get(GetDurationHistogramReport request)
         {
-            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.NumberOfDays);
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.days, end_date);
 
             // find max
             int max = -1;
@@ -480,13 +527,35 @@ namespace playback_reporting.Api
 
         public object Get(GetTvShowsReport request)
         {
-            List<Dictionary<string, object>> report = Repository.GetTvShowReport(request.NumberOfDays);
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            List<Dictionary<string, object>> report = Repository.GetTvShowReport(request.days, end_date);
             return report;
         }
 
         public object Get(GetMoviesReport request)
         {
-            List<Dictionary<string, object>> report = Repository.GetMoviesReport(request.NumberOfDays);
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            List<Dictionary<string, object>> report = Repository.GetMoviesReport(request.days, end_date);
             return report;
         }
     }
