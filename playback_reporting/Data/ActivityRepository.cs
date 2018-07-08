@@ -727,5 +727,62 @@ namespace playback_reporting.Data
 
             return report;
         }
+
+        public List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date)
+        {
+            List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
+
+            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
+            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+
+            string sql = "";
+            sql += "SELECT x.latest_date, x.UserId, x.play_count, x.total_duarion, y.ItemName, y.DeviceName ";
+            sql += "FROM( ";
+            sql += "SELECT MAX(DateCreated) AS latest_date, UserId, COUNT(1) AS play_count, SUM(PlayDuration) AS total_duarion ";
+            sql += "FROM PlaybackActivity ";
+            sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
+            sql += "GROUP BY UserId ";
+            sql += ") AS x ";
+            sql += "INNER JOIN PlaybackActivity AS y ON x.latest_date = y.DateCreated AND x.UserId = y.UserId ";
+            sql += "ORDER BY x.latest_date DESC";
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            Dictionary<string, object> row_data = new Dictionary<string, object>();
+
+                            DateTime latest_date = row[0].ReadDateTime().ToLocalTime();
+                            row_data.Add("latest_date", latest_date);
+
+                            string user_id = row[1].ToString();
+                            row_data.Add("user_id", user_id);
+
+                            int action_count = row[2].ToInt();
+                            int seconds_sum = row[3].ToInt();
+                            row_data.Add("total_count", action_count);
+                            row_data.Add("total_time", seconds_sum);
+
+                            string item_name = row[4].ToString();
+                            row_data.Add("item_name", item_name);
+
+                            string client_name = row[5].ToString();
+                            row_data.Add("client_name", client_name);
+
+                            report.Add(row_data);
+                        }
+                    }
+                }
+            }
+
+            return report;
+        }
     }
 }

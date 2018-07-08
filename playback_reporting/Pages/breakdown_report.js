@@ -216,16 +216,20 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('user_report'),
+                name: 'Users'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
                 name: 'Playback'
             },
             {
-                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly'
-            },
-            {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
                 name: 'Breakdown'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),

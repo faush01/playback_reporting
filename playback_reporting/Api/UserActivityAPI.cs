@@ -32,6 +32,18 @@ using System.Globalization;
 
 namespace playback_reporting.Api
 {
+
+    // http://localhost:8096/emby/user_usage_stats/user_activity
+    [Route("/user_usage_stats/user_activity", "GET", Summary = "Gets a report of the available activity per hour")]
+    public class GetUserReport : IReturn<ReportDayUsage>
+    {
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+
+        public int days { get; set; }
+        public string end_date { get; set; }
+    }
+
     // http://localhost:8096/user_usage_stats/user_manage/add/1234-4321-1234
     [Route("/user_usage_stats/user_manage/{Action}/{Id}", "GET", Summary = "Get users")]
     public class GetUserManage : IReturn<String>
@@ -99,7 +111,7 @@ namespace playback_reporting.Api
         public string Filter { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/30/HourlyReport
+    // http://localhost:8096/emby/user_usage_stats/HourlyReport
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
     public class GetHourlyReport : IReturn<ReportDayUsage>
     {
@@ -194,6 +206,88 @@ namespace playback_reporting.Api
         {
             List<string> filter_list = Repository.GetTypeFilterList();
             return filter_list;
+        }
+
+        public object Get(GetUserReport request)
+        {
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            List<Dictionary<string, object>> report = Repository.GetUserReport(request.days, end_date);
+
+            foreach(var user_info in report)
+            {
+                string user_id = (string)user_info["user_id"];
+                string user_name = "Not Known";
+                Guid user_guid = new Guid(user_id);
+                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                if (user != null)
+                {
+                    user_name = user.Name;
+                }
+                user_info.Add("user_name", user_name);
+
+                DateTime last_seen = (DateTime)user_info["latest_date"];
+                TimeSpan time_ago = DateTime.Now.Subtract(last_seen);
+                user_info.Add("last_seen", GetLastSeenString(time_ago));
+
+                int seconds = (int)user_info["total_time"];
+                TimeSpan total_time = new TimeSpan(10000000L * (long)seconds);
+                user_info.Add("total_play_time", GetLastSeenString(total_time));
+
+            }
+
+            return report;
+        }
+
+        private string GetLastSeenString(TimeSpan span)
+        {
+            String last_seen = "";
+
+            if (span.TotalDays > 365)
+            {
+                last_seen += GetTimePart((int)(span.TotalDays / 365), "year");
+            }
+
+            if ((int)(span.TotalDays % 365) > 7)
+            {
+                last_seen += GetTimePart((int)((span.TotalDays % 365) / 7), "week");
+            }
+
+            if ((int)(span.TotalDays % 7) > 0)
+            {
+                last_seen += GetTimePart((int)(span.TotalDays % 7), "day");
+            }
+
+            if (span.Hours > 0)
+            {
+                last_seen += GetTimePart(span.Hours, "hour");
+            }
+
+            if (span.Minutes > 0)
+            {
+                last_seen += GetTimePart(span.Minutes, "minute");
+            }
+
+            return last_seen;
+        }
+
+        private string GetTimePart(int value, string name)
+        {
+            string part = value + " " + name;
+            if (value > 1)
+            {
+                part += "s";
+            }
+            return part + " ";
         }
 
         public object Get(GetUserManage request)

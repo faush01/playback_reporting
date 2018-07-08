@@ -39,5 +39,6 @@ namespace playback_reporting.Data
         SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date);
         List<Dictionary<string, object>> GetTvShowReport(int days, DateTime end_date);
         List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date);
+        List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);
     }
 }

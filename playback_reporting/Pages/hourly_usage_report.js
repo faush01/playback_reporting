@@ -159,16 +159,20 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('user_report'),
+                name: 'Users'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
                 name: 'Playback'
             },
             {
-                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly'
-            },
-            {
                 href: Dashboard.getConfigurationPageUrl('breakdown_report'),
                 name: 'Breakdown'
+            },
+            {
+                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
+                name: 'Hourly'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
@@ -186,7 +190,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 1, getTabs);
+            libraryMenu.setTabs('playback_reporting', 3, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
