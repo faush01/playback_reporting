@@ -88,20 +88,28 @@ namespace playback_reporting
         void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
         {
             string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-            if(playback_trackers.ContainsKey(key))
+            if(playback_trackers != null && playback_trackers.ContainsKey(key))
             {
-                //_logger.Info("Playback progress tracker found, processing progress : " + key);
-                PlaybackTracker tracker = playback_trackers[key];
-                tracker.ProcessProgress(e);
-                if (tracker.TrackedPlaybackInfo != null)
+                try
                 {
-                    _logger.Debug("Saving playback tracking activity in DB");
-                    _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
+                    //_logger.Info("Playback progress tracker found, processing progress : " + key);
+                    PlaybackTracker tracker = playback_trackers[key];
+                    tracker.ProcessProgress(e);
+                    if (tracker.TrackedPlaybackInfo != null)
+                    {
+                        _logger.Debug("Saving playback tracking activity in DB");
+                        _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
+                    }
+                }
+                catch(Exception exp)
+                {
+                    playback_trackers.Remove(key);
+                    throw new Exception("Error saving playback state: " + exp.Message);
                 }
             }
             else
             {
-                _logger.Info("Playback progress did not have a tracker : " + key);
+                _logger.Debug("Playback progress did not have a tracker : " + key);
             }
         }
 

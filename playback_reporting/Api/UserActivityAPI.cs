@@ -35,32 +35,33 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/user_activity
     [Route("/user_usage_stats/user_activity", "GET", Summary = "Gets a report of the available activity per hour")]
-    public class GetUserReport : IReturn<ReportDayUsage>
+    public class GetUserReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
     }
 
     // http://localhost:8096/user_usage_stats/user_manage/add/1234-4321-1234
     [Route("/user_usage_stats/user_manage/{Action}/{Id}", "GET", Summary = "Get users")]
-    public class GetUserManage : IReturn<String>
+    public class GetUserManage : IReturn<Object>
     {
+        [ApiMember(Name = "Action", Description = "action to perform", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string Action { get; set; }
+        [ApiMember(Name = "Id", Description = "user Id to perform the action on", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string Id { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/user_list
     [Route("/user_usage_stats/user_list", "GET", Summary = "Get users")]
-    public class GetUserList : IReturn<String>
+    public class GetUserList : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/type_filter_list", "GET", Summary = "Gets types filter list items")]
-    public class TypeFilterList : IReturn<String>
+    public class TypeFilterList : IReturn<Object>
     {
     }
 
@@ -73,98 +74,91 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
-    public class LoadBackup : IReturn<String>
+    public class LoadBackup : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/save_backup
     [Route("/user_usage_stats/save_backup", "GET", Summary = "Saves a backup of the playback report data to the backup path")]
-    public class SaveBackup : IReturn<ReportDayUsage>
+    public class SaveBackup : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/PlayActivity
     [Route("/user_usage_stats/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
-    public class GetUsageStats : IReturn<ReportDayUsage>
+    public class GetUsageStats : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "data_type", Description = "Data type to return (count,time)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string filter { get; set; }
+        [ApiMember(Name = "data_type", Description = "Data type to return (count,time)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string data_type { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
     [Route("/user_usage_stats/{UserID}/{Date}/GetItems", "GET", Summary = "Gets activity for {USER} for {Date} formatted as yyyy-MM-dd")]
-    public class GetUserReportData : IReturn<ReportDayUsage>
+    public class GetUserReportData : IReturn<Object>
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "StartDate", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-        [ApiMember(Name = "Filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public string UserID { get; set; }
+        [ApiMember(Name = "Date", Description = "UTC DateTime, Format yyyy-MM-dd", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string Date { get; set; }
+        [ApiMember(Name = "Filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string Filter { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/HourlyReport
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
-    public class GetHourlyReport : IReturn<ReportDayUsage>
+    public class GetHourlyReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/ItemType/BreakdownReport
     [Route("/user_usage_stats/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
-    public class GetBreakdownReport : IReturn<ReportDayUsage>
+    public class GetBreakdownReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "BreakdownType", Description = "Breakdown type", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
+        [ApiMember(Name = "BreakdownType", Description = "Breakdown type", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string BreakdownType { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/DurationHistogramReport
     [Route("/user_usage_stats/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
-    public class GetDurationHistogramReport : IReturn<ReportDayUsage>
+    public class GetDurationHistogramReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/TvShowsReport
     [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
-    public class GetTvShowsReport : IReturn<ReportDayUsage>
+    public class GetTvShowsReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/MoviesReport
     [Route("/user_usage_stats/MoviesReport", "GET", Summary = "Gets Movies counts")]
-    public class GetMoviesReport : IReturn<ReportDayUsage>
+    public class GetMoviesReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-
         public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
     }
 
