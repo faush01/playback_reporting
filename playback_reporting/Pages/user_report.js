@@ -55,6 +55,10 @@ define(['libraryMenu'], function (libraryMenu) {
                 name: 'Duration'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('custom_query'),
+                name: 'Query'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];

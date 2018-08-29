@@ -9,6 +9,8 @@
     <None Remove="Pages\breakdown_report.html" />
     <None Remove="Pages\breakdown_report.js" />
     <None Remove="Pages\Chart.bundle.min.js" />
+    <None Remove="Pages\custom_query.html" />
+    <None Remove="Pages\custom_query.js" />
     <None Remove="Pages\duration_histogram_report.html" />
     <None Remove="Pages\duration_histogram_report.js" />
     <None Remove="Pages\hourly_usage_report.html" />
@@ -32,6 +34,8 @@
     <EmbeddedResource Include="Pages\playback_report_settings.js" />
     <EmbeddedResource Include="Pages\user_playback_report.html" />
     <EmbeddedResource Include="Pages\user_playback_report.js" />
+    <EmbeddedResource Include="Pages\custom_query.html" />
+    <EmbeddedResource Include="Pages\custom_query.js" />
     <EmbeddedResource Include="Pages\user_report.html" />
     <EmbeddedResource Include="Pages\user_report.js" />
   </ItemGroup>

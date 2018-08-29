@@ -70,6 +70,10 @@ define(['libraryMenu'], function (libraryMenu) {
                 name: 'Duration'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('custom_query'),
+                name: 'Query'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
                 name: 'Settings'
             }];
@@ -137,7 +141,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 5, getTabs);
+            libraryMenu.setTabs('playplayback_report_settingsback_reporting', 6, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", showFolderPicker);

@@ -741,6 +741,7 @@ namespace playback_reporting.Data
             sql += "SELECT MAX(DateCreated) AS latest_date, UserId, COUNT(1) AS play_count, SUM(PlayDuration) AS total_duarion ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
+            sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY UserId ";
             sql += ") AS x ";
             sql += "INNER JOIN PlaybackActivity AS y ON x.latest_date = y.DateCreated AND x.UserId = y.UserId ";

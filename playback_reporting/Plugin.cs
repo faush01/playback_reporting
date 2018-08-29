@@ -106,6 +106,16 @@ namespace playback_reporting
                 {
                     Name = "user_report.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = "custom_query",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.custom_query.html",
+                },
+                new PluginPageInfo
+                {
+                    Name = "custom_query.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.custom_query.js"
                 }
             };
         }
