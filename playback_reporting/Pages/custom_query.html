@@ -6,6 +6,16 @@
 			<h2>Custom Query Report</h2>
 
 
+			<h3>Custom SQL Query</h3>
+			<textarea id="custom_query_text" style="width: 100%; height:75px">
+SELECT ROWID, * 
+FROM PlaybackActivity 
+LIMIT 10
+			</textarea>
+			<button id="run_custom_query">Run</button>
+
+			<h3>Query Result</h3>
+			<div id="query_result_message"> </div>
 			<table cellpadding="6" id="custom_query_table" style="width:95%;">
 				<tbody class="resultBody" id="custom_query_results"></tbody>
 			</table>

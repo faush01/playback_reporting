@@ -72,6 +72,13 @@ namespace playback_reporting.Api
         public Stream RequestStream { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/submit_custom_query
+    [Route("/user_usage_stats/submit_custom_query", "POST", Summary = "Submit an SQL query")]
+    public class CustomQuery : IReturn<Object>
+    {
+        public String CustomQueryString { get; set; }
+    }
+
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
     public class LoadBackup : IReturn<Object>
@@ -645,6 +652,35 @@ namespace playback_reporting.Api
 
             List<Dictionary<string, object>> report = Repository.GetMoviesReport(request.days, end_date);
             return report;
+        }
+
+        public object Post(CustomQuery request)
+        {
+            _logger.Info("CustomQuery : " + request.CustomQueryString);
+
+            Dictionary<string, object> responce = new Dictionary<string, object>();
+
+            List<List<object>> result = new List<List<object>>();
+            List<string> colums = new List<string>();
+            string message = Repository.RunCustomQuery(request.CustomQueryString, colums, result);
+
+            /*
+            List<object> row = new List<object>();
+            row.Add("Shaun");
+            row.Add(12);
+            row.Add("Some Date");
+            result.Add(row);
+
+            colums.Add("Name");
+            colums.Add("Age");
+            colums.Add("Started");
+            */
+
+            responce.Add("colums", colums);
+            responce.Add("results", result);
+            responce.Add("message", message);
+            
+            return responce;
         }
     }
 }

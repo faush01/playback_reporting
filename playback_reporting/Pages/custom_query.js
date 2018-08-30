@@ -18,12 +18,16 @@ define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
 
-    ApiClient.getUserActivity = function (url_to_get) {
-        console.log("getUserActivity Url = " + url_to_get);
+    ApiClient.sendCustomQuery = function (url_to_get, query_data) {
+        var post_data = JSON.stringify(query_data);
+        console.log("sendCustomQuery url  = " + url_to_get);
+        console.log("sendCustomQuery data = " + post_data);
         return this.ajax({
-            type: "GET",
+            type: "POST",
             url: url_to_get,
-            dataType: "json"
+            dataType: "json",
+            data: post_data,
+            contentType: 'application/json'
         });
     };
 
@@ -67,6 +71,68 @@ define(['libraryMenu'], function (libraryMenu) {
 
             libraryMenu.setTabs('custom_query', 5, getTabs);
 
+            var run_custom_query = view.querySelector('#run_custom_query');
+            run_custom_query.addEventListener("click", runQuery);
+
+            function runQuery() {
+
+                var custom_query = view.querySelector('#custom_query_text');
+
+                //alert("Running: " + custom_query.value);
+
+                var message_div = view.querySelector('#query_result_message');
+                message_div.innerHTML = "";
+                var table_body = view.querySelector('#custom_query_results');
+                table_body.innerHTML = "";
+
+                var url = "user_usage_stats/submit_custom_query?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
+
+                var query_data = {
+                    CustomQueryString: custom_query.value
+                };
+
+                ApiClient.sendCustomQuery(url, query_data).then(function (result) {
+                    //alert("Loaded Data: " + JSON.stringify(result));
+
+                    var message = result["message"];
+
+                    if (message !== "") {
+                        var message_div = view.querySelector('#query_result_message');
+                        message_div.innerHTML = message;
+                    }
+                    else {
+                        // build the table
+                        var table_row_html = "";
+
+                        // add table heading
+                        var result_ladels = result["colums"];
+                        table_row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+                        for (var index = 0; index < result_ladels.length; ++index) {
+                            var colum_name = result_ladels[index];
+                            table_row_html += "<td><strong>" + colum_name + "</strong></td>";
+                        }
+                        table_row_html += "</tr>";
+
+                        // add the data
+                        var result_data_rows = result["results"];
+                        for (var index2 = 0; index2 < result_data_rows.length; ++index2) {
+                            var row_data = result_data_rows[index2];
+                            table_row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+
+                            for (var index3 = 0; index3 < row_data.length; ++index3) {
+                                var cell_data = row_data[index3];
+                                table_row_html += "<td>" + cell_data + "</td>";
+                            }
+
+                            table_row_html += "</tr>";
+                        }
+
+                        var table_body = view.querySelector('#custom_query_results');
+                        table_body.innerHTML = table_row_html;
+                    }
+                });
+            }
 
         });
 

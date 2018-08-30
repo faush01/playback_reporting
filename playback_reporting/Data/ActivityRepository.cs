@@ -103,6 +103,59 @@ namespace playback_reporting.Data
             }
         }
 
+        public string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results)
+        {
+            string message = "";
+            bool columns_done = false;
+            using (WriteLock.Write())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    try
+                    {
+                        using (var statement = connection.PrepareStatement(query_string))
+                        {
+                            foreach (var row in statement.ExecuteQuery())
+                            {
+                                if (!columns_done)
+                                {
+                                    foreach (var col in row.Columns())
+                                    {
+                                        col_names.Add(col.Name);
+                                    }
+                                    columns_done = true;
+                                }
+
+                                List<object> row_date = new List<object>();
+                                for(int x = 0; x < row.Count; x++)
+                                {
+                                    string cell_data = row[x].ToString();
+                                    row_date.Add(cell_data);
+                                }
+                                results.Add(row_date);
+
+                                string type = row[0].ToString();
+                            }
+
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        _logger.ErrorException("Error in SQL", e);
+                        message = "Error Running Query</br>" + e.Message;
+                        message += "<pre>" + e.ToString() + "</pre>";
+                    }
+                }
+            }
+
+            if(string.IsNullOrEmpty(message) && col_names.Count == 0 && results.Count == 0)
+            {
+                message = "Query executed, no data returned.";
+            }
+
+            return message;
+        }
+
         public int RemoveUnknownUsers(List<string> known_user_ids)
         {
             string sql_query = "delete from PlaybackActivity " +
