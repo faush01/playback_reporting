@@ -52,29 +52,22 @@ namespace playback_reporting
                 return "No backup path set";
             }
 
-            string raw_data = repository.ExportRawData();
-
             DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
             _logger.Info("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
-
-            // this is a file, get parent folder of file
-            if (config.BackupPath.ToLower().EndsWith(".tsv"))
+            if (fi.Exists == false || (fi.Attributes & FileAttributes.Directory) != FileAttributes.Directory)
             {
-                fi = fi.Parent;
-                _logger.Info("Backup Path Parent : " + fi.FullName);
+                return "Backup path does not exist or is not a directory";
             }
+
+            string raw_data = repository.ExportRawData();
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";
             string backup_file = Path.Combine(fi.FullName, fileName);
             _logger.Info("Backup Path Final : " + backup_file);
 
-            config.BackupPath = backup_file;
-            _logger.Info("Appending backup file name : " + config.BackupPath);
-            _config.SaveReportPlaybackOptions(config);
-
             try
             {
-                System.IO.File.WriteAllText(config.BackupPath, raw_data);
+                System.IO.File.WriteAllText(backup_file, raw_data);
             }
             catch (Exception e)
             {
@@ -82,7 +75,7 @@ namespace playback_reporting
             }
 
             FileInfo[] files = fi.GetFiles("PlaybackReportingBackup-*.tsv");
-            int max_files = 5;
+            int max_files = config.MaxBackupFiles;
             int files_to_delete = files.Length - max_files;
 
             if (files_to_delete > 0)
@@ -103,7 +96,7 @@ namespace playback_reporting
                 }
             }
 
-            return "Backup saved";
+            return "Backup saved : " + fileName;
         }
 
     }

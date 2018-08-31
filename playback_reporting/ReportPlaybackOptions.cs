@@ -24,6 +24,7 @@ namespace playback_reporting
     {
         public int MaxDataAge { set; get; } = 3;
         public string BackupPath { set; get; }
+        public int MaxBackupFiles { set; get; } = 5;
 
     }
 }

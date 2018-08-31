@@ -26,7 +26,7 @@ define(['libraryMenu'], function (libraryMenu) {
         });
     };	
 
-    function pickerCallBack(selectedDir, view) {
+    function setBackupPathCallBack(selectedDir, view) {
         ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
             config.BackupPath = selectedDir;
             console.log("New Config Settings : " + JSON.stringify(config));
@@ -42,6 +42,9 @@ define(['libraryMenu'], function (libraryMenu) {
         console.log("Settings Page Loaded With Config : " + JSON.stringify(config));
         var max_data_age_select = view.querySelector('#max_data_age_select');
         max_data_age_select.value = config.MaxDataAge;
+
+        var backup_files_to_keep = view.querySelector('#files_to_keep');
+        backup_files_to_keep.value = config.MaxBackupFiles;
 
         var backup_path_label = view.querySelector('#backup_path_label');
         backup_path_label.innerHTML = config.BackupPath;
@@ -95,8 +98,9 @@ define(['libraryMenu'], function (libraryMenu) {
         });
     }
 
-    function loadBackup(view) {
-        var url = "user_usage_stats/load_backup?stamp=" + new Date().getTime();
+    function loadBackupFile(selectedFile, view) {
+        var encoded_path = encodeURI(selectedFile); 
+        var url = "user_usage_stats/load_backup?backupfile=" + encoded_path + "&stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
         ApiClient.getUserActivity(url).then(function (responce_message) {
             //alert("Loaded Data Message : " + JSON.stringify(responce_message));
@@ -144,16 +148,28 @@ define(['libraryMenu'], function (libraryMenu) {
             libraryMenu.setTabs('playplayback_report_settingsback_reporting', 6, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
-            set_backup_path.addEventListener("click", showFolderPicker);
+            set_backup_path.addEventListener("click", setBackupPathPicker);
 
             var backup_data_now = view.querySelector('#backup_data_now');
             backup_data_now.addEventListener("click", function () { saveBackup(view) });
 
             var load_backup_data = view.querySelector('#load_backup_data');
-            load_backup_data.addEventListener("click", function () { loadBackup(view) });
+            load_backup_data.addEventListener("click", loadBackupDataPicker);
 
             var max_data_age_select = view.querySelector('#max_data_age_select');
             max_data_age_select.addEventListener("change", setting_changed);
+
+            var backup_files_to_keep = view.querySelector('#files_to_keep');
+            backup_files_to_keep.addEventListener("change", files_to_keep_changed);
+
+            function files_to_keep_changed() {
+                var max_files = backup_files_to_keep.value;
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                    config.MaxBackupFiles = max_files;
+                    console.log("New Config Settings : " + JSON.stringify(config));
+                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                });
+            }
 
             function setting_changed() {
                 var max_age = max_data_age_select.value;
@@ -164,16 +180,30 @@ define(['libraryMenu'], function (libraryMenu) {
                 });
             }
 
-            function showFolderPicker() {
+            function loadBackupDataPicker() {
                 require(['directorybrowser'], function (directoryBrowser) {
                     var picker = new directoryBrowser();
                     picker.show({
                         includeFiles: true,
                         callback: function (selected) {
                             picker.close();
-                            pickerCallBack(selected, view);
+                            loadBackupFile(selected, view);
                         },
-                        header: "Select Backup Path"
+                        header: "Select backup file to load"
+                    });
+                });
+            }
+
+            function setBackupPathPicker() {
+                require(['directorybrowser'], function (directoryBrowser) {
+                    var picker = new directoryBrowser();
+                    picker.show({
+                        includeFiles: false,
+                        callback: function (selected) {
+                            picker.close();
+                            setBackupPathCallBack(selected, view);
+                        },
+                        header: "Select backup path"
                     });
                 });
             }

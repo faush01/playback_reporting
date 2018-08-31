@@ -83,6 +83,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
     public class LoadBackup : IReturn<Object>
     {
+        [ApiMember(Name = "backupfile", Description = "File name of file to load", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string backupfile { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/save_backup
@@ -385,8 +387,7 @@ namespace playback_reporting.Api
 
         public object Get(LoadBackup load_backup)
         {
-            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            FileInfo fi = new FileInfo(config.BackupPath);
+            FileInfo fi = new FileInfo(load_backup.backupfile);
             if (fi.Exists == false)
             {
                 return new List<string>() { "Backup file does not exist" };
@@ -396,7 +397,7 @@ namespace playback_reporting.Api
             try
             {
                 string load_data = "";
-                using (StreamReader sr = new StreamReader(new FileStream(config.BackupPath, FileMode.Open)))
+                using (StreamReader sr = new StreamReader(new FileStream(fi.FullName, FileMode.Open)))
                 {
                     load_data = sr.ReadToEnd();
                 }
