@@ -383,7 +383,7 @@ namespace playback_reporting.Api
             _logger.Info("Read : " + bytes);
         }
 
-        public object Get(LoadBackup load_baclup)
+        public object Get(LoadBackup load_backup)
         {
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
             FileInfo fi = new FileInfo(config.BackupPath);
@@ -409,37 +409,12 @@ namespace playback_reporting.Api
 
             return new List<string>() { "Backup loaded " + count + " items" };
         }
-        public object Get(SaveBackup save_baclup)
+        public object Get(SaveBackup save_backup)
         {
-            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            BackupManager bum = new BackupManager(_config, _logger, _fileSystem);
+            string message = bum.SaveBackup();
 
-            if (string.IsNullOrEmpty(config.BackupPath))
-            {
-                return new List<string>() { "No backup path set" };
-            }
-
-            string raw_data = Repository.ExportRawData();
-
-            DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
-            _logger.Info("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
-            if ((fi.Attributes & FileAttributes.Directory) == FileAttributes.Directory && fi.Exists)
-            {
-                string backup_file = Path.Combine(config.BackupPath, "PlaybackReportingBackup.tsv");
-                config.BackupPath = backup_file;
-                _logger.Info("Appending backup file name : " + config.BackupPath);
-                _config.SaveReportPlaybackOptions(config);
-            }
-
-            try
-            {
-                System.IO.File.WriteAllText(config.BackupPath, raw_data);
-            }
-            catch (Exception e)
-            {
-                return new List<string>() { e.Message };
-            }
-
-            return new List<string>() { "Backup saved" };
+            return new List<string>() { message };
         }
 
         public object Get(GetUsageStats activity)
