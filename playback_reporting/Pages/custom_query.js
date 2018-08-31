@@ -77,6 +77,7 @@ define(['libraryMenu'], function (libraryMenu) {
             function runQuery() {
 
                 var custom_query = view.querySelector('#custom_query_text');
+                var replace_userid = view.querySelector('#replace_userid').checked;
 
                 //alert("Running: " + custom_query.value);
 
@@ -89,7 +90,8 @@ define(['libraryMenu'], function (libraryMenu) {
                 url = ApiClient.getUrl(url);
 
                 var query_data = {
-                    CustomQueryString: custom_query.value
+                    CustomQueryString: custom_query.value,
+                    ReplaceUserId: replace_userid
                 };
 
                 ApiClient.sendCustomQuery(url, query_data).then(function (result) {

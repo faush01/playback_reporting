@@ -77,6 +77,7 @@ namespace playback_reporting.Api
     public class CustomQuery : IReturn<Object>
     {
         public String CustomQueryString { get; set; }
+        public bool ReplaceUserId { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
@@ -639,6 +640,28 @@ namespace playback_reporting.Api
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
             string message = Repository.RunCustomQuery(request.CustomQueryString, colums, result);
+
+            int index_of_user_col = colums.IndexOf("UserId");
+            if (request.ReplaceUserId && index_of_user_col > -1)
+            {
+                colums[index_of_user_col] = "UserName";
+
+                Dictionary<string, string> user_map = new Dictionary<string, string>();
+                foreach (var user in _userManager.Users)
+                {
+                    user_map.Add(user.Id.ToString("N"), user.Name);
+                }
+
+                foreach(var row in result)
+                {
+                    String user_id = (string)row[index_of_user_col];
+                    if(user_map.ContainsKey(user_id))
+                    {
+                        row[index_of_user_col] = user_map[user_id];
+                    }
+                }
+            }
+
 
             /*
             List<object> row = new List<object>();
