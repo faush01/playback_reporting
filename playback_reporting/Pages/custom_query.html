@@ -1,6 +1,7 @@
 <div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
 	 data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton"
 	 data-controller="__plugin/custom_query.js">
+
 	<div data-role="content">
 		<div class="content-primary">
 			<h2>Custom Query Report</h2>
@@ -16,9 +17,12 @@ LIMIT 10
 
 			<h3>Query Result</h3>
 			<div id="query_result_message"> </div>
-			<table cellpadding="6" id="custom_query_table" style="width:95%;">
-				<tbody class="resultBody" id="custom_query_results"></tbody>
-			</table>
+
+			<div id="table_area_div" style="">
+				<table cellpadding="2" id="custom_query_table">
+					<tbody class="resultBody" id="custom_query_results"></tbody>
+				</table>
+			</div>
 
 		</div>
 	</div>

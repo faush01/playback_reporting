@@ -110,7 +110,7 @@ define(['libraryMenu'], function (libraryMenu) {
                         table_row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
                         for (var index = 0; index < result_ladels.length; ++index) {
                             var colum_name = result_ladels[index];
-                            table_row_html += "<td><strong>" + colum_name + "</strong></td>";
+                            table_row_html += "<td style='white-space: nowrap;'><strong>" + colum_name + "</strong></td>";
                         }
                         table_row_html += "</tr>";
 
@@ -122,14 +122,19 @@ define(['libraryMenu'], function (libraryMenu) {
 
                             for (var index3 = 0; index3 < row_data.length; ++index3) {
                                 var cell_data = row_data[index3];
-                                table_row_html += "<td>" + cell_data + "</td>";
+                                table_row_html += "<td style='white-space: nowrap;'>" + cell_data + "</td>";
                             }
 
                             table_row_html += "</tr>";
                         }
 
+                        var table_area_div = view.querySelector('#table_area_div');
+                        table_area_div.setAttribute("style", "overflow:hidden;height:500px;");
+                        
                         var table_body = view.querySelector('#custom_query_results');
                         table_body.innerHTML = table_row_html;
+
+                        table_area_div.setAttribute("style", "overflow:auto;height:500px;");
                     }
                 });
             }
