@@ -78,6 +78,8 @@ namespace playback_reporting
             int max_files = config.MaxBackupFiles;
             int files_to_delete = files.Length - max_files;
 
+            _logger.Info("Backup Files Counts Current: " + files.Length + " Max:" + max_files + " ToDelete:" + files_to_delete);
+
             if (files_to_delete > 0)
             {
                 List<string> file_paths = new List<string>();

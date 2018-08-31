@@ -28,32 +28,33 @@ using System.Threading.Tasks;
 
 namespace playback_reporting
 {
-    class PluginTask : IScheduledTask
+    class TaskCleanDb : IScheduledTask
     {
         private IActivityManager _activity;
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
         private readonly IFileSystem _fileSystem;
 
-        public string Name => "Playback History Trim";
+        public string Name => "Playback Reporting Trim Db";
         public string Key => "PlaybackHistoryTrimTask";
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
 
         private playback_reporting.Data.IActivityRepository Repository;
 
-        public PluginTask(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskCleanDb(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
-            _logger = logger.GetLogger("PlaybackReporting - PluginTask");
+            _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
 
-            _logger.Info("PluginTask Loaded");
+            _logger.Info("TaskCleanDb Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             //repo.Initialize();
             Repository = repo;
         }
+
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
             var trigger = new TaskTriggerInfo
@@ -93,7 +94,6 @@ namespace playback_reporting
                     Repository.DeleteOldData(del_defore);
                 }
             }, cancellationToken);
-
         }
     }
 }
