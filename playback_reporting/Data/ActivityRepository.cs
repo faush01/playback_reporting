@@ -107,6 +107,7 @@ namespace playback_reporting.Data
         {
             string message = "";
             bool columns_done = false;
+            int change_count = 0;
             using (WriteLock.Write())
             {
                 using (var connection = CreateConnection(true))
@@ -136,7 +137,7 @@ namespace playback_reporting.Data
 
                                 string type = row[0].ToString();
                             }
-
+                            change_count = connection.GetChangeCount();
                         }
                     }
                     catch(Exception e)
@@ -151,6 +152,7 @@ namespace playback_reporting.Data
             if(string.IsNullOrEmpty(message) && col_names.Count == 0 && results.Count == 0)
             {
                 message = "Query executed, no data returned.";
+                message += "</br>Number of rows effected : " + change_count;
             }
 
             return message;

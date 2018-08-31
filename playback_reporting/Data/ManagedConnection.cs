@@ -54,6 +54,11 @@ namespace playback_reporting.Data
             db.Execute(sql, values);
         }
 
+        public int GetChangeCount()
+        {
+            return db.TotalChanges;
+        }
+
         public void RunQueries(string[] sql)
         {
             db.RunQueries(sql);
