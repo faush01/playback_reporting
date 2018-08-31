@@ -241,11 +241,23 @@ namespace playback_reporting.Api
 
                 DateTime last_seen = (DateTime)user_info["latest_date"];
                 TimeSpan time_ago = DateTime.Now.Subtract(last_seen);
-                user_info.Add("last_seen", GetLastSeenString(time_ago));
+
+                string last_seen_string = GetLastSeenString(time_ago);
+                if (last_seen_string == "")
+                {
+                    last_seen_string = "just now";
+                }
+                user_info.Add("last_seen", last_seen_string);
 
                 int seconds = (int)user_info["total_time"];
                 TimeSpan total_time = new TimeSpan(10000000L * (long)seconds);
-                user_info.Add("total_play_time", GetLastSeenString(total_time));
+
+                string time_played = GetLastSeenString(total_time);
+                if (time_played == "")
+                {
+                    time_played = "< 1 minute";
+                }
+                user_info.Add("total_play_time", time_played);
 
             }
 

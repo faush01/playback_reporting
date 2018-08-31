@@ -204,6 +204,9 @@ namespace playback_reporting
                     string session_playing_id = "";
                     if (session.NowPlayingItem != null) session_playing_id = session.NowPlayingItem.Id.ToString("N");
                     string session_user_id = "";
+
+                    _logger.Info("session.RemoteEndPoint : " + session.RemoteEndPoint);
+                    
                     if (session.UserId != null) session_user_id = ((Guid)session.UserId).ToString("N");
 
                     string play_method = "na";
