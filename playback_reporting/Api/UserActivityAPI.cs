@@ -233,6 +233,10 @@ namespace playback_reporting.Api
                 string user_name = "Not Known";
                 Guid user_guid = new Guid(user_id);
                 MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+
+                bool hasPrimaryImage = user.HasImage(MediaBrowser.Model.Entities.ImageType.Primary);
+                user_info.Add("has_image", hasPrimaryImage);
+
                 if (user != null)
                 {
                     user_name = user.Name;

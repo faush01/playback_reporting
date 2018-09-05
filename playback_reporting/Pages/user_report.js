@@ -96,10 +96,13 @@ define(['libraryMenu'], function (libraryMenu) {
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
-                        var user_image = "Users/" + user_info.user_id + "/Images/Primary?width=50";
-                        user_image = ApiClient.getUrl(user_image);
-                        row_html += "<td><img src='" + user_image + "'></td>";
+                        var user_image = "css/images/logindefault.png";
+                        if (user_info.has_image) {
+                            user_image = "Users/" + user_info.user_id + "/Images/Primary?width=50";
+                            user_image = ApiClient.getUrl(user_image);
+                        }                      
 
+                        row_html += "<td><img src='" + user_image + "' width='50px' style='background-color: black;'></td>";
                         row_html += "<td>" + user_info.user_name + "</td>";
                         row_html += "<td>" + user_info.last_seen + "</td>";
                         row_html += "<td>" + user_info.item_name + "</td>";
