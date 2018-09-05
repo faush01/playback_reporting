@@ -198,19 +198,18 @@ namespace playback_reporting
                 var session = _sessionManager.GetSession(e.DeviceId, e.ClientName, "");
                 if (session != null)
                 {
-                    string event_playing_id = e.Item.Id.ToString("N");
-                    string event_playing_id_int = e.Item.InternalId.ToString();
+                    string event_playing_id_guid = e.Item.Id.ToString("N");
+                    long event_playing_id_internal = e.Item.InternalId;
 
-                    string event_user_id = e.Users[0].Id.ToString("N");
-                    long event_user_id_int = e.Users[0].InternalId;
+                    string event_user_id_guid = e.Users[0].Id.ToString("N");
+                    long event_user_id_internal = e.Users[0].InternalId;
 
-                    string session_playing_id = "";
-                    if (session.NowPlayingItem != null) session_playing_id = session.NowPlayingItem.Id;
-                    long session_user_id = -1;
+                    string session_playing_id_guid = session.NowPlayingItem.Id;
+                    long session_playing_id_internal = _libraryManager.GetInternalId(session.NowPlayingItem.Id);
+
+                    long session_user_id_internal = session.UserId;
 
                     _logger.Info("session.RemoteEndPoint : " + session.RemoteEndPoint);
-                    
-                    session_user_id = session.UserId;
 
                     string play_method = "na";
                     if (session.PlayState != null && session.PlayState.PlayMethod != null)
@@ -239,18 +238,19 @@ namespace playback_reporting
                     string item_id = e.Item.Id.ToString("N");
                     string item_type = e.MediaInfo.Type;
 
-                    _logger.Info("StartPlaybackTimer : event_playing_id     = " + event_playing_id);
-                    _logger.Info("StartPlaybackTimer : event_playing_id_int = " + event_playing_id_int);
-                    _logger.Info("StartPlaybackTimer : event_user_id        = " + event_user_id);
-                    _logger.Info("StartPlaybackTimer : event_user_id_int    = " + event_user_id_int);
-                    _logger.Info("StartPlaybackTimer : session_playing_id   = " + session_playing_id);
-                    _logger.Info("StartPlaybackTimer : session_user_id      = " + session_user_id);
-                    _logger.Info("StartPlaybackTimer : play_method          = " + play_method);
-                    _logger.Info("StartPlaybackTimer : e.ClientName         = " + e.ClientName);
-                    _logger.Info("StartPlaybackTimer : e.DeviceName         = " + e.DeviceName);
-                    _logger.Info("StartPlaybackTimer : ItemName             = " + item_name);
-                    _logger.Info("StartPlaybackTimer : ItemId               = " + item_id);
-                    _logger.Info("StartPlaybackTimer : ItemType             = " + item_type);
+                    _logger.Info("StartPlaybackTimer : event_playing_id       = " + event_playing_id_guid);
+                    _logger.Info("StartPlaybackTimer : event_playing_id_int   = " + event_playing_id_internal);
+                    _logger.Info("StartPlaybackTimer : event_user_id          = " + event_user_id_guid);
+                    _logger.Info("StartPlaybackTimer : event_user_id_int      = " + event_user_id_internal);
+                    _logger.Info("StartPlaybackTimer : session_playing_id     = " + session_playing_id_guid);
+                    _logger.Info("StartPlaybackTimer : session_playing_id_int = " + session_playing_id_internal);
+                    _logger.Info("StartPlaybackTimer : session_user_id_int    = " + session_user_id_internal);
+                    _logger.Info("StartPlaybackTimer : play_method            = " + play_method);
+                    _logger.Info("StartPlaybackTimer : e.ClientName           = " + e.ClientName);
+                    _logger.Info("StartPlaybackTimer : e.DeviceName           = " + e.DeviceName);
+                    _logger.Info("StartPlaybackTimer : ItemName               = " + item_name);
+                    _logger.Info("StartPlaybackTimer : ItemId                 = " + item_id);
+                    _logger.Info("StartPlaybackTimer : ItemType               = " + item_type);
 
                     PlaybackInfo play_info = new PlaybackInfo();
                     play_info.Id = Guid.NewGuid().ToString("N");
@@ -258,12 +258,12 @@ namespace playback_reporting
                     play_info.ClientName = e.ClientName;
                     play_info.DeviceName = e.DeviceName;
                     play_info.PlaybackMethod = play_method;
-                    play_info.UserId = event_user_id;
+                    play_info.UserId = event_user_id_guid;
                     play_info.ItemId = item_id;
                     play_info.ItemName = item_name;
                     play_info.ItemType = item_type;
 
-                    if (event_playing_id_int == session_playing_id && event_user_id_int == session_user_id)
+                    if (event_playing_id_internal == session_playing_id_internal && event_user_id_internal == session_user_id_internal)
                     {
                         _logger.Info("StartPlaybackTimer : All matches, playback registered");
 
