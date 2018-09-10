@@ -373,6 +373,7 @@ namespace playback_reporting.Api
                 item_info["Method"] = item_data["PlaybackMethod"];
                 item_info["Device"] = item_data["DeviceName"];
                 item_info["Duration"] = item_data["PlayDuration"];
+                item_info["RowId"] = item_data["RowId"];
 
                 user_activity.Add(item_info);
             }
