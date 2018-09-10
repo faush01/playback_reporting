@@ -444,7 +444,7 @@ namespace playback_reporting.Data
                 filters.Add("'" + filter + "'");
             }
 
-            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration " +
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration, rowid " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
@@ -474,6 +474,7 @@ namespace playback_reporting.Data
                             item["PlaybackMethod"] = row[5].ToString();
                             item["DeviceName"] = row[6].ToString();
                             item["PlayDuration"] = row[7].ToString();
+                            item["RowId"] = row[8].ToString();
 
                             items.Add(item);
                         }

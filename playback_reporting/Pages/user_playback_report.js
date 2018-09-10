@@ -33,7 +33,20 @@ define(['libraryMenu'], function (libraryMenu) {
             url: url_to_get,
             dataType: "json"
         });
-    };	
+    };
+
+    ApiClient.sendCustomQuery = function (url_to_get, query_data) {
+        var post_data = JSON.stringify(query_data);
+        console.log("sendCustomQuery url  = " + url_to_get);
+        console.log("sendCustomQuery data = " + post_data);
+        return this.ajax({
+            type: "POST",
+            url: url_to_get,
+            dataType: "json",
+            data: post_data,
+            contentType: 'application/json'
+        });
+    };
 
     var color_list = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
 
@@ -74,7 +87,7 @@ define(['libraryMenu'], function (libraryMenu) {
         }
 
         // process user usage into data for chart
-        var user_ids = []
+        var user_ids = [];
         var user_usage_datasets = [];
         for (var index = 0; index < usage_data.length; ++index) {
             var user_usage = usage_data[index];
@@ -248,7 +261,7 @@ define(['libraryMenu'], function (libraryMenu) {
             var filter_name = filter_names[x];
             var filter_checked = view.querySelector('#media_type_filter_' + filter_name).checked;
             if (filter_checked) {
-                filter.push(filter_name)
+                filter.push(filter_name);
             }
         }
 
@@ -258,12 +271,35 @@ define(['libraryMenu'], function (libraryMenu) {
 
         ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
             //alert("Loaded Data: " + JSON.stringify(usage_data));
-            populate_report(user_name, data_label, usage_data, view);
+            populate_report(user_name, user_id, data_label, usage_data, view);
         });
 
     }
 
-    function populate_report(user_name, data_label, usage_data, view) {
+    function remove_item(index, user_name, user_id, data_label, view) {
+        if (!confirm("Are you sure you want to remove this item?")) {
+            return;
+        }
+
+        var sql = "DELETE FROM PlaybackActivity WHERE rowid = " + index;
+        console.log("Remove Item Query : " + sql);
+
+        var url = "user_usage_stats/submit_custom_query?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+
+        var query_data = {
+            CustomQueryString: sql,
+            ReplaceUserId: false
+        };
+
+        ApiClient.sendCustomQuery(url, query_data).then(function (result) {
+            var message = result["message"];
+            console.log("Remove Item Result : " + message);
+            display_user_report(user_name, user_id, data_label, view);
+        });
+    }
+
+    function populate_report(user_name, user_id, data_label, usage_data, view) {
 
         if (!usage_data) {
             alert("No Data!");
@@ -279,6 +315,61 @@ define(['libraryMenu'], function (libraryMenu) {
         user_report_on_date.innerHTML = "(" + data_label + ")";
 
         var table_body = view.querySelector('#user_usage_report_results');
+
+        while (table_body.firstChild) {
+            table_body.removeChild(table_body.firstChild);
+        }
+
+        usage_data.forEach(function (item_details, index) {
+
+            var tr = document.createElement("tr");
+            tr.className = "detailTableBodyRow detailTableBodyRow-shaded";
+
+            var td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Time));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Name));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Type));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Client));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Device));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(item_details.Method));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(seconds2time(item_details.Duration)));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            var btn = document.createElement("BUTTON");
+            var i = document.createElement("i");
+            i.className = "md-icon";
+            var t = document.createTextNode("remove");
+            i.appendChild(t);
+            btn.appendChild(i);
+            btn.setAttribute("title", "Remove");
+            btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
+
+            td.appendChild(btn);
+            tr.appendChild(td);
+
+            table_body.appendChild(tr);
+        });
+
+        /*
         var row_html = "";
 
         for (var index = 0; index < usage_data.length; ++index) {
@@ -295,6 +386,7 @@ define(['libraryMenu'], function (libraryMenu) {
             row_html += "</tr>";
         }
         table_body.innerHTML = row_html;
+        */
     }
 
     function seconds2time(seconds) {
