@@ -88,20 +88,28 @@ namespace playback_reporting
         void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
         {
             string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-            if(playback_trackers != null && playback_trackers.ContainsKey(key))
+            if (playback_trackers != null && playback_trackers.ContainsKey(key))
             {
                 try
                 {
-                    //_logger.Info("Playback progress tracker found, processing progress : " + key);
                     PlaybackTracker tracker = playback_trackers[key];
-                    tracker.ProcessProgress(e);
-                    if (tracker.TrackedPlaybackInfo != null)
+                    DateTime now = DateTime.Now;
+                    if (now.Subtract(tracker.last_updated).TotalSeconds > 20) // update every 20 seconds
                     {
-                        _logger.Debug("Saving playback tracking activity in DB");
-                        _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
+                        tracker.last_updated = now;
+                        _logger.Info("Processing playback tracker : " + key);
+                        List<string> event_log = tracker.ProcessProgress(e);
+                        if (event_log.Count > 0)
+                        {
+                            _logger.Debug("ProcessProgress : " + String.Join("", event_log));
+                        }
+                        if (tracker.TrackedPlaybackInfo != null)
+                        {
+                            _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
+                        }
                     }
                 }
-                catch(Exception exp)
+                catch (Exception exp)
                 {
                     playback_trackers.Remove(key);
                     throw new Exception("Error saving playback state: " + exp.Message);
@@ -120,7 +128,11 @@ namespace playback_reporting
             {
                 _logger.Info("Playback stop tracker found, processing stop : " + key);
                 PlaybackTracker tracker = playback_trackers[key];
-                tracker.ProcessStop(e);
+                List<string> event_log = tracker.ProcessStop(e);
+                if (event_log.Count > 0)
+                {
+                    _logger.Debug("ProcessProgress : " + String.Join("", event_log));
+                }
 
                 // if playback duration was long enough save the action
                 if (tracker.TrackedPlaybackInfo != null)
@@ -169,7 +181,12 @@ namespace playback_reporting
                 if (track.TrackedPlaybackInfo != null)
                 {
                     _logger.Info("Saving existing playback tracking activity in DB");
-                    track.CalculateDuration();
+                    List<string> event_log = new List<string>();
+                    track.CalculateDuration(event_log);
+                    if (event_log.Count > 0)
+                    {
+                        _logger.Debug("CalculateDuration : " + String.Join("", event_log));
+                    }
                     _repository.UpdatePlaybackAction(track.TrackedPlaybackInfo);
                 }
 

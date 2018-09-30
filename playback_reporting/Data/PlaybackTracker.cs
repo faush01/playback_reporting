@@ -29,6 +29,7 @@ namespace playback_reporting.Data
         private readonly ILogger _logger;
         private List<KeyValuePair<DateTime, ACTION_TYPE>> event_tracking = new List<KeyValuePair<DateTime, ACTION_TYPE>>();
         private string tracker_key;
+        public DateTime last_updated = DateTime.MinValue;
 
         private enum ACTION_TYPE { START, STOP, PAUSE, UNPAUSE, NONE };
 
@@ -38,27 +39,30 @@ namespace playback_reporting.Data
             tracker_key = key;
         }
 
-        public void ProcessProgress(PlaybackProgressEventArgs e)
+        public List<string> ProcessProgress(PlaybackProgressEventArgs e)
         {
+            List<string> event_log = new List<string>();
             if (IsPaused != e.IsPaused)
             {
                 KeyValuePair<DateTime, ACTION_TYPE> play_event;
                 if (e.IsPaused)
                 {
                     play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.PAUSE);
-                    _logger.Info("PlaybackTracker : Adding Paused Event : " + play_event.Key.ToString());
+                    event_log.Add("PauseEvent(" + play_event.Key.ToString() + ")");
                 }
                 else
                 {
                     play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.UNPAUSE);
-                    _logger.Info("PlaybackTracker : Adding Unpaused Event : " + play_event.Key.ToString());
+                    event_log.Add("UnPaused Event(" + play_event.Key.ToString() + ")");
                 }
                 event_tracking.Add(play_event);
 
                 IsPaused = e.IsPaused;
             }
 
-            CalculateDuration();
+            CalculateDuration(event_log);
+
+            return event_log;
         }
 
         public void ProcessStart(PlaybackProgressEventArgs e)
@@ -69,17 +73,19 @@ namespace playback_reporting.Data
             _logger.Info("PlaybackTracker : Adding Start Event : " + play_event.Key.ToString());
         }
 
-        public void ProcessStop(PlaybackStopEventArgs e)
+        public List<string> ProcessStop(PlaybackStopEventArgs e)
         {
             IsPaused = e.IsPaused;
             KeyValuePair<DateTime, ACTION_TYPE> play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.STOP);
             event_tracking.Add(play_event);
             _logger.Info("PlaybackTracker : Adding Stop Event : " + play_event.Key.ToString());
 
-            CalculateDuration();
+            List<string> event_log = new List<string>();
+            CalculateDuration(event_log);
+            return event_log;
         }
 
-        public void CalculateDuration()
+        public void CalculateDuration(List<string> event_log)
         {
             int duration = 0;
 
@@ -105,13 +111,14 @@ namespace playback_reporting.Data
                 events = event_tracking;
             }
 
-            _logger.Debug("PlaybackTracker : Finding Duration : EventCount : " + events.Count);
+            event_log.Add("EventCount(" + events.Count + ")");
 
             KeyValuePair<DateTime, ACTION_TYPE> prev_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.NONE);
 
             foreach (KeyValuePair<DateTime, ACTION_TYPE> e in events)
             {
-                if(prev_event.Value != ACTION_TYPE.NONE)
+                event_log.Add("Event(" + e.Key.ToString() + "," + e.Value + ")");
+                if (prev_event.Value != ACTION_TYPE.NONE)
                 {
                     ACTION_TYPE action01 = prev_event.Value;
                     ACTION_TYPE action02 = e.Value;
@@ -121,15 +128,13 @@ namespace playback_reporting.Data
                         TimeSpan diff = e.Key.Subtract(prev_event.Key);
                         double diff_seconds = diff.TotalSeconds;
                         duration += (int)diff_seconds;
-                        _logger.Debug("PlaybackTracker : Event : Time Diff : " + (int)diff_seconds + " total : " + duration);
+                        event_log.Add("Diff(" + (int)diff_seconds + ","+ duration + ")");
                     }
                 }
-
-                _logger.Debug("PlaybackTracker : Event : " + e.Key.ToString() + " " + e.Value);
                 prev_event = e;
             }
 
-            _logger.Debug("PlaybackTracker : Calculated total play duration : " + duration);
+            event_log.Add("Total(" + duration + ")");
             TrackedPlaybackInfo.PlaybackDuration = duration;
         }
 
