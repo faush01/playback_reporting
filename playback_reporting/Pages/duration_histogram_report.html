@@ -3,7 +3,7 @@
 	 data-controller="__plugin/duration_histogram_report.js">
 	<div data-role="content">
 		<div class="content-primary">
-			<h2>Duration Histogram Report</h2>
+			<h2>Playback Session Duration Report</h2>
 
 			<table style="border: 1px solid black; padding: 1px;" cellpadding="1" cellspacing="1">
 				<tr>
@@ -34,12 +34,15 @@
 					</td>
 				</tr>
 			</table>
-
-			<br /><br />
+			<span id="filter_check_list">
+			</span>
+			<br />
 
 			<div style="width: 75%">
 				<canvas id="duration_histogram_chart_canvas"></canvas>
 			</div>
+
+			<br />
 		</div>
 	</div>
 </div>

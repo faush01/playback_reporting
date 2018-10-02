@@ -3,7 +3,7 @@
 	 data-controller="__plugin/hourly_usage_report.js">
 	<div data-role="content">
 		<div class="content-primary">
-			<h2>Hourly Usage Report</h2>
+			<h2>Usage Report</h2>
 
 			<table style="border: 1px solid black; padding: 1px;" cellpadding="1" cellspacing="1">
 				<tr>
@@ -34,11 +34,20 @@
 					</td>
 				</tr>
 			</table>
+			<span id="filter_check_list">
+			</span>
+			<br />
 
-			<br /><br />
+			<div style="width: 75%">
+				<canvas id="daily_usage_chart_canvas"></canvas>
+			</div>
 
 			<div style="width: 75%">
 				<canvas id="hourly_usage_chart_canvas"></canvas>
+			</div>
+
+			<div style="width: 75%">
+				<canvas id="weekly_usage_chart_canvas"></canvas>
 			</div>
 		</div>
 	</div>

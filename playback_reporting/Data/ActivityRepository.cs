@@ -544,8 +544,14 @@ namespace playback_reporting.Data
             return usage;
         }
 
-        public SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date)
+        public SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date, string[] types)
         {
+            List<string> filters = new List<string>();
+            foreach (string filter in types)
+            {
+                filters.Add("'" + filter + "'");
+            }
+
             SortedDictionary<string, int> report_data = new SortedDictionary<string, int>();
 
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
@@ -553,7 +559,8 @@ namespace playback_reporting.Data
             string sql = "SELECT DateCreated, PlayDuration ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
-            sql += "AND UserId not IN (select UserId from UserList)";
+            sql += "AND UserId not IN (select UserId from UserList) ";
+            sql += "AND ItemType IN (" + string.Join(",", filters) + ")";
 
             using (WriteLock.Read())
             {
@@ -651,7 +658,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date)
+        public SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date, string[] types)
         {
             /*
             SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount 
@@ -659,6 +666,13 @@ namespace playback_reporting.Data
             GROUP BY CAST(PlayDuration / 300 as int)
             ORDER BY CAST(PlayDuration / 300 as int) ASC;
             */
+
+            List<string> filters = new List<string>();
+            foreach (string filter in types)
+            {
+                filters.Add("'" + filter + "'");
+            }
+
             SortedDictionary<int, int> report = new SortedDictionary<int, int>();
 
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
@@ -669,6 +683,7 @@ namespace playback_reporting.Data
                 "FROM PlaybackActivity " +
                 "WHERE DateCreated >= @start_date AND DateCreated <= @end_date " +
                 "AND UserId not IN (select UserId from UserList) " +
+                "AND ItemType IN (" + string.Join(",", filters) + ") " +
                 "GROUP BY CAST(PlayDuration / 300 as int) " +
                 "ORDER BY CAST(PlayDuration / 300 as int) ASC";
 

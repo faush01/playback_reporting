@@ -66,7 +66,7 @@ define(['libraryMenu'], function (libraryMenu) {
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly'
+                name: 'Usage'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
