@@ -128,6 +128,8 @@ namespace playback_reporting.Api
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string filter { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/ItemType/BreakdownReport
@@ -150,6 +152,8 @@ namespace playback_reporting.Api
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string end_date { get; set; }
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string filter { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/TvShowsReport
@@ -509,6 +513,12 @@ namespace playback_reporting.Api
 
         public object Get(GetHourlyReport request)
         {
+            string[] filter_tokens = new string[0];
+            if (request.filter != null)
+            {
+                filter_tokens = request.filter.Split(',');
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -520,7 +530,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.days, end_date);
+            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
 
             for (int day = 0; day < 7; day++)
             {
@@ -576,6 +586,12 @@ namespace playback_reporting.Api
 
         public object Get(GetDurationHistogramReport request)
         {
+            string[] filter_tokens = new string[0];
+            if (request.filter != null)
+            {
+                filter_tokens = request.filter.Split(',');
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -587,7 +603,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.days, end_date);
+            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.days, end_date, filter_tokens);
 
             // find max
             int max = -1;

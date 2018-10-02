@@ -20,6 +20,7 @@ define(['libraryMenu'], function (libraryMenu) {
     var daily_bar_chart = null;
     var hourly_bar_chart = null;
     var weekly_bar_chart = null;
+    var filter_names = [];
 
     Date.prototype.toDateInputValue = (function () {
         var local = new Date(this);
@@ -362,25 +363,55 @@ define(['libraryMenu'], function (libraryMenu) {
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                var end_date = view.querySelector('#end_date');
-                end_date.value = new Date().toDateInputValue();
-                end_date.addEventListener("change", process_click);
+                var filter_url = ApiClient.getUrl("user_usage_stats/type_filter_list");
+                console.log("loading types form : " + filter_url);
+                ApiClient.getUserActivity(filter_url).then(function (filter_data) {
+                    filter_names = filter_data;
 
-                var weeks = view.querySelector('#weeks');
-                weeks.addEventListener("change", process_click);
+                    // build filter list
+                    var filter_items = "";
+                    for (var x1 = 0; x1 < filter_names.length; x1++) {
+                        var filter_name_01 = filter_names[x1];
+                        filter_items += "<input type='checkbox' id='media_type_filter_" + filter_name_01 + "' data_fileter_name='" + filter_name_01 + "' checked> " + filter_name_01 + " ";
+                    }
 
-                process_click();
+                    var filter_check_list = view.querySelector('#filter_check_list');
+                    filter_check_list.innerHTML = filter_items;
 
-                function process_click() {
-                    var days = parseInt(weeks.value) * 7;
-                    var url = "user_usage_stats/HourlyReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
-                    url = ApiClient.getUrl(url);
-                    ApiClient.getUserActivity(url).then(function (usage_data) {
-                        //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_graph(view, d3, usage_data);
-                    });
-                }
+                    for (var x2 = 0; x2 < filter_names.length; x2++) {
+                        var filter_name_02 = filter_names[x2];
+                        view.querySelector('#media_type_filter_' + filter_name_02).addEventListener("click", process_click);
+                    }
 
+
+                    var end_date = view.querySelector('#end_date');
+                    end_date.value = new Date().toDateInputValue();
+                    end_date.addEventListener("change", process_click);
+
+                    var weeks = view.querySelector('#weeks');
+                    weeks.addEventListener("change", process_click);
+
+                    process_click();
+
+                    function process_click() {
+                        var filter = [];
+                        for (var x3 = 0; x3 < filter_names.length; x3++) {
+                            var filter_name = filter_names[x3];
+                            var filter_checked = view.querySelector('#media_type_filter_' + filter_name).checked;
+                            if (filter_checked) {
+                                filter.push(filter_name);
+                            }
+                        }
+
+                        var days = parseInt(weeks.value) * 7;
+                        var url = "user_usage_stats/HourlyReport?days=" + days + "&end_date=" + end_date.value + "&filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+                        url = ApiClient.getUrl(url);
+                        ApiClient.getUserActivity(url).then(function (usage_data) {
+                            //alert("Loaded Data: " + JSON.stringify(usage_data));
+                            draw_graph(view, d3, usage_data);
+                        });
+                    }
+                });
             });
 
         });
