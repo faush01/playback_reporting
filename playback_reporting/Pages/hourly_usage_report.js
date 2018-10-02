@@ -17,7 +17,9 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
-    var my_bar_chart = null;
+    var daily_bar_chart = null;
+    var hourly_bar_chart = null;
+    var weekly_bar_chart = null;
 
     Date.prototype.toDateInputValue = (function () {
         var local = new Date(this);
@@ -46,17 +48,82 @@ define(['libraryMenu'], function (libraryMenu) {
         //console.log(usage_data);
         var chart_labels = [];
         var chart_data = [];
+        var aggregated_hours = {};
+        var aggregated_days = {};
         for (var key in usage_data) {
             //console.log(key + " " + usage_data[key]);
             var day_index = key.substring(0, 1);
             var day_name = days_of_week[day_index];
             var day_hour = key.substring(2);
-            chart_labels.push(day_name + " " + day_hour + ":00");
+            //chart_labels.push(day_name + " " + day_hour + ":00");
+            chart_labels.push(day_name + " " + day_hour);
             chart_data.push(usage_data[key]);//precisionRound(usage_data[key] / 60, 2));
+            var current_hour_value = 0;
+            if (aggregated_hours[day_hour]) {
+                current_hour_value = aggregated_hours[day_hour];
+            }
+            aggregated_hours[day_hour] = current_hour_value + usage_data[key];
+            var current_day_value = 0;
+            if (aggregated_days[day_index]) {
+                current_day_value = aggregated_days[day_index];
+            }
+            aggregated_days[day_index] = current_day_value + usage_data[key];
         }
-        chart_labels.push("00");
+        //chart_labels.push("00");
 
-        var barChartData = {
+        //console.log(JSON.stringify(aggregated_hours));
+        //console.log(JSON.stringify(aggregated_days));
+
+        //
+        // daily bar chart data
+        //
+        var daily_chart_label_data = [];
+        var daily_chart_point_data = [];
+        var daily_days_labels = Object.keys(aggregated_days);
+        daily_days_labels.sort();
+        for (var daily_key_index = 0; daily_key_index < daily_days_labels.length; daily_key_index++) {
+            var daily_key = daily_days_labels[daily_key_index];
+            daily_chart_label_data.push(days_of_week[daily_key]);
+            daily_chart_point_data.push(aggregated_days[daily_key]);
+        }
+
+        var daily_chart_data = {
+            labels: daily_chart_label_data,
+            datasets: [{
+                label: 'Time',
+                type: "bar",
+                backgroundColor: '#c39bd3',
+                data: daily_chart_point_data
+            }]
+        };
+
+        //
+        // hourly chart data
+        //
+        var hourly_chart_label_data = [];
+        var hourly_chart_point_data = [];
+        var hourly_days_labels = Object.keys(aggregated_hours);
+        hourly_days_labels.sort();
+        for (var hourly_key_index = 0; hourly_key_index < hourly_days_labels.length; hourly_key_index++) {
+            var hourly_key = hourly_days_labels[hourly_key_index];
+            hourly_chart_label_data.push(hourly_key);
+            hourly_chart_point_data.push(aggregated_hours[hourly_key]);
+        }
+
+        var hourly_chart_data = {
+            labels: hourly_chart_label_data,
+            datasets: [{
+                label: 'Time',
+                type: "bar",
+                backgroundColor: '#c39bd3',
+                data: hourly_chart_point_data
+            }]
+        };
+
+        //
+        // weekly bar chart data
+        //
+        var weekly_chart_data = {
             labels: chart_labels, //['Mon 00', 'Mon 01', 'Mon 02', 'Mon 03', 'Mon 04', 'Mon 05', 'Mon 06'],
             datasets: [{
                 label: 'Time',
@@ -90,33 +157,32 @@ define(['libraryMenu'], function (libraryMenu) {
             return label;
         }
 
-        var chart_canvas = view.querySelector('#hourly_usage_chart_canvas');
-        var ctx = chart_canvas.getContext('2d');
+        //
+        // daily chart
+        //
+        var daily_chart_canvas = view.querySelector('#daily_usage_chart_canvas');
+        var ctx_daily = daily_chart_canvas.getContext('2d');
 
-        if (my_bar_chart) {
-            console.log("destroy() existing chart");
-            my_bar_chart.destroy();
+        if (daily_bar_chart) {
+            console.log("destroy() existing chart: daily_bar_chart");
+            daily_bar_chart.destroy();
         }
 
-        my_bar_chart = new Chart(ctx, {
+        daily_bar_chart = new Chart(ctx_daily, {
             type: 'bar',
-            data: barChartData,
+            data: daily_chart_data,
             options: {
                 legend: {
                     display: false
                 },
                 title: {
                     display: true,
-                    text: "Usage by Hour"
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false
+                    text: "Usage by Day"
                 },
                 responsive: true,
                 scales: {
                     xAxes: [{
-                        stacked: false,
+                        stacked: false
                     }],
                     yAxes: [{
                         stacked: false,
@@ -128,6 +194,8 @@ define(['libraryMenu'], function (libraryMenu) {
                     }]
                 },
                 tooltips: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: tooltip_labels
                     }
@@ -135,7 +203,103 @@ define(['libraryMenu'], function (libraryMenu) {
             }
         });
 
-        console.log("Chart Done");
+        //
+        // hourly chart
+        //
+        var hourly_chart_canvas = view.querySelector('#hourly_usage_chart_canvas');
+        var ctx_hourly = hourly_chart_canvas.getContext('2d');
+
+        if (hourly_bar_chart) {
+            console.log("destroy() existing chart: hourly_bar_chart");
+            hourly_bar_chart.destroy();
+        }
+
+        hourly_bar_chart = new Chart(ctx_hourly, {
+            type: 'bar',
+            data: hourly_chart_data,
+            options: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Usage by Hour"
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{
+                        stacked: false
+                    }],
+                    yAxes: [{
+                        stacked: false,
+                        ticks: {
+                            autoSkip: true,
+                            beginAtZero: true,
+                            callback: y_axis_labels
+                        }
+                    }]
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: tooltip_labels
+                    }
+                }
+            }
+        });
+
+        //
+        // weekly chart
+        //
+        var chart_canvas = view.querySelector('#weekly_usage_chart_canvas');
+        var ctx_weekly = chart_canvas.getContext('2d');
+
+        if (weekly_bar_chart) {
+            console.log("destroy() existing chart: weekly_bar_chart");
+            weekly_bar_chart.destroy();
+        }
+
+        weekly_bar_chart = new Chart(ctx_weekly, {
+            type: 'bar',
+            data: weekly_chart_data,
+            options: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Usage by Week"
+                },
+                responsive: true,
+                scaleShowValues: true,
+                scales: {
+                    xAxes: [{
+                        stacked: false,
+                        ticks: {
+                            //autoSkip: false
+                        }
+                    }],
+                    yAxes: [{
+                        stacked: false,
+                        ticks: {
+                            autoSkip: true,
+                            beginAtZero: true,
+                            callback: y_axis_labels
+                        }
+                    }]
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: tooltip_labels
+                    }
+                }
+            }
+        });
+
+        console.log("Charts Done");
     }
 
     function seconds2time(seconds) {
@@ -172,7 +336,7 @@ define(['libraryMenu'], function (libraryMenu) {
             },
             {
                 href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Hourly'
+                name: 'Usage'
             },
             {
                 href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
