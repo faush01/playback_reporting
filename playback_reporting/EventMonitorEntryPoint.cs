@@ -224,7 +224,7 @@ namespace playback_reporting
                     string session_playing_id_guid = session.NowPlayingItem.Id;
                     long session_playing_id_internal = _libraryManager.GetInternalId(session.NowPlayingItem.Id);
 
-                    long session_user_id_internal = session.UserId;
+                    long session_user_id_internal = session.UserInternalId;
 
                     _logger.Info("session.RemoteEndPoint : " + session.RemoteEndPoint);
 
