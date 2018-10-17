@@ -21,6 +21,7 @@
     <None Remove="Pages\user_playback_report.js" />
     <None Remove="Pages\user_report.html" />
     <None Remove="Pages\user_report.js" />
+    <None Remove="thumb.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Pages\breakdown_report.html" />
@@ -38,6 +39,7 @@
     <EmbeddedResource Include="Pages\custom_query.js" />
     <EmbeddedResource Include="Pages\user_report.html" />
     <EmbeddedResource Include="Pages\user_report.js" />
+    <EmbeddedResource Include="thumb.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mediabrowser.server.core" Version="3.6.0.51-beta" />

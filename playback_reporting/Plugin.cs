@@ -16,15 +16,17 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace playback_reporting
 {
-    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
@@ -118,6 +120,20 @@ namespace playback_reporting
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.custom_query.js"
                 }
             };
+        }
+
+        public Stream GetThumbImage()
+        {
+            var type = GetType();
+            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
+        }
+
+        public ImageFormat ThumbImageFormat
+        {
+            get
+            {
+                return ImageFormat.Png;
+            }
         }
     }
 }
