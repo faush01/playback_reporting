@@ -235,17 +235,17 @@ namespace playback_reporting.Api
             {
                 string user_id = (string)user_info["user_id"];
                 string user_name = "Not Known";
+                bool has_image = false;
                 Guid user_guid = new Guid(user_id);
                 MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
-
-                bool hasPrimaryImage = user.HasImage(MediaBrowser.Model.Entities.ImageType.Primary);
-                user_info.Add("has_image", hasPrimaryImage);
 
                 if (user != null)
                 {
                     user_name = user.Name;
+                    has_image = user.HasImage(MediaBrowser.Model.Entities.ImageType.Primary);
                 }
                 user_info.Add("user_name", user_name);
+                user_info.Add("has_image", has_image);
 
                 DateTime last_seen = (DateTime)user_info["latest_date"];
                 TimeSpan time_ago = DateTime.Now.Subtract(last_seen);
