@@ -25,9 +25,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class TaskRunBackup : IScheduledTask
+    public class TaskRunBackup : IScheduledTask
     {
-        private IActivityManager _activity;
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
         private readonly IFileSystem _fileSystem;
@@ -38,10 +37,9 @@ namespace Jellyfin.Plugin.PlaybackReporting
         public string Category => "Playback Reporting";
 
 
-        public TaskRunBackup(IActivityManager activity, ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskRunBackup(ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
             _logger = logger.CreateLogger("PlaybackReporting - TaskCleanDb");
-            _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
 

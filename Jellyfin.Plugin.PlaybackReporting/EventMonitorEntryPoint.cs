@@ -32,37 +32,25 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class EventMonitorEntryPoint : IServerEntryPoint
+    public class EventMonitorEntryPoint : IServerEntryPoint
     {
         private readonly ISessionManager _sessionManager;
-        private readonly ILibraryManager _libraryManager;
-        private readonly IUserManager _userManager;
         private readonly IServerConfigurationManager _config;
-        private readonly IServerApplicationHost _appHost;
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
-        private readonly IJsonSerializer _jsonSerializer;
 
         private Dictionary<string, PlaybackTracker> playback_trackers = null;
         private IActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
-            ILibraryManager libraryManager, 
-            IUserManager userManager, 
             IServerConfigurationManager config,
-            IServerApplicationHost appHost,
             ILoggerFactory logger,
-            IFileSystem fileSystem,
-            IJsonSerializer jsonSerializer)
+            IFileSystem fileSystem)
         {
             _logger = logger.CreateLogger("PlaybackReporting - EventMonitorEntryPoint");
             _sessionManager = sessionManager;
-            _libraryManager = libraryManager;
-            _userManager = userManager;
             _config = config;
-            _appHost = appHost;
             _fileSystem = fileSystem;
-            _jsonSerializer = jsonSerializer;
             playback_trackers = new Dictionary<string, PlaybackTracker>();
         }
 

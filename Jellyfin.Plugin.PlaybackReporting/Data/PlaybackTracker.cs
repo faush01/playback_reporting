@@ -21,7 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
-    class PlaybackTracker
+    public class PlaybackTracker
     {
         private bool IsPaused;
         public PlaybackInfo TrackedPlaybackInfo { set; get; }

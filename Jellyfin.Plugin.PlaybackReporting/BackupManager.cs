@@ -24,10 +24,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class BackupManager
+    public class BackupManager
     {
 
-        private IActivityRepository repository;
+        private readonly IActivityRepository _repository;
         private readonly IServerConfigurationManager _config;
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
@@ -38,7 +38,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
             _fileSystem = fileSystem;
             _logger = logger;
 
-            repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
         }
 
 
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
                 return "Backup path does not exist or is not a directory";
             }
 
-            string raw_data = repository.ExportRawData();
+            string raw_data = _repository.ExportRawData();
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";
             string backup_file = Path.Combine(fi.FullName, fileName);
@@ -66,7 +66,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
 
             try
             {
-                System.IO.File.WriteAllText(backup_file, raw_data);
+                File.WriteAllText(backup_file, raw_data);
             }
             catch (Exception e)
             {

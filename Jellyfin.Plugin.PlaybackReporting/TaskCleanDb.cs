@@ -27,9 +27,8 @@ using IActivityRepository = Jellyfin.Plugin.PlaybackReporting.Data.IActivityRepo
 
 namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class TaskCleanDb : IScheduledTask
+    public class TaskCleanDb : IScheduledTask
     {
-        private IActivityManager _activity;
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
         private readonly IFileSystem _fileSystem;
@@ -41,10 +40,9 @@ namespace Jellyfin.Plugin.PlaybackReporting
 
         private IActivityRepository Repository;
 
-        public TaskCleanDb(IActivityManager activity, ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskCleanDb(ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
             _logger = logger.CreateLogger("PlaybackReporting - TaskCleanDb");
-            _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
 

@@ -23,7 +23,7 @@ using MediaBrowser.Model.Serialization;
 
 namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
