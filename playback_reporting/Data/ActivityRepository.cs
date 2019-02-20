@@ -14,15 +14,13 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Api;
 using MediaBrowser.Controller;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
 using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace playback_reporting.Data
 {
@@ -47,7 +45,7 @@ namespace playback_reporting.Data
 
             catch (Exception ex)
             {
-                Logger.ErrorException("Error loading PlaybackActivity database file.", ex);
+                Logger.LogError(ex, "Error loading PlaybackActivity database file.");
                 //FileSystem.DeleteFile(DbFilePath);
                 //InitializeInternal();
             }
@@ -59,7 +57,7 @@ namespace playback_reporting.Data
             {
                 using (var connection = CreateConnection())
                 {
-                    _logger.Info("Initialize PlaybackActivity Repository");
+                    _logger.LogInformation("Initialize PlaybackActivity Repository");
 
                     string sql_info = "pragma table_info('PlaybackActivity')";
                     List<string> cols = new List<string>();
@@ -72,17 +70,17 @@ namespace playback_reporting.Data
                     string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
                     if (required_schema != actual_schema)
                     {
-                        _logger.Info("PlaybackActivity table schema miss match!");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
-                        _logger.Info("Dropping and recreating PlaybackActivity table");
+                        _logger.LogInformation("PlaybackActivity table schema miss match!");
+                        _logger.LogInformation("Expected : " + required_schema);
+                        _logger.LogInformation("Received : " + actual_schema);
+                        _logger.LogInformation("Dropping and recreating PlaybackActivity table");
                         connection.Execute("drop table if exists PlaybackActivity");
                     }
                     else
                     {
-                        _logger.Info("PlaybackActivity table schema OK");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
+                        _logger.LogInformation("PlaybackActivity table schema OK");
+                        _logger.LogInformation("Expected : " + required_schema);
+                        _logger.LogInformation("Received : " + actual_schema);
                     }
 
                     // ROWID 
@@ -142,9 +140,9 @@ namespace playback_reporting.Data
                     }
                     catch(Exception e)
                     {
-                        _logger.ErrorException("Error in SQL", e);
+                        _logger.LogError(e, "Error in SQL");
                         message = "Error Running Query</br>" + e.Message;
-                        message += "<pre>" + e.ToString() + "</pre>";
+                        message += "<pre>" + e + "</pre>";
                     }
                 }
             }
@@ -249,7 +247,7 @@ namespace playback_reporting.Data
         public int ImportRawData(string data)
         {
             int count = 0;
-            _logger.Info("Loading Data");
+            _logger.LogInformation("Loading Data");
             using (WriteLock.Write())
             {
                 using (var connection = CreateConnection(true))
@@ -260,7 +258,7 @@ namespace playback_reporting.Data
                     while (line != null)
                     {
                         string[] tokens = line.Split('\t');
-                        _logger.Info("Line Length : " + tokens.Length);
+                        _logger.LogInformation("Line Length : " + tokens.Length);
                         if (tokens.Length != 9)
                         {
                             line = sr.ReadLine();
@@ -277,7 +275,7 @@ namespace playback_reporting.Data
                         string device_name = tokens[7];
                         string duration = tokens[8];
 
-                        //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
+                        //_logger.LogInformation(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
 
                         string sql = "select rowid from PlaybackActivity where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
                         using (var statement = connection.PrepareStatement(sql))
@@ -295,7 +293,7 @@ namespace playback_reporting.Data
 
                             if (found == false)
                             {
-                                _logger.Info("Not Found, Adding");
+                                _logger.LogInformation("Not Found, Adding");
 
                                 string sql_add = "insert into PlaybackActivity " +
                                     "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
@@ -322,7 +320,7 @@ namespace playback_reporting.Data
                             }
                             else
                             {
-                                //_logger.Info("Found, ignoring");
+                                //_logger.LogInformation("Found, ignoring");
                             }
                         }
 
@@ -369,7 +367,7 @@ namespace playback_reporting.Data
                 sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
             }
 
-            _logger.Info("DeleteOldData : " + sql);
+            _logger.LogInformation("DeleteOldData : " + sql);
 
             using (WriteLock.Write())
             {
@@ -577,7 +575,7 @@ namespace playback_reporting.Data
                             int duration = row[1].ToInt();
 
                             int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
-                            _logger.Info("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
+                            _logger.LogInformation("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
                             while (duration > 0)
                             {
                                 string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
@@ -604,7 +602,7 @@ namespace playback_reporting.Data
 
         private void AddTimeToHours(SortedDictionary<string, int> report_data, string key, int count)
         {
-            _logger.Info("Adding Time : " + key + " - " + count);
+            _logger.LogInformation("Adding Time : " + key + " - " + count);
             if (report_data.ContainsKey(key))
             {
                 report_data[key] += count;

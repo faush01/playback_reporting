@@ -17,10 +17,9 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
+using Microsoft.Extensions.Logging;
 using playback_reporting.Data;
 
 namespace playback_reporting
@@ -53,7 +52,7 @@ namespace playback_reporting
             }
 
             DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
-            _logger.Info("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
+            _logger.LogInformation("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
             if (fi.Exists == false || (fi.Attributes & FileAttributes.Directory) != FileAttributes.Directory)
             {
                 return "Backup path does not exist or is not a directory";
@@ -63,7 +62,7 @@ namespace playback_reporting
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";
             string backup_file = Path.Combine(fi.FullName, fileName);
-            _logger.Info("Backup Path Final : " + backup_file);
+            _logger.LogInformation("Backup Path Final : " + backup_file);
 
             try
             {
@@ -78,7 +77,7 @@ namespace playback_reporting
             int max_files = config.MaxBackupFiles;
             int files_to_delete = files.Length - max_files;
 
-            _logger.Info("Backup Files Counts Current: " + files.Length + " Max:" + max_files + " ToDelete:" + files_to_delete);
+            _logger.LogInformation("Backup Files Counts Current: " + files.Length + " Max:" + max_files + " ToDelete:" + files_to_delete);
 
             if (files_to_delete > 0)
             {
@@ -86,14 +85,14 @@ namespace playback_reporting
                 foreach (FileInfo file_info in files)
                 {
                     file_paths.Add(file_info.FullName);
-                    _logger.Info("Existing Backup Files Before: " + file_info.Name);
+                    _logger.LogInformation("Existing Backup Files Before: " + file_info.Name);
                 }
                 file_paths.Sort();
 
                 for (int file_index = 0; file_index < files_to_delete; file_index++)
                 {
                     FileInfo del_file = new FileInfo(file_paths[file_index]);
-                    _logger.Info("Deleting backup file : " + del_file.FullName);
+                    _logger.LogInformation("Deleting backup file : " + del_file.FullName);
                     del_file.Delete();
                 }
             }

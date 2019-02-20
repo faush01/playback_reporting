@@ -26,7 +26,7 @@ using System.Text;
 
 namespace playback_reporting
 {
-    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
@@ -120,20 +120,6 @@ namespace playback_reporting
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.custom_query.js"
                 }
             };
-        }
-
-        public Stream GetThumbImage()
-        {
-            var type = GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
-        }
-
-        public ImageFormat ThumbImageFormat
-        {
-            get
-            {
-                return ImageFormat.Png;
-            }
         }
     }
 }

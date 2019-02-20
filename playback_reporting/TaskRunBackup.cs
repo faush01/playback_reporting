@@ -17,12 +17,11 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace playback_reporting
 {
@@ -39,14 +38,14 @@ namespace playback_reporting
         public string Category => "Playback Reporting";
 
 
-        public TaskRunBackup(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskRunBackup(IActivityManager activity, ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
-            _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
+            _logger = logger.CreateLogger("PlaybackReporting - TaskCleanDb");
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
 
-            _logger.Info("TaskCleanDb Loaded");
+            _logger.LogInformation("TaskCleanDb Loaded");
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()

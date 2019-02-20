@@ -15,28 +15,25 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace playback_reporting.Data
 {
     class PlaybackTracker
     {
-        private bool IsPaused = false;
+        private bool IsPaused;
         public PlaybackInfo TrackedPlaybackInfo { set; get; }
         private readonly ILogger _logger;
-        private List<KeyValuePair<DateTime, ACTION_TYPE>> event_tracking = new List<KeyValuePair<DateTime, ACTION_TYPE>>();
-        private string tracker_key;
+        private List<KeyValuePair<DateTime, ActionType>> event_tracking = new List<KeyValuePair<DateTime, ActionType>>();
         public DateTime last_updated = DateTime.MinValue;
 
-        private enum ACTION_TYPE { START, STOP, PAUSE, UNPAUSE, NONE };
+        private enum ActionType { START, STOP, PAUSE, UNPAUSE, NONE }
 
-        public PlaybackTracker(string key, ILogger logger)
+        public PlaybackTracker(ILogger logger)
         {
             _logger = logger;
-            tracker_key = key;
         }
 
         public List<string> ProcessProgress(PlaybackProgressEventArgs e)
@@ -44,16 +41,16 @@ namespace playback_reporting.Data
             List<string> event_log = new List<string>();
             if (IsPaused != e.IsPaused)
             {
-                KeyValuePair<DateTime, ACTION_TYPE> play_event;
+                KeyValuePair<DateTime, ActionType> play_event;
                 if (e.IsPaused)
                 {
-                    play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.PAUSE);
-                    event_log.Add("PauseEvent(" + play_event.Key.ToString() + ")");
+                    play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.PAUSE);
+                    event_log.Add("PauseEvent(" + play_event.Key + ")");
                 }
                 else
                 {
-                    play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.UNPAUSE);
-                    event_log.Add("UnPaused Event(" + play_event.Key.ToString() + ")");
+                    play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.UNPAUSE);
+                    event_log.Add("UnPaused Event(" + play_event.Key + ")");
                 }
                 event_tracking.Add(play_event);
 
@@ -68,17 +65,17 @@ namespace playback_reporting.Data
         public void ProcessStart(PlaybackProgressEventArgs e)
         {
             IsPaused = e.IsPaused;
-            KeyValuePair<DateTime, ACTION_TYPE> play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.START);
+            KeyValuePair<DateTime, ActionType> play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.START);
             event_tracking.Add(play_event);
-            _logger.Info("PlaybackTracker : Adding Start Event : " + play_event.Key.ToString());
+            _logger.LogInformation("PlaybackTracker : Adding Start Event : " + play_event.Key.ToString());
         }
 
         public List<string> ProcessStop(PlaybackStopEventArgs e)
         {
             IsPaused = e.IsPaused;
-            KeyValuePair<DateTime, ACTION_TYPE> play_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.STOP);
+            KeyValuePair<DateTime, ActionType> play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.STOP);
             event_tracking.Add(play_event);
-            _logger.Info("PlaybackTracker : Adding Stop Event : " + play_event.Key.ToString());
+            _logger.LogInformation("PlaybackTracker : Adding Stop Event : " + play_event.Key.ToString());
 
             List<string> event_log = new List<string>();
             CalculateDuration(event_log);
@@ -94,16 +91,16 @@ namespace playback_reporting.Data
                 return;
             }
 
-            List<KeyValuePair<DateTime, ACTION_TYPE>> events = null;
+            List<KeyValuePair<DateTime, ActionType>> events;
             // if the last event is not a stop event then add one to allow duration calculation to work
-            if (event_tracking.Count > 0 && event_tracking[event_tracking.Count - 1].Value != ACTION_TYPE.STOP)
+            if (event_tracking.Count > 0 && event_tracking[event_tracking.Count - 1].Value != ActionType.STOP)
             {
-                events = new List<KeyValuePair<DateTime, ACTION_TYPE>>();
-                foreach (KeyValuePair<DateTime, ACTION_TYPE> e in event_tracking)
+                events = new List<KeyValuePair<DateTime, ActionType>>();
+                foreach (KeyValuePair<DateTime, ActionType> e in event_tracking)
                 {
                     events.Add(e);
                 }
-                KeyValuePair<DateTime, ACTION_TYPE> stop_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.STOP);
+                KeyValuePair<DateTime, ActionType> stop_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.STOP);
                 events.Add(stop_event);
             }
             else
@@ -113,17 +110,17 @@ namespace playback_reporting.Data
 
             event_log.Add("EventCount(" + events.Count + ")");
 
-            KeyValuePair<DateTime, ACTION_TYPE> prev_event = new KeyValuePair<DateTime, ACTION_TYPE>(DateTime.Now, ACTION_TYPE.NONE);
+            KeyValuePair<DateTime, ActionType> prev_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.NONE);
 
-            foreach (KeyValuePair<DateTime, ACTION_TYPE> e in events)
+            foreach (KeyValuePair<DateTime, ActionType> e in events)
             {
-                event_log.Add("Event(" + e.Key.ToString() + "," + e.Value + ")");
-                if (prev_event.Value != ACTION_TYPE.NONE)
+                event_log.Add("Event(" + e.Key + "," + e.Value + ")");
+                if (prev_event.Value != ActionType.NONE)
                 {
-                    ACTION_TYPE action01 = prev_event.Value;
-                    ACTION_TYPE action02 = e.Value;
+                    ActionType action01 = prev_event.Value;
+                    ActionType action02 = e.Value;
                     // count up the activity that is considered PLAYING i.e. the client was actually playing and not paused
-                    if ((action01 == ACTION_TYPE.START || action01 == ACTION_TYPE.UNPAUSE) && (action02 == ACTION_TYPE.STOP || action02 == ACTION_TYPE.PAUSE))
+                    if ((action01 == ActionType.START || action01 == ActionType.UNPAUSE) && (action02 == ActionType.STOP || action02 == ActionType.PAUSE))
                     {
                         TimeSpan diff = e.Key.Subtract(prev_event.Key);
                         double diff_seconds = diff.TotalSeconds;

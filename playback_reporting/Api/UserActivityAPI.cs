@@ -17,18 +17,16 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using playback_reporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 
 namespace playback_reporting.Api
 {
@@ -188,21 +186,21 @@ namespace playback_reporting.Api
 
         private IActivityRepository Repository;
 
-        public UserActivityAPI(ILogManager logger,
+        public UserActivityAPI(ILoggerFactory logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
             IJsonSerializer jsonSerializer,
             IUserManager userManager,
             ILibraryManager libraryManager)
         {
-            _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
+            _logger = logger.CreateLogger("PlaybackReporting - UserActivityAPI");
             _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
             _userManager = userManager;
             _libraryManager = libraryManager;
 
-            _logger.Info("UserActivityAPI Loaded");
+            _logger.LogInformation("UserActivityAPI Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             //repo.Initialize();
             Repository = repo;
@@ -225,7 +223,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -392,19 +390,19 @@ namespace playback_reporting.Api
             {
                 headers += head + " : " + Request.Headers[head] + "\r\n";
             }
-            _logger.Info("Header : " + headers);
+            _logger.LogInformation("Header : " + headers);
 
-            _logger.Info("Files Length : " + Request.Files.Length);
+            _logger.LogInformation("Files Length : " + Request.Files.Length);
 
-            _logger.Info("ContentType : " + Request.ContentType);
+            _logger.LogInformation("ContentType : " + Request.ContentType);
 
             Stream input_data = request.RequestStream;
-            _logger.Info("Stream Info : " + input_data.CanRead);
+            _logger.LogInformation("Stream Info : " + input_data.CanRead);
 
             byte[] bytes = new byte[10000];
             int read = input_data.Read(bytes, 0, 10000);
-            _logger.Info("Bytes Read : " + read);
-            _logger.Info("Read : " + bytes);
+            _logger.LogInformation("Bytes Read : " + read);
+            _logger.LogInformation("Read : " + bytes);
         }
 
         public object Get(LoadBackup load_backup)
@@ -455,7 +453,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + activity.end_date);
+                _logger.LogInformation("End_Date: " + activity.end_date);
                 end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
             
@@ -530,7 +528,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -560,7 +558,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -603,7 +601,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -639,7 +637,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -656,7 +654,7 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
@@ -666,7 +664,7 @@ namespace playback_reporting.Api
 
         public object Post(CustomQuery request)
         {
-            _logger.Info("CustomQuery : " + request.CustomQueryString);
+            _logger.LogInformation("CustomQuery : " + request.CustomQueryString);
 
             Dictionary<string, object> responce = new Dictionary<string, object>();
 
