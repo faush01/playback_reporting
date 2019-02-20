@@ -552,7 +552,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
