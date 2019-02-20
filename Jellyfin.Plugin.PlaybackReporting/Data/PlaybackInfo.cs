@@ -29,7 +29,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
         public string PlaybackMethod { get; set; }
         public string ClientName { get; set; }
         public string DeviceName { get; set; }
-        public int PlaybackDuration { get; set; } = 0;
+        public int PlaybackDuration { get; set; }
 
     }
 }

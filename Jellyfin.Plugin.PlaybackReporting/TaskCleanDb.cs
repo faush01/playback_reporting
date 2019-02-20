@@ -73,7 +73,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
 
                 int max_data_age = config.MaxDataAge;
 
-                _logger.LogInformation("MaxDataAge : " + max_data_age);
+                _logger.LogInformation("MaxDataAge : {MaxDataAge}", max_data_age);
 
                 if(max_data_age == -1)
                 {

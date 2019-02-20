@@ -178,39 +178,33 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
     {
 
         private readonly ILogger _logger;
-        private readonly IJsonSerializer _jsonSerializer;
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _config;
         private readonly IUserManager _userManager;
-        private readonly ILibraryManager _libraryManager;
 
-        private IActivityRepository Repository;
+        private readonly IActivityRepository _repository;
 
         public UserActivityAPI(ILoggerFactory logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
-            IJsonSerializer jsonSerializer,
-            IUserManager userManager,
-            ILibraryManager libraryManager)
+            IUserManager userManager)
         {
             _logger = logger.CreateLogger("PlaybackReporting - UserActivityAPI");
-            _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
             _userManager = userManager;
-            _libraryManager = libraryManager;
 
             _logger.LogInformation("UserActivityAPI Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             //repo.Initialize();
-            Repository = repo;
+            _repository = repo;
         }
 
         public IRequest Request { get; set; }
 
         public object Get(TypeFilterList request)
         {
-            List<string> filter_list = Repository.GetTypeFilterList();
+            List<string> filter_list = _repository.GetTypeFilterList();
             return filter_list;
         }
 
@@ -223,11 +217,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetUserReport(request.days, end_date);
+            List<Dictionary<string, object>> report = _repository.GetUserReport(request.days, end_date);
 
             foreach(var user_info in report)
             {
@@ -235,7 +229,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
                 string user_name = "Not Known";
                 bool has_image = false;
                 Guid user_guid = new Guid(user_id);
-                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                User user = _userManager.GetUserById(user_guid);
 
                 if (user != null)
                 {
@@ -324,11 +318,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
                 {
                     user_id_list.Add(emby_user.Id.ToString("N"));
                 }
-                Repository.RemoveUnknownUsers(user_id_list);
+                _repository.RemoveUnknownUsers(user_id_list);
             }
             else
             {
-                Repository.ManageUserList(action, id);
+                _repository.ManageUserList(action, id);
             }
 
             return true;
@@ -336,7 +330,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
 
         public object Get(GetUserList request)
         {
-            List<string> user_id_list = Repository.GetUserList();
+            List<string> user_id_list = _repository.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
 
@@ -359,7 +353,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             {
                 filter_tokens = report.Filter.Split(',');
             }
-            List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
+            List<Dictionary<string, string>> results = _repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
 
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
@@ -390,52 +384,52 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             {
                 headers += head + " : " + Request.Headers[head] + "\r\n";
             }
-            _logger.LogInformation("Header : " + headers);
+            _logger.LogInformation("Header : {Headers}", headers);
 
-            _logger.LogInformation("Files Length : " + Request.Files.Length);
+            _logger.LogInformation("Files Length : {NumberOfFiles}", Request.Files.Length);
 
-            _logger.LogInformation("ContentType : " + Request.ContentType);
+            _logger.LogInformation("ContentType : {ContentType}", Request.ContentType);
 
             Stream input_data = request.RequestStream;
-            _logger.LogInformation("Stream Info : " + input_data.CanRead);
+            _logger.LogInformation("Stream Info : {CanRead}", input_data.CanRead);
 
             byte[] bytes = new byte[10000];
             int read = input_data.Read(bytes, 0, 10000);
-            _logger.LogInformation("Bytes Read : " + read);
-            _logger.LogInformation("Read : " + bytes);
+            _logger.LogInformation("Bytes Read : {BytesRead}", read);
+            _logger.LogInformation("Read : {Bytes}", bytes);
         }
 
-        public object Get(LoadBackup load_backup)
+        public object Get(LoadBackup loadBackup)
         {
-            FileInfo fi = new FileInfo(load_backup.backupfile);
+            FileInfo fi = new FileInfo(loadBackup.backupfile);
             if (fi.Exists == false)
             {
-                return new List<string>() { "Backup file does not exist" };
+                return new List<string> { "Backup file does not exist" };
             }
 
-            int count = 0;
+            int count;
             try
             {
-                string load_data = "";
+                string load_data;
                 using (StreamReader sr = new StreamReader(new FileStream(fi.FullName, FileMode.Open)))
                 {
                     load_data = sr.ReadToEnd();
                 }
-                count = Repository.ImportRawData(load_data);
+                count = _repository.ImportRawData(load_data);
             }
             catch (Exception e)
             {
-                return new List<string>() { e.Message };
+                return new List<string> { e.Message };
             }
 
-            return new List<string>() { "Backup loaded " + count + " items" };
+            return new List<string> { "Backup loaded " + count + " items" };
         }
-        public object Get(SaveBackup save_backup)
+        public object Get(SaveBackup saveBackup)
         {
             BackupManager bum = new BackupManager(_config, _logger, _fileSystem);
             string message = bum.SaveBackup();
 
-            return new List<string>() { message };
+            return new List<string> { message };
         }
 
         public object Get(GetUsageStats activity)
@@ -453,11 +447,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + activity.end_date);
+                _logger.LogInformation("End_Date: {ActivityEndDate}", activity.end_date);
                 end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
             
-            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
+            Dictionary<String, Dictionary<string, int>> results = _repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
 
             // add empty user for labels
             results.Add("labels_user", new Dictionary<string, int>());
@@ -469,7 +463,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
 
                 // fill in missing dates for time period
                 SortedDictionary<string, int> userUsageByDate = new SortedDictionary<string, int>();
-                DateTime from_date = end_date.AddDays((activity.days * -1) + 1);
+                DateTime from_date = end_date.AddDays(activity.days * -1 + 1);
                 while (from_date <= end_date)
                 {
                     string date_string = from_date.ToString("yyyy-MM-dd");
@@ -493,7 +487,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
                 else
                 {
                     Guid user_guid = new Guid(user_id);
-                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                    User user = _userManager.GetUserById(user_guid);
                     if (user != null)
                     {
                         user_name = user.Name;
@@ -528,11 +522,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
+            SortedDictionary<string, int> report = _repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
 
             for (int day = 0; day < 7; day++)
             {
@@ -562,19 +556,21 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
+            List<Dictionary<string, object>> report = _repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
 
             if (request.BreakdownType == "UserId")
             {
                 foreach (var row in report)
                 {
-                    string user_id = row["label"] as string;
-                    Guid user_guid = new Guid(user_id);
-                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
-
-                    if (user != null)
+                    if (row["label"] is string user_id)
                     {
-                        row["label"] = user.Name;
+                        Guid user_guid = new Guid(user_id);
+                        User user = _userManager.GetUserById(user_guid);
+
+                        if (user != null)
+                        {
+                            row["label"] = user.Name;
+                        }
                     }
                     else
                     {
@@ -601,11 +597,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.days, end_date, filter_tokens);
+            SortedDictionary<int, int> report = _repository.GetDurationHistogram(request.days, end_date, filter_tokens);
 
             // find max
             int max = -1;
@@ -637,11 +633,11 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetTvShowReport(request.days, end_date);
+            List<Dictionary<string, object>> report = _repository.GetTvShowReport(request.days, end_date);
             return report;
         }
 
@@ -654,23 +650,23 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             else
             {
-                _logger.LogInformation("End_Date: " + request.end_date);
+                _logger.LogInformation("End_Date: {RequestEndDate}", request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetMoviesReport(request.days, end_date);
+            List<Dictionary<string, object>> report = _repository.GetMoviesReport(request.days, end_date);
             return report;
         }
 
         public object Post(CustomQuery request)
         {
-            _logger.LogInformation("CustomQuery : " + request.CustomQueryString);
+            _logger.LogInformation("CustomQuery : {CustomerQueryString}", request.CustomQueryString);
 
             Dictionary<string, object> responce = new Dictionary<string, object>();
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
-            string message = Repository.RunCustomQuery(request.CustomQueryString, colums, result);
+            string message = _repository.RunCustomQuery(request.CustomQueryString, colums, result);
 
             int index_of_user_col = colums.IndexOf("UserId");
             if (request.ReplaceUserId && index_of_user_col > -1)

@@ -52,7 +52,8 @@ namespace Jellyfin.Plugin.PlaybackReporting
             }
 
             DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
-            _logger.LogInformation("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
+            _logger.LogInformation("Backup Path : {BackupPath} attributes : {Attributes} exists : {Exists}",
+                config.BackupPath, fi.Attributes, fi.Exists);
             if (fi.Exists == false || (fi.Attributes & FileAttributes.Directory) != FileAttributes.Directory)
             {
                 return "Backup path does not exist or is not a directory";
@@ -62,7 +63,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";
             string backup_file = Path.Combine(fi.FullName, fileName);
-            _logger.LogInformation("Backup Path Final : " + backup_file);
+            _logger.LogInformation("Backup Path Final : {BackupFile}", backup_file);
 
             try
             {
@@ -77,7 +78,9 @@ namespace Jellyfin.Plugin.PlaybackReporting
             int max_files = config.MaxBackupFiles;
             int files_to_delete = files.Length - max_files;
 
-            _logger.LogInformation("Backup Files Counts Current: " + files.Length + " Max:" + max_files + " ToDelete:" + files_to_delete);
+            _logger.LogInformation(
+                "Backup Files Counts Current: {NumberOfFiles} Max: {MaxFiles} ToDelete {FilesToDelete}", files.Length,
+                max_files, files_to_delete);
 
             if (files_to_delete > 0)
             {
@@ -85,14 +88,14 @@ namespace Jellyfin.Plugin.PlaybackReporting
                 foreach (FileInfo file_info in files)
                 {
                     file_paths.Add(file_info.FullName);
-                    _logger.LogInformation("Existing Backup Files Before: " + file_info.Name);
+                    _logger.LogInformation("Existing Backup Files Before: {FileName}", file_info.Name);
                 }
                 file_paths.Sort();
 
                 for (int file_index = 0; file_index < files_to_delete; file_index++)
                 {
                     FileInfo del_file = new FileInfo(file_paths[file_index]);
-                    _logger.LogInformation("Deleting backup file : " + del_file.FullName);
+                    _logger.LogInformation("Deleting backup file : {FullName}", del_file.FullName);
                     del_file.Delete();
                 }
             }

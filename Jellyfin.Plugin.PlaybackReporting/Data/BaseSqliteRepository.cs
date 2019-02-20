@@ -25,6 +25,7 @@ using SQLitePCL.pretty;
 
 namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
+    // TODO use the _same_ implementation from core???
     public abstract class BaseSqliteRepository : IDisposable
     {
         protected string DbFilePath { get; set; }

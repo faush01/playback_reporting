@@ -23,40 +23,9 @@ using SQLitePCL.pretty;
 
 namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
+    // TODO yet another file that is COPIED from core
     public static class SqliteExtensions
     {
-        public static void RunQueries(this SQLiteDatabaseConnection connection, string[] queries)
-        {
-            if (queries == null)
-            {
-                throw new ArgumentNullException("queries");
-            }
-
-            connection.RunInTransaction(conn =>
-            {
-                //foreach (var query in queries)
-                //{
-                //    conn.Execute(query);
-                //}
-                conn.ExecuteAll(string.Join(";", queries));
-            });
-        }
-
-        public static byte[] ToGuidBlob(this string str)
-        {
-            return ToGuidBlob(new Guid(str));
-        }
-
-        public static byte[] ToGuidBlob(this Guid guid)
-        {
-            return guid.ToByteArray();
-        }
-
-        public static Guid ReadGuidFromBlob(this IResultSetValue result)
-        {
-            return new Guid(result.ToBlob());
-        }
-
         public static string ToDateTimeParamValue(this DateTime dateValue)
         {
             var kind = DateTimeKind.Utc;
@@ -79,7 +48,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
         /// <summary>
         /// An array of ISO-8601 DateTime formats that we support parsing.
         /// </summary>
-        private static string[] _datetimeFormats = new string[] {
+        private static readonly string[] _datetimeFormats = {
       "THHmmssK",
       "THHmmK",
       "HH:mm:ss.FFFFFFFK",
@@ -126,85 +95,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                 DateTimeStyles.None).ToUniversalTime();
         }
 
-        public static DateTime? TryReadDateTime(this IResultSetValue result)
-        {
-            var dateText = result.ToString();
-
-            DateTime dateTimeResult;
-
-            if (DateTime.TryParseExact(dateText, _datetimeFormats, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out dateTimeResult))
-            {
-                return dateTimeResult.ToUniversalTime();
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Serializes to bytes.
-        /// </summary>
-        /// <returns>System.Byte[][].</returns>
-        /// <exception cref="System.ArgumentNullException">obj</exception>
-        public static byte[] SerializeToBytes(this IJsonSerializer json, object obj)
-        {
-            if (obj == null)
-            {
-                throw new ArgumentNullException("obj");
-            }
-
-            using (var stream = new MemoryStream())
-            {
-                json.SerializeToStream(obj, stream);
-                return stream.ToArray();
-            }
-        }
-
-        public static void Attach(ManagedConnection db, string path, string alias)
-        {
-            var commandText = string.Format("attach @path as {0};", alias);
-
-            using (var statement = db.PrepareStatement(commandText))
-            {
-                statement.TryBind("@path", path);
-                statement.MoveNext();
-            }
-        }
-
-        public static bool IsDBNull(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].SQLiteType == SQLiteType.Null;
-        }
-
-        public static string GetString(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ToString();
-        }
-
-        public static bool GetBoolean(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ToBool();
-        }
-
-        public static int GetInt32(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ToInt();
-        }
-
-        public static long GetInt64(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ToInt64();
-        }
-
-        public static float GetFloat(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ToFloat();
-        }
-
-        public static Guid GetGuid(this IReadOnlyList<IResultSetValue> result, int index)
-        {
-            return result[index].ReadGuidFromBlob();
-        }
-
         private static void CheckName(string name)
         {
 #if DEBUG
@@ -213,19 +103,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                 throw new Exception("Invalid param name: " + name);
             }
 #endif
-        }
-
-        public static void TryBind(this IStatement statement, string name, double value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value);
-            }
-            else
-            {
-                CheckName(name);
-            }
         }
 
         public static void TryBind(this IStatement statement, string name, string value)
@@ -248,32 +125,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
             }
         }
 
-        public static void TryBind(this IStatement statement, string name, bool value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value);
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, float value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value);
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
         public static void TryBind(this IStatement statement, string name, int value)
         {
             IBindParameter bindParam;
@@ -284,143 +135,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
             else
             {
                 CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, Guid value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value.ToGuidBlob());
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, DateTime value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value.ToDateTimeParamValue());
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, long value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value);
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, byte[] value)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.Bind(value);
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBindNull(this IStatement statement, string name)
-        {
-            IBindParameter bindParam;
-            if (statement.BindParameters.TryGetValue(name, out bindParam))
-            {
-                bindParam.BindNull();
-            }
-            else
-            {
-                CheckName(name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, DateTime? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, Guid? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, double? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, int? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, float? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
-            }
-        }
-
-        public static void TryBind(this IStatement statement, string name, bool? value)
-        {
-            if (value.HasValue)
-            {
-                TryBind(statement, name, value.Value);
-            }
-            else
-            {
-                TryBindNull(statement, name);
             }
         }
 

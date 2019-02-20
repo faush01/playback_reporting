@@ -26,8 +26,8 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
         private bool IsPaused;
         public PlaybackInfo TrackedPlaybackInfo { set; get; }
         private readonly ILogger _logger;
-        private List<KeyValuePair<DateTime, ActionType>> event_tracking = new List<KeyValuePair<DateTime, ActionType>>();
-        public DateTime last_updated = DateTime.MinValue;
+        private readonly List<KeyValuePair<DateTime, ActionType>> event_tracking = new List<KeyValuePair<DateTime, ActionType>>();
+        public DateTime LastUpdated = DateTime.MinValue;
 
         private enum ActionType { START, STOP, PAUSE, UNPAUSE, NONE }
 
@@ -67,7 +67,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
             IsPaused = e.IsPaused;
             KeyValuePair<DateTime, ActionType> play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.START);
             event_tracking.Add(play_event);
-            _logger.LogInformation("PlaybackTracker : Adding Start Event : " + play_event.Key.ToString());
+            _logger.LogInformation("PlaybackTracker : Adding Start Event : {PlayEventKey}", play_event.Key);
         }
 
         public List<string> ProcessStop(PlaybackStopEventArgs e)
@@ -75,14 +75,14 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
             IsPaused = e.IsPaused;
             KeyValuePair<DateTime, ActionType> play_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.STOP);
             event_tracking.Add(play_event);
-            _logger.LogInformation("PlaybackTracker : Adding Stop Event : " + play_event.Key.ToString());
+            _logger.LogInformation("PlaybackTracker : Adding Stop Event : {PlayEventKey}", play_event.Key);
 
             List<string> event_log = new List<string>();
             CalculateDuration(event_log);
             return event_log;
         }
 
-        public void CalculateDuration(List<string> event_log)
+        public void CalculateDuration(List<string> eventLog)
         {
             int duration = 0;
 
@@ -108,13 +108,13 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                 events = event_tracking;
             }
 
-            event_log.Add("EventCount(" + events.Count + ")");
+            eventLog.Add("EventCount(" + events.Count + ")");
 
             KeyValuePair<DateTime, ActionType> prev_event = new KeyValuePair<DateTime, ActionType>(DateTime.Now, ActionType.NONE);
 
             foreach (KeyValuePair<DateTime, ActionType> e in events)
             {
-                event_log.Add("Event(" + e.Key + "," + e.Value + ")");
+                eventLog.Add("Event(" + e.Key + "," + e.Value + ")");
                 if (prev_event.Value != ActionType.NONE)
                 {
                     ActionType action01 = prev_event.Value;
@@ -125,15 +125,14 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                         TimeSpan diff = e.Key.Subtract(prev_event.Key);
                         double diff_seconds = diff.TotalSeconds;
                         duration += (int)diff_seconds;
-                        event_log.Add("Diff(" + (int)diff_seconds + ","+ duration + ")");
+                        eventLog.Add("Diff(" + (int)diff_seconds + ","+ duration + ")");
                     }
                 }
                 prev_event = e;
             }
 
-            event_log.Add("Total(" + duration + ")");
+            eventLog.Add("Total(" + duration + ")");
             TrackedPlaybackInfo.PlaybackDuration = duration;
         }
-
     }
 }

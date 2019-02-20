@@ -22,68 +22,44 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     public class ManagedConnection : IDisposable
     {
-        private SQLiteDatabaseConnection db;
+        private readonly SQLiteDatabaseConnection _db;
         private readonly bool _closeOnDispose;
 
         public ManagedConnection(SQLiteDatabaseConnection db, bool closeOnDispose)
         {
-            this.db = db;
+            _db = db;
             _closeOnDispose = closeOnDispose;
         }
 
         public IStatement PrepareStatement(string sql)
         {
-            return db.PrepareStatement(sql);
+            return _db.PrepareStatement(sql);
         }
 
-        public IEnumerable<IStatement> PrepareAll(string sql)
-        {
-            return db.PrepareAll(sql);
-        }
-
-        public void ExecuteAll(string sql)
-        {
-            db.ExecuteAll(sql);
-        }
 
         public void Execute(string sql, params object[] values)
         {
-            db.Execute(sql, values);
+            _db.Execute(sql, values);
         }
 
         public int GetChangeCount()
         {
-            return db.TotalChanges;
-        }
-
-        public void RunQueries(string[] sql)
-        {
-            db.RunQueries(sql);
+            return _db.TotalChanges;
         }
 
         public void RunInTransaction(Action<IDatabaseConnection> action, TransactionMode mode)
         {
-            db.RunInTransaction(action, mode);
-        }
-
-        public T RunInTransaction<T>(Func<IDatabaseConnection, T> action, TransactionMode mode)
-        {
-            return db.RunInTransaction<T>(action, mode);
+            _db.RunInTransaction(action, mode);
         }
 
         public IEnumerable<IReadOnlyList<IResultSetValue>> Query(string sql)
         {
-            return db.Query(sql);
-        }
-
-        public IEnumerable<IReadOnlyList<IResultSetValue>> Query(string sql, params object[] values)
-        {
-            return db.Query(sql, values);
+            return _db.Query(sql);
         }
 
         public void Close()
         {
-            using (db)
+            using (_db)
             {
 
             }

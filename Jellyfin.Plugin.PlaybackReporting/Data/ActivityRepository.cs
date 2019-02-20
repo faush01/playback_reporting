@@ -71,16 +71,16 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                     if (required_schema != actual_schema)
                     {
                         _logger.LogInformation("PlaybackActivity table schema miss match!");
-                        _logger.LogInformation("Expected : " + required_schema);
-                        _logger.LogInformation("Received : " + actual_schema);
+                        _logger.LogInformation("Expected : {RequiredSchema}", required_schema);
+                        _logger.LogInformation("Received : {ActualSchema}", actual_schema);
                         _logger.LogInformation("Dropping and recreating PlaybackActivity table");
                         connection.Execute("drop table if exists PlaybackActivity");
                     }
                     else
                     {
                         _logger.LogInformation("PlaybackActivity table schema OK");
-                        _logger.LogInformation("Expected : " + required_schema);
-                        _logger.LogInformation("Received : " + actual_schema);
+                        _logger.LogInformation("Expected : {RequiredSchema}", required_schema);
+                        _logger.LogInformation("Received : {ActualSchema}", actual_schema);
                     }
 
                     // ROWID 
@@ -176,7 +176,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
 
         public void ManageUserList(string action, string id)
         {
-            string sql = "";
+            string sql;
             if(action == "add")
             {
                 sql = "insert into UserList (UserId) values (@id)";
@@ -317,10 +317,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                                     }
                                 }, TransactionMode);
                                 count++;
-                            }
-                            else
-                            {
-                                //_logger.LogInformation("Found, ignoring");
                             }
                         }
 
@@ -575,7 +571,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                             int duration = row[1].ToInt();
 
                             int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
-                            _logger.LogInformation("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
+                            _logger.LogInformation("Processing - date: " + date + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
                             while (duration > 0)
                             {
                                 string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
@@ -620,7 +616,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration) AS Seconds ";
             sql += "FROM PlaybackActivity ";
