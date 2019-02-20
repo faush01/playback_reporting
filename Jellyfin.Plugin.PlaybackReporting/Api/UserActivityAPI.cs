@@ -14,21 +14,21 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Data;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Globalization;
 using Microsoft.Extensions.Logging;
 
-namespace playback_reporting.Api
+namespace Jellyfin.Plugin.PlaybackReporting.Api
 {
 
     // http://localhost:8096/emby/user_usage_stats/user_activity

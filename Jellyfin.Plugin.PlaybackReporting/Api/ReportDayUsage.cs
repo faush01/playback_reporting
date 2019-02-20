@@ -14,17 +14,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting.Api
 {
-    public class ReportPlaybackOptions
+    public class ReportDayUsage
     {
-        public int MaxDataAge { set; get; } = 3;
-        public string BackupPath { set; get; }
-        public int MaxBackupFiles { set; get; } = 5;
-
+        public string Date { get; set; }
+        public int Count { get; set; }
     }
 }

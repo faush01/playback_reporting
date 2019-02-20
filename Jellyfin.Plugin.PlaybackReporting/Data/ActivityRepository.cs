@@ -14,15 +14,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Controller;
-using MediaBrowser.Model.IO;
-using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MediaBrowser.Controller;
+using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
+using SQLitePCL.pretty;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     public class ActivityRepository : BaseSqliteRepository, IActivityRepository
     {

@@ -14,12 +14,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Controller.Library;
 using System;
 using System.Collections.Generic;
+using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Logging;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     class PlaybackTracker
     {

@@ -14,23 +14,23 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Data;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Audio;
 using Microsoft.Extensions.Logging;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
     class EventMonitorEntryPoint : IServerEntryPoint
     {

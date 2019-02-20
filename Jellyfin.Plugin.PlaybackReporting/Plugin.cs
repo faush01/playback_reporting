@@ -14,17 +14,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Common.Configuration;
-using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Drawing;
-using MediaBrowser.Model.Plugins;
-using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Serialization;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
     class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {

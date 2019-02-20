@@ -17,13 +17,13 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
-using SQLitePCL.pretty;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using SQLitePCL;
+using SQLitePCL.pretty;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     public abstract class BaseSqliteRepository : IDisposable
     {

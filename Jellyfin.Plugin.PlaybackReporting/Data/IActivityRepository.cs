@@ -16,10 +16,8 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
-using playback_reporting.Api;
-using MediaBrowser.Model.Querying;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     public interface IActivityRepository
     {

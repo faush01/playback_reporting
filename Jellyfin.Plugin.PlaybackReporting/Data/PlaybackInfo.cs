@@ -14,15 +14,22 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Model.Plugins;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
-    public class PluginConfiguration: BasePluginConfiguration
+    public class PlaybackInfo
     {
+        public string Id { get; set; }
+        public DateTime Date { get; set; }
+        public string UserId { get; set; }
+        public string ItemId { get; set; }
+        public string ItemType { get; set; }
+        public string ItemName { get; set; }
+        public string PlaybackMethod { get; set; }
+        public string ClientName { get; set; }
+        public string DeviceName { get; set; }
+        public int PlaybackDuration { get; set; } = 0;
 
     }
 }

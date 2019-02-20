@@ -14,17 +14,18 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
-using playback_reporting.Data;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using Microsoft.Extensions.Logging;
+using IActivityRepository = Jellyfin.Plugin.PlaybackReporting.Data.IActivityRepository;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
     class TaskCleanDb : IScheduledTask
     {
@@ -38,7 +39,7 @@ namespace playback_reporting
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
 
-        private playback_reporting.Data.IActivityRepository Repository;
+        private IActivityRepository Repository;
 
         public TaskCleanDb(IActivityManager activity, ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {

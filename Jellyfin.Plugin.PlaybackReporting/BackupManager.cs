@@ -17,12 +17,12 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
-using playback_reporting.Data;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
     class BackupManager
     {

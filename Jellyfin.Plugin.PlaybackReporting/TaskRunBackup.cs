@@ -14,16 +14,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
     class TaskRunBackup : IScheduledTask
     {

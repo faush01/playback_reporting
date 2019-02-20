@@ -90,7 +90,7 @@ define(['libraryMenu'], function (libraryMenu) {
             //alert("Loaded Data: " + JSON.stringify(usage_data));
             alert(responce_message[0]);
 
-            ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+            ApiClient.getNamedConfiguration('Jellyfin.Plugin.PlaybackReporting').then(function (config) {
                 var backup_path_label = view.querySelector('#backup_path_label');
                 backup_path_label.innerHTML = config.BackupPath;
             });
@@ -167,7 +167,7 @@ define(['libraryMenu'], function (libraryMenu) {
                 ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
                     config.MaxBackupFiles = max_files;
                     console.log("New Config Settings : " + JSON.stringify(config));
-                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                    ApiClient.updateNamedConfiguration('Jellyfin.Plugin.PlaybackReporting', config);
                 });
             }
 
@@ -176,7 +176,7 @@ define(['libraryMenu'], function (libraryMenu) {
                 ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
                     config.MaxDataAge = max_age;
                     console.log("New Config Settings : " + JSON.stringify(config));
-                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                    ApiClient.updateNamedConfiguration('Jellyfin.Plugin.PlaybackReporting', config);
                 });
             }
 
