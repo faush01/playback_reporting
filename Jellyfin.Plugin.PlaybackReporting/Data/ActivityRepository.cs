@@ -258,7 +258,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                     while (line != null)
                     {
                         string[] tokens = line.Split('\t');
-                        _logger.LogInformation("Line Length : " + tokens.Length);
+                        _logger.LogInformation("Line Length : {NumberOfTokens}", tokens.Length);
                         if (tokens.Length != 9)
                         {
                             line = sr.ReadLine();
@@ -570,8 +570,8 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
                             DateTime date = row[0].ReadDateTime().ToLocalTime();
                             int duration = row[1].ToInt();
 
-                            int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
-                            _logger.LogInformation("Processing - date: " + date + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
+                            int seconds_left_in_hour = 3600 - (date.Minute * 60 + date.Second);
+                            _logger.LogInformation("Processing - date: {Date} duration: {Duration} seconds_left_in_hour {SecondsLeftInHour}", date, duration, seconds_left_in_hour);
                             while (duration > 0)
                             {
                                 string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
@@ -598,7 +598,7 @@ namespace Jellyfin.Plugin.PlaybackReporting.Data
 
         private void AddTimeToHours(SortedDictionary<string, int> reportData, string key, int count)
         {
-            _logger.LogInformation("Adding Time : " + key + " - " + count);
+            _logger.LogInformation("Adding Time : {Key} - {Count}", key, count);
             if (reportData.ContainsKey(key))
             {
                 reportData[key] += count;
