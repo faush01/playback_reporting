@@ -14,21 +14,19 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+using Microsoft.Extensions.Logging;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class TaskRunBackup : IScheduledTask
+    public class TaskRunBackup : IScheduledTask
     {
-        private IActivityManager _activity;
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
         private readonly IFileSystem _fileSystem;
@@ -39,14 +37,13 @@ namespace playback_reporting
         public string Category => "Playback Reporting";
 
 
-        public TaskRunBackup(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskRunBackup(ILoggerFactory logger, IServerConfigurationManager config, IFileSystem fileSystem)
         {
-            _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
-            _activity = activity;
+            _logger = logger.CreateLogger("PlaybackReporting - TaskCleanDb");
             _config = config;
             _fileSystem = fileSystem;
 
-            _logger.Info("TaskCleanDb Loaded");
+            _logger.LogInformation("TaskCleanDb Loaded");
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()

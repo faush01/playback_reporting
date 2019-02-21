@@ -14,19 +14,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Common.Configuration;
-using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Drawing;
-using MediaBrowser.Model.Plugins;
-using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Serialization;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
@@ -34,7 +31,7 @@ namespace playback_reporting
         }
 
         public override string Name => "Playback Reporting";
-        public override Guid Id => new Guid("9E6EB40F-9A1A-4CA1-A299-62B4D252453E");
+        public override Guid Id => new Guid("5c534381-91a3-43cb-907a-35aa02eb9d2c");
         public override string Description => "Show reports for playback activity";
         public static Plugin Instance { get; private set; }
         public PluginConfiguration PluginConfiguration => Configuration;
@@ -120,20 +117,6 @@ namespace playback_reporting
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.custom_query.js"
                 }
             };
-        }
-
-        public Stream GetThumbImage()
-        {
-            var type = GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
-        }
-
-        public ImageFormat ThumbImageFormat
-        {
-            get
-            {
-                return ImageFormat.Png;
-            }
         }
     }
 }

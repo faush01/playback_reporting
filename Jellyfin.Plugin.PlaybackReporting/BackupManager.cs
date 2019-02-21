@@ -17,18 +17,17 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
-using playback_reporting.Data;
+using Microsoft.Extensions.Logging;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class BackupManager
+    public class BackupManager
     {
 
-        private IActivityRepository repository;
+        private readonly IActivityRepository _repository;
         private readonly IServerConfigurationManager _config;
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
@@ -39,7 +38,7 @@ namespace playback_reporting
             _fileSystem = fileSystem;
             _logger = logger;
 
-            repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
         }
 
 
@@ -53,21 +52,22 @@ namespace playback_reporting
             }
 
             DirectoryInfo fi = new DirectoryInfo(config.BackupPath);
-            _logger.Info("Backup Path : " + config.BackupPath + " attributes : " + fi.Attributes + " exists : " + fi.Exists);
+            _logger.LogInformation("Backup Path : {BackupPath} attributes : {Attributes} exists : {Exists}",
+                config.BackupPath, fi.Attributes, fi.Exists);
             if (fi.Exists == false || (fi.Attributes & FileAttributes.Directory) != FileAttributes.Directory)
             {
                 return "Backup path does not exist or is not a directory";
             }
 
-            string raw_data = repository.ExportRawData();
+            string raw_data = _repository.ExportRawData();
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";
             string backup_file = Path.Combine(fi.FullName, fileName);
-            _logger.Info("Backup Path Final : " + backup_file);
+            _logger.LogInformation("Backup Path Final : {BackupFile}", backup_file);
 
             try
             {
-                System.IO.File.WriteAllText(backup_file, raw_data);
+                File.WriteAllText(backup_file, raw_data);
             }
             catch (Exception e)
             {
@@ -78,7 +78,9 @@ namespace playback_reporting
             int max_files = config.MaxBackupFiles;
             int files_to_delete = files.Length - max_files;
 
-            _logger.Info("Backup Files Counts Current: " + files.Length + " Max:" + max_files + " ToDelete:" + files_to_delete);
+            _logger.LogInformation(
+                "Backup Files Counts Current: {NumberOfFiles} Max: {MaxFiles} ToDelete {FilesToDelete}", files.Length,
+                max_files, files_to_delete);
 
             if (files_to_delete > 0)
             {
@@ -86,14 +88,14 @@ namespace playback_reporting
                 foreach (FileInfo file_info in files)
                 {
                     file_paths.Add(file_info.FullName);
-                    _logger.Info("Existing Backup Files Before: " + file_info.Name);
+                    _logger.LogInformation("Existing Backup Files Before: {FileName}", file_info.Name);
                 }
                 file_paths.Sort();
 
                 for (int file_index = 0; file_index < files_to_delete; file_index++)
                 {
                     FileInfo del_file = new FileInfo(file_paths[file_index]);
-                    _logger.Info("Deleting backup file : " + del_file.FullName);
+                    _logger.LogInformation("Deleting backup file : {FullName}", del_file.FullName);
                     del_file.Delete();
                 }
             }

@@ -14,17 +14,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Api;
-using MediaBrowser.Controller;
-using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
-using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using MediaBrowser.Controller;
+using MediaBrowser.Model.IO;
+using Microsoft.Extensions.Logging;
+using SQLitePCL.pretty;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
     public class ActivityRepository : BaseSqliteRepository, IActivityRepository
     {
@@ -47,7 +45,7 @@ namespace playback_reporting.Data
 
             catch (Exception ex)
             {
-                Logger.ErrorException("Error loading PlaybackActivity database file.", ex);
+                Logger.LogError(ex, "Error loading PlaybackActivity database file.");
                 //FileSystem.DeleteFile(DbFilePath);
                 //InitializeInternal();
             }
@@ -59,7 +57,7 @@ namespace playback_reporting.Data
             {
                 using (var connection = CreateConnection())
                 {
-                    _logger.Info("Initialize PlaybackActivity Repository");
+                    _logger.LogInformation("Initialize PlaybackActivity Repository");
 
                     string sql_info = "pragma table_info('PlaybackActivity')";
                     List<string> cols = new List<string>();
@@ -72,17 +70,17 @@ namespace playback_reporting.Data
                     string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
                     if (required_schema != actual_schema)
                     {
-                        _logger.Info("PlaybackActivity table schema miss match!");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
-                        _logger.Info("Dropping and recreating PlaybackActivity table");
+                        _logger.LogInformation("PlaybackActivity table schema miss match!");
+                        _logger.LogInformation("Expected : {RequiredSchema}", required_schema);
+                        _logger.LogInformation("Received : {ActualSchema}", actual_schema);
+                        _logger.LogInformation("Dropping and recreating PlaybackActivity table");
                         connection.Execute("drop table if exists PlaybackActivity");
                     }
                     else
                     {
-                        _logger.Info("PlaybackActivity table schema OK");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
+                        _logger.LogInformation("PlaybackActivity table schema OK");
+                        _logger.LogInformation("Expected : {RequiredSchema}", required_schema);
+                        _logger.LogInformation("Received : {ActualSchema}", actual_schema);
                     }
 
                     // ROWID 
@@ -142,9 +140,9 @@ namespace playback_reporting.Data
                     }
                     catch(Exception e)
                     {
-                        _logger.ErrorException("Error in SQL", e);
+                        _logger.LogError(e, "Error in SQL");
                         message = "Error Running Query</br>" + e.Message;
-                        message += "<pre>" + e.ToString() + "</pre>";
+                        message += "<pre>" + e + "</pre>";
                     }
                 }
             }
@@ -178,7 +176,7 @@ namespace playback_reporting.Data
 
         public void ManageUserList(string action, string id)
         {
-            string sql = "";
+            string sql;
             if(action == "add")
             {
                 sql = "insert into UserList (UserId) values (@id)";
@@ -249,7 +247,7 @@ namespace playback_reporting.Data
         public int ImportRawData(string data)
         {
             int count = 0;
-            _logger.Info("Loading Data");
+            _logger.LogInformation("Loading Data");
             using (WriteLock.Write())
             {
                 using (var connection = CreateConnection(true))
@@ -260,7 +258,7 @@ namespace playback_reporting.Data
                     while (line != null)
                     {
                         string[] tokens = line.Split('\t');
-                        _logger.Info("Line Length : " + tokens.Length);
+                        _logger.LogInformation("Line Length : {NumberOfTokens}", tokens.Length);
                         if (tokens.Length != 9)
                         {
                             line = sr.ReadLine();
@@ -277,7 +275,7 @@ namespace playback_reporting.Data
                         string device_name = tokens[7];
                         string duration = tokens[8];
 
-                        //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
+                        //_logger.LogInformation(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
 
                         string sql = "select rowid from PlaybackActivity where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
                         using (var statement = connection.PrepareStatement(sql))
@@ -295,7 +293,7 @@ namespace playback_reporting.Data
 
                             if (found == false)
                             {
-                                _logger.Info("Not Found, Adding");
+                                _logger.LogInformation("Not Found, Adding");
 
                                 string sql_add = "insert into PlaybackActivity " +
                                     "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
@@ -319,10 +317,6 @@ namespace playback_reporting.Data
                                     }
                                 }, TransactionMode);
                                 count++;
-                            }
-                            else
-                            {
-                                //_logger.Info("Found, ignoring");
                             }
                         }
 
@@ -360,16 +354,16 @@ namespace playback_reporting.Data
             return sw.ToString();
         }
 
-        public void DeleteOldData(DateTime? del_before)
+        public void DeleteOldData(DateTime? delBefore)
         {
             string sql = "delete from PlaybackActivity";
-            if (del_before != null)
+            if (delBefore != null)
             {
-                DateTime date = (DateTime)del_before;
+                DateTime date = (DateTime)delBefore;
                 sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
             }
 
-            _logger.Info("DeleteOldData : " + sql);
+            _logger.LogInformation("DeleteOldData : {Sql}", sql);
 
             using (WriteLock.Write())
             {
@@ -383,7 +377,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public void AddPlaybackAction(PlaybackInfo play_info)
+        public void AddPlaybackAction(PlaybackInfo playInfo)
         {
             string sql_add = "insert into PlaybackActivity " +
                 "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
@@ -398,15 +392,15 @@ namespace playback_reporting.Data
                     {
                         using (var statement = db.PrepareStatement(sql_add))
                         {
-                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                            statement.TryBind("@UserId", play_info.UserId);
-                            statement.TryBind("@ItemId", play_info.ItemId);
-                            statement.TryBind("@ItemType", play_info.ItemType);
-                            statement.TryBind("@ItemName", play_info.ItemName);
-                            statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
-                            statement.TryBind("@ClientName", play_info.ClientName);
-                            statement.TryBind("@DeviceName", play_info.DeviceName);
-                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                            statement.TryBind("@DateCreated", playInfo.Date.ToDateTimeParamValue());
+                            statement.TryBind("@UserId", playInfo.UserId);
+                            statement.TryBind("@ItemId", playInfo.ItemId);
+                            statement.TryBind("@ItemType", playInfo.ItemType);
+                            statement.TryBind("@ItemName", playInfo.ItemName);
+                            statement.TryBind("@PlaybackMethod", playInfo.PlaybackMethod);
+                            statement.TryBind("@ClientName", playInfo.ClientName);
+                            statement.TryBind("@DeviceName", playInfo.DeviceName);
+                            statement.TryBind("@PlayDuration", playInfo.PlaybackDuration);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -414,7 +408,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public void UpdatePlaybackAction(PlaybackInfo play_info)
+        public void UpdatePlaybackAction(PlaybackInfo playInfo)
         {
             string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
             using (WriteLock.Write())
@@ -425,10 +419,10 @@ namespace playback_reporting.Data
                     {
                         using (var statement = db.PrepareStatement(sql_add))
                         {
-                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                            statement.TryBind("@UserId", play_info.UserId);
-                            statement.TryBind("@ItemId", play_info.ItemId);
-                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                            statement.TryBind("@DateCreated", playInfo.Date.ToDateTimeParamValue());
+                            statement.TryBind("@UserId", playInfo.UserId);
+                            statement.TryBind("@ItemId", playInfo.ItemId);
+                            statement.TryBind("@PlayDuration", playInfo.PlaybackDuration);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -436,7 +430,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
+        public List<Dictionary<string, string>> GetUsageForUser(string date, string userId, string[] types)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -460,7 +454,7 @@ namespace playback_reporting.Data
                     {
                         statement.TryBind("@date_from", date + " 00:00:00");
                         statement.TryBind("@date_to", date + " 23:59:59");
-                        statement.TryBind("@user_id", user_id);
+                        statement.TryBind("@user_id", userId);
                         foreach (var row in statement.ExecuteQuery())
                         {
                             string item_id = row[1].ToString();
@@ -485,7 +479,7 @@ namespace playback_reporting.Data
             return items;
         }
 
-        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type)
+        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime endDate, string[] types, string dataType)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -494,7 +488,7 @@ namespace playback_reporting.Data
             }
 
             string sql_query = "";
-            if (data_type == "count")
+            if (dataType == "count")
             {
                 sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, COUNT(1) AS count ";
             }
@@ -508,8 +502,8 @@ namespace playback_reporting.Data
             sql_query += "AND UserId not IN (select UserId from UserList) ";
             sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
+            Dictionary<string, Dictionary<string, int>> usage = new Dictionary<string, Dictionary<string, int>>();
 
             using (WriteLock.Read())
             {
@@ -518,7 +512,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -544,7 +538,7 @@ namespace playback_reporting.Data
             return usage;
         }
 
-        public SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date, string[] types)
+        public SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime endDate, string[] types)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -554,7 +548,7 @@ namespace playback_reporting.Data
 
             SortedDictionary<string, int> report_data = new SortedDictionary<string, int>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql = "SELECT DateCreated, PlayDuration ";
             sql += "FROM PlaybackActivity ";
@@ -569,15 +563,15 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
                             DateTime date = row[0].ReadDateTime().ToLocalTime();
                             int duration = row[1].ToInt();
 
-                            int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
-                            _logger.Info("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
+                            int seconds_left_in_hour = 3600 - (date.Minute * 60 + date.Second);
+                            _logger.LogInformation("Processing - date: {Date} duration: {Duration} seconds_left_in_hour {SecondsLeftInHour}", date, duration, seconds_left_in_hour);
                             while (duration > 0)
                             {
                                 string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
@@ -602,27 +596,26 @@ namespace playback_reporting.Data
             return report_data;
         }
 
-        private void AddTimeToHours(SortedDictionary<string, int> report_data, string key, int count)
+        private void AddTimeToHours(SortedDictionary<string, int> reportData, string key, int count)
         {
-            _logger.Info("Adding Time : " + key + " - " + count);
-            if (report_data.ContainsKey(key))
+            _logger.LogInformation("Adding Time : {Key} - {Count}", key, count);
+            if (reportData.ContainsKey(key))
             {
-                report_data[key] += count;
+                reportData[key] += count;
             }
             else
             {
-                report_data.Add(key, count);
+                reportData.Add(key, count);
             }
         }
 
-        public List<Dictionary<string, object>> GetBreakdownReport(int days, DateTime end_date, string type)
+        public List<Dictionary<string, object>> GetBreakdownReport(int days, DateTime endDate, string type)
         {
             // UserId ItemType PlaybackMethod ClientName DeviceName
 
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration) AS Seconds ";
             sql += "FROM PlaybackActivity ";
@@ -637,7 +630,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -645,10 +638,10 @@ namespace playback_reporting.Data
                             int action_count = row[1].ToInt();
                             int seconds_sum = row[2].ToInt();
 
-                            Dictionary<string, object> row_data = new Dictionary<string, object>();
-                            row_data.Add("label", item_label);
-                            row_data.Add("count", action_count);
-                            row_data.Add("time", seconds_sum);
+                            Dictionary<string, object> row_data = new Dictionary<string, object>
+                            {
+                                {"label", item_label}, {"count", action_count}, {"time", seconds_sum}
+                            };
                             report.Add(row_data);
                         }
                     }
@@ -658,7 +651,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date, string[] types)
+        public SortedDictionary<int, int> GetDurationHistogram(int days, DateTime endDate, string[] types)
         {
             /*
             SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount 
@@ -675,8 +668,7 @@ namespace playback_reporting.Data
 
             SortedDictionary<int, int> report = new SortedDictionary<int, int>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql =
                 "SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
@@ -694,7 +686,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -709,12 +701,11 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetTvShowReport(int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetTvShowReport(int days, DateTime endDate)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql = "";
             sql += "SELECT substr(ItemName,0, instr(ItemName, ' - ')) AS name, ";
@@ -733,7 +724,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -754,12 +745,11 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetMoviesReport(int days, DateTime endDate)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql = "";
             sql += "SELECT ItemName AS name, ";
@@ -778,7 +768,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -786,10 +776,10 @@ namespace playback_reporting.Data
                             int action_count = row[1].ToInt();
                             int seconds_sum = row[2].ToInt();
 
-                            Dictionary<string, object> row_data = new Dictionary<string, object>();
-                            row_data.Add("label", item_label);
-                            row_data.Add("count", action_count);
-                            row_data.Add("time", seconds_sum);
+                            Dictionary<string, object> row_data = new Dictionary<string, object>
+                            {
+                                {"label", item_label}, {"count", action_count}, {"time", seconds_sum}
+                            };
                             report.Add(row_data);
                         }
                     }
@@ -799,12 +789,11 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetUserReport(int days, DateTime endDate)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+            DateTime start_date = endDate.Subtract(new TimeSpan(days, 0, 0, 0));
 
             string sql = "";
             sql += "SELECT x.latest_date, x.UserId, x.play_count, x.total_duarion, y.ItemName, y.DeviceName ";
@@ -825,7 +814,7 @@ namespace playback_reporting.Data
                     using (var statement = connection.PrepareStatement(sql))
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@end_date", endDate.ToString("yyyy-MM-dd 23:59:59"));
 
                         foreach (var row in statement.ExecuteQuery())
                         {

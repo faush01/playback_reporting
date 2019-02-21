@@ -15,16 +15,21 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
-    public class ReportPlaybackOptions
+    public class PlaybackInfo
     {
-        public int MaxDataAge { set; get; } = 3;
-        public string BackupPath { set; get; }
-        public int MaxBackupFiles { set; get; } = 5;
+        public string Id { get; set; }
+        public DateTime Date { get; set; }
+        public string UserId { get; set; }
+        public string ItemId { get; set; }
+        public string ItemType { get; set; }
+        public string ItemName { get; set; }
+        public string PlaybackMethod { get; set; }
+        public string ClientName { get; set; }
+        public string DeviceName { get; set; }
+        public int PlaybackDuration { get; set; }
 
     }
 }

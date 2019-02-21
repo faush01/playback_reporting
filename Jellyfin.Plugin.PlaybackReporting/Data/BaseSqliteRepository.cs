@@ -17,15 +17,15 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Model.Logging;
-using SQLitePCL.pretty;
 using System.Linq;
+using System.Threading;
+using Microsoft.Extensions.Logging;
 using SQLitePCL;
+using SQLitePCL.pretty;
 
-namespace playback_reporting.Data
+namespace Jellyfin.Plugin.PlaybackReporting.Data
 {
+    // TODO use the _same_ implementation from core???
     public abstract class BaseSqliteRepository : IDisposable
     {
         protected string DbFilePath { get; set; }
@@ -41,11 +41,6 @@ namespace playback_reporting.Data
         }
 
         protected TransactionMode TransactionMode
-        {
-            get { return TransactionMode.Deferred; }
-        }
-
-        protected TransactionMode ReadTransactionMode
         {
             get { return TransactionMode.Deferred; }
         }
@@ -91,22 +86,22 @@ namespace playback_reporting.Data
                 if (!_versionLogged)
                 {
                     _versionLogged = true;
-                    Logger.Info("Sqlite version: " + SQLite3.Version);
-                    Logger.Info("Sqlite compiler options: " + string.Join(",", SQLite3.CompilerOptions.ToArray()));
+                    Logger.LogInformation("Sqlite version: " + SQLite3.Version);
+                    Logger.LogInformation("Sqlite compiler options: " + string.Join(",", SQLite3.CompilerOptions.ToArray()));
                 }
 
                 ConnectionFlags connectionFlags;
 
                 if (isReadOnly)
                 {
-                    //Logger.Info("Opening read connection");
+                    //Logger.LogInformation("Opening read connection");
                     //connectionFlags = ConnectionFlags.ReadOnly;
                     connectionFlags = ConnectionFlags.Create;
                     connectionFlags |= ConnectionFlags.ReadWrite;
                 }
                 else
                 {
-                    //Logger.Info("Opening write connection");
+                    //Logger.LogInformation("Opening write connection");
                     connectionFlags = ConnectionFlags.Create;
                     connectionFlags |= ConnectionFlags.ReadWrite;
                 }
@@ -130,7 +125,7 @@ namespace playback_reporting.Data
                     {
                         _defaultWal = db.Query("PRAGMA journal_mode").SelectScalarString().First();
 
-                        Logger.Info("Default journal_mode for {0} is {1}", DbFilePath, _defaultWal);
+                        Logger.LogInformation("Default journal_mode for {0} is {1}", DbFilePath, _defaultWal);
                     }
 
                     var queries = new List<string>
@@ -174,66 +169,6 @@ namespace playback_reporting.Data
                 return _connection;
             }
         }
-
-        public IStatement PrepareStatement(ManagedConnection connection, string sql)
-        {
-            return connection.PrepareStatement(sql);
-        }
-
-        public IStatement PrepareStatementSafe(ManagedConnection connection, string sql)
-        {
-            return connection.PrepareStatement(sql);
-        }
-
-        public IStatement PrepareStatement(IDatabaseConnection connection, string sql)
-        {
-            return connection.PrepareStatement(sql);
-        }
-
-        public IStatement PrepareStatementSafe(IDatabaseConnection connection, string sql)
-        {
-            return connection.PrepareStatement(sql);
-        }
-
-        public List<IStatement> PrepareAll(IDatabaseConnection connection, IEnumerable<string> sql)
-        {
-            return PrepareAllSafe(connection, sql);
-        }
-
-        public List<IStatement> PrepareAllSafe(IDatabaseConnection connection, IEnumerable<string> sql)
-        {
-            return sql.Select(connection.PrepareStatement).ToList();
-        }
-
-        protected void RunDefaultInitialization(ManagedConnection db)
-        {
-            var queries = new List<string>
-            {
-                "PRAGMA journal_mode=WAL",
-                "PRAGMA page_size=4096",
-                "PRAGMA synchronous=Normal"
-            };
-
-            if (EnableTempStoreMemory)
-            {
-                queries.AddRange(new List<string>
-                {
-                    "pragma default_temp_store = memory",
-                    "pragma temp_store = memory"
-                });
-            }
-            else
-            {
-                queries.AddRange(new List<string>
-                {
-                    "pragma temp_store = file"
-                });
-            }
-
-            db.ExecuteAll(string.Join(";", queries.ToArray()));
-            Logger.Info("PRAGMA synchronous=" + db.Query("PRAGMA synchronous").SelectScalarString().First());
-        }
-
         protected virtual bool EnableTempStoreMemory
         {
             get
@@ -242,43 +177,10 @@ namespace playback_reporting.Data
             }
         }
 
-        protected virtual int? CacheSize
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        internal static void CheckOk(int rc)
-        {
-            string msg = "";
-
-            if (raw.SQLITE_OK != rc)
-            {
-                throw CreateException((ErrorCode)rc, msg);
-            }
-        }
-
-        internal static Exception CreateException(ErrorCode rc, string msg)
-        {
-            var exp = new Exception(msg);
-
-            return exp;
-        }
-
-        private bool _disposed;
-        protected void CheckDisposed()
-        {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(GetType().Name + " has been disposed and cannot be accessed.");
-            }
-        }
+        protected virtual int? CacheSize => null;
 
         public void Dispose()
         {
-            _disposed = true;
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -320,7 +222,7 @@ namespace playback_reporting.Data
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("Error disposing database", ex);
+                Logger.LogError(ex, "Error disposing database");
             }
         }
 
@@ -328,54 +230,10 @@ namespace playback_reporting.Data
         {
 
         }
-
-        protected List<string> GetColumnNames(IDatabaseConnection connection, string table)
-        {
-            var list = new List<string>();
-
-            foreach (var row in connection.Query("PRAGMA table_info(" + table + ")"))
-            {
-                if (row[1].SQLiteType != SQLiteType.Null)
-                {
-                    var name = row[1].ToString();
-
-                    list.Add(name);
-                }
-            }
-
-            return list;
-        }
-
-        protected void AddColumn(IDatabaseConnection connection, string table, string columnName, string type, List<string> existingColumnNames)
-        {
-            if (existingColumnNames.Contains(columnName, StringComparer.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            connection.Execute("alter table " + table + " add column " + columnName + " " + type + " NULL");
-        }
     }
 
     public static class ReaderWriterLockSlimExtensions
     {
-        private sealed class ReadLockToken : IDisposable
-        {
-            private ReaderWriterLockSlim _sync;
-            public ReadLockToken(ReaderWriterLockSlim sync)
-            {
-                _sync = sync;
-                sync.EnterReadLock();
-            }
-            public void Dispose()
-            {
-                if (_sync != null)
-                {
-                    _sync.ExitReadLock();
-                    _sync = null;
-                }
-            }
-        }
         private sealed class WriteLockToken : IDisposable
         {
             private ReaderWriterLockSlim _sync;
@@ -391,13 +249,6 @@ namespace playback_reporting.Data
                     _sync.ExitWriteLock();
                     _sync = null;
                 }
-            }
-        }
-
-        public class DummyToken : IDisposable
-        {
-            public void Dispose()
-            {
             }
         }
 

@@ -14,57 +14,43 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Data;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Jellyfin.Plugin.PlaybackReporting.Data;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Audio;
+using Microsoft.Extensions.Logging;
 
-namespace playback_reporting
+namespace Jellyfin.Plugin.PlaybackReporting
 {
-    class EventMonitorEntryPoint : IServerEntryPoint
+    public class EventMonitorEntryPoint : IServerEntryPoint
     {
         private readonly ISessionManager _sessionManager;
-        private readonly ILibraryManager _libraryManager;
-        private readonly IUserManager _userManager;
         private readonly IServerConfigurationManager _config;
-        private readonly IServerApplicationHost _appHost;
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
-        private readonly IJsonSerializer _jsonSerializer;
 
         private Dictionary<string, PlaybackTracker> playback_trackers = null;
         private IActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
-            ILibraryManager libraryManager, 
-            IUserManager userManager, 
             IServerConfigurationManager config,
-            IServerApplicationHost appHost,
-            ILogManager logger,
-            IFileSystem fileSystem,
-            IJsonSerializer jsonSerializer)
+            ILoggerFactory logger,
+            IFileSystem fileSystem)
         {
-            _logger = logger.GetLogger("PlaybackReporting - EventMonitorEntryPoint");
+            _logger = logger.CreateLogger("PlaybackReporting - EventMonitorEntryPoint");
             _sessionManager = sessionManager;
-            _libraryManager = libraryManager;
-            _userManager = userManager;
             _config = config;
-            _appHost = appHost;
             _fileSystem = fileSystem;
-            _jsonSerializer = jsonSerializer;
             playback_trackers = new Dictionary<string, PlaybackTracker>();
         }
 
@@ -73,9 +59,9 @@ namespace playback_reporting
 
         }
 
-        public void Run()
+        public Task RunAsync()
         {
-            _logger.Info("EventMonitorEntryPoint Running");
+            _logger.LogInformation("EventMonitorEntryPoint Running");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
             _repository = repo;
@@ -83,6 +69,8 @@ namespace playback_reporting
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
             _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
             _sessionManager.PlaybackProgress += _sessionManager_PlaybackProgress;
+
+            return Task.CompletedTask;
         }
 
         void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
@@ -94,14 +82,14 @@ namespace playback_reporting
                 {
                     PlaybackTracker tracker = playback_trackers[key];
                     DateTime now = DateTime.Now;
-                    if (now.Subtract(tracker.last_updated).TotalSeconds > 20) // update every 20 seconds
+                    if (now.Subtract(tracker.LastUpdated).TotalSeconds > 20) // update every 20 seconds
                     {
-                        tracker.last_updated = now;
-                        _logger.Info("Processing playback tracker : " + key);
+                        tracker.LastUpdated = now;
+                        _logger.LogInformation("Processing playback tracker : {Key}", key);
                         List<string> event_log = tracker.ProcessProgress(e);
                         if (event_log.Count > 0)
                         {
-                            _logger.Debug("ProcessProgress : " + String.Join("", event_log));
+                            _logger.LogDebug("ProcessProgress : {Events}", string.Join("", event_log));
                         }
                         if (tracker.TrackedPlaybackInfo != null)
                         {
@@ -117,7 +105,7 @@ namespace playback_reporting
             }
             else
             {
-                _logger.Debug("Playback progress did not have a tracker : " + key);
+                _logger.LogDebug("Playback progress did not have a tracker : {Key}", key);
             }
         }
 
@@ -126,23 +114,23 @@ namespace playback_reporting
             string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
             if (playback_trackers.ContainsKey(key))
             {
-                _logger.Info("Playback stop tracker found, processing stop : " + key);
+                _logger.LogInformation("Playback stop tracker found, processing stop : {Key}", key);
                 PlaybackTracker tracker = playback_trackers[key];
                 List<string> event_log = tracker.ProcessStop(e);
                 if (event_log.Count > 0)
                 {
-                    _logger.Debug("ProcessProgress : " + String.Join("", event_log));
+                    _logger.LogDebug("ProcessProgress : {Events}", string.Join("", event_log));
                 }
 
                 // if playback duration was long enough save the action
                 if (tracker.TrackedPlaybackInfo != null)
                 {
-                    _logger.Info("Saving playback tracking activity in DB");
+                    _logger.LogInformation("Saving playback tracking activity in DB");
                     _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
                 }
                 else
                 {
-                    _logger.Info("Playback stop but TrackedPlaybackInfo not found! not storing activity in DB");
+                    _logger.LogInformation("Playback stop but TrackedPlaybackInfo not found! not storing activity in DB");
                 }
 
                 // remove the playback tracer from the map as we no longer need it.
@@ -150,7 +138,7 @@ namespace playback_reporting
             }
             else
             {
-                _logger.Info("Playback stop did not have a tracker : " + key);
+                _logger.LogInformation("Playback stop did not have a tracker : {Key}", key);
             }
         }
 
@@ -172,62 +160,68 @@ namespace playback_reporting
                 return;
             }
 
-            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
+            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item?.Id.ToString("N");
             if (playback_trackers.ContainsKey(key))
             {
-                _logger.Info("Existing tracker found! : " + key);
+                _logger.LogInformation("Existing tracker found! : " + key);
 
                 PlaybackTracker track = playback_trackers[key];
                 if (track.TrackedPlaybackInfo != null)
                 {
-                    _logger.Info("Saving existing playback tracking activity in DB");
+                    _logger.LogInformation("Saving existing playback tracking activity in DB");
                     List<string> event_log = new List<string>();
                     track.CalculateDuration(event_log);
                     if (event_log.Count > 0)
                     {
-                        _logger.Debug("CalculateDuration : " + String.Join("", event_log));
+                        _logger.LogDebug("CalculateDuration : {Events}", string.Join("", event_log));
                     }
                     _repository.UpdatePlaybackAction(track.TrackedPlaybackInfo);
                 }
 
-                _logger.Info("Removing existing tracker : " + key);
+                _logger.LogInformation("Removing existing tracker : " + key);
                 playback_trackers.Remove(key);
             }
 
-            _logger.Info("Adding playback tracker : " + key);
-            PlaybackTracker tracker = new PlaybackTracker(key, _logger);
+            _logger.LogInformation("Adding playback tracker : " + key);
+            PlaybackTracker tracker = new PlaybackTracker(_logger);
             tracker.ProcessStart(e);
             playback_trackers.Add(key, tracker);
 
             // start a task to report playback started
-            _logger.Info("Creating StartPlaybackTimer Task");
-            System.Threading.Tasks.Task.Run(() => StartPlaybackTimer(e));
+            _logger.LogInformation("Creating StartPlaybackTimer Task");
+            Task.Run(() => StartPlaybackTimer(e));
 
         }
 
-        public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
+        public async Task StartPlaybackTimer(PlaybackProgressEventArgs e)
         {
-            _logger.Info("StartPlaybackTimer : Entered");
-            await System.Threading.Tasks.Task.Delay(20000);
+            _logger.LogInformation("StartPlaybackTimer : Entered");
+            await Task.Delay(20000);
 
             try
             {
                 var session = _sessionManager.GetSession(e.DeviceId, e.ClientName, "");
                 if (session != null)
                 {
-                    string event_playing_id_guid = e.Item.Id.ToString("N");
-                    long event_playing_id_internal = e.Item.InternalId;
+                    string event_playing_id = e.Item.Id.ToString("N");
 
-                    string event_user_id_guid = e.Users[0].Id.ToString("N");
-                    long event_user_id_internal = e.Users[0].InternalId;
+                    string event_user_id = e.Users[0].Id.ToString("N");
+                    long event_user_id_int = e.Users[0].InternalId;
 
-                    string session_playing_id_guid = session.NowPlayingItem.Id;
-                    long session_playing_id_internal = _libraryManager.GetInternalId(session.NowPlayingItem.Id);
+                    string session_playing_id = "";
+                    if (session.NowPlayingItem != null)
+                    {
+                        session_playing_id = session.NowPlayingItem.Id.ToString("N");
+                    }
+                    string session_user_id = "";
 
-                    long session_user_id_internal = session.UserInternalId;
+                    _logger.LogInformation("session.RemoteEndPoint : {RemoteEndPoint}", session.RemoteEndPoint);
 
-                    _logger.Info("session.RemoteEndPoint : " + session.RemoteEndPoint);
-
+                    if (session.UserId != Guid.Empty)
+                    {
+                        session_user_id = session.UserId.ToString("N");
+                    }
+                    
                     string play_method = "na";
                     if (session.PlayState != null && session.PlayState.PlayMethod != null)
                     {
@@ -255,67 +249,67 @@ namespace playback_reporting
                     string item_id = e.Item.Id.ToString("N");
                     string item_type = e.MediaInfo.Type;
 
-                    _logger.Info("StartPlaybackTimer : event_playing_id       = " + event_playing_id_guid);
-                    _logger.Info("StartPlaybackTimer : event_playing_id_int   = " + event_playing_id_internal);
-                    _logger.Info("StartPlaybackTimer : event_user_id          = " + event_user_id_guid);
-                    _logger.Info("StartPlaybackTimer : event_user_id_int      = " + event_user_id_internal);
-                    _logger.Info("StartPlaybackTimer : session_playing_id     = " + session_playing_id_guid);
-                    _logger.Info("StartPlaybackTimer : session_playing_id_int = " + session_playing_id_internal);
-                    _logger.Info("StartPlaybackTimer : session_user_id_int    = " + session_user_id_internal);
-                    _logger.Info("StartPlaybackTimer : play_method            = " + play_method);
-                    _logger.Info("StartPlaybackTimer : e.ClientName           = " + e.ClientName);
-                    _logger.Info("StartPlaybackTimer : e.DeviceName           = " + e.DeviceName);
-                    _logger.Info("StartPlaybackTimer : ItemName               = " + item_name);
-                    _logger.Info("StartPlaybackTimer : ItemId                 = " + item_id);
-                    _logger.Info("StartPlaybackTimer : ItemType               = " + item_type);
+                    _logger.LogInformation("StartPlaybackTimer : event_playing_id     = {EventPlayingId}", event_playing_id);
+                    _logger.LogInformation("StartPlaybackTimer : event_user_id        = {EventUserId}", event_user_id);
+                    _logger.LogInformation("StartPlaybackTimer : event_user_id_int    = {EventUserIdInternal}", event_user_id_int);
+                    _logger.LogInformation("StartPlaybackTimer : session_playing_id   = {SessionPlayingId}", session_playing_id);
+                    _logger.LogInformation("StartPlaybackTimer : session_user_id      = {SessionUserId}", session_user_id);
+                    _logger.LogInformation("StartPlaybackTimer : play_method          = {PlayMethod}", play_method);
+                    _logger.LogInformation("StartPlaybackTimer : e.ClientName         = {ClientName}", e.ClientName);
+                    _logger.LogInformation("StartPlaybackTimer : e.DeviceName         = {DeviceName}", e.DeviceName);
+                    _logger.LogInformation("StartPlaybackTimer : ItemName             = {ItemName}", item_name);
+                    _logger.LogInformation("StartPlaybackTimer : ItemId               = {ItemId}", item_id);
+                    _logger.LogInformation("StartPlaybackTimer : ItemType             = {ItemType}", item_type);
 
-                    PlaybackInfo play_info = new PlaybackInfo();
-                    play_info.Id = Guid.NewGuid().ToString("N");
-                    play_info.Date = DateTime.Now;
-                    play_info.ClientName = e.ClientName;
-                    play_info.DeviceName = e.DeviceName;
-                    play_info.PlaybackMethod = play_method;
-                    play_info.UserId = event_user_id_guid;
-                    play_info.ItemId = item_id;
-                    play_info.ItemName = item_name;
-                    play_info.ItemType = item_type;
-
-                    if (event_playing_id_internal == session_playing_id_internal && event_user_id_internal == session_user_id_internal)
+                    PlaybackInfo play_info = new PlaybackInfo
                     {
-                        _logger.Info("StartPlaybackTimer : All matches, playback registered");
+                        Id = Guid.NewGuid().ToString("N"),
+                        Date = DateTime.Now,
+                        ClientName = e.ClientName,
+                        DeviceName = e.DeviceName,
+                        PlaybackMethod = play_method,
+                        UserId = event_user_id,
+                        ItemId = item_id,
+                        ItemName = item_name,
+                        ItemType = item_type
+                    };
+
+                    if (event_playing_id == session_playing_id && event_user_id == session_user_id)
+                    {
+                        _logger.LogInformation("StartPlaybackTimer : All matches, playback registered");
 
                         // update tracker with playback info
                         string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
                         if (playback_trackers.ContainsKey(key))
                         {
-                            _logger.Info("Playback tracker found, adding playback info : " + key);
+                            _logger.LogInformation("Playback tracker found, adding playback info : {Key}", key);
                             PlaybackTracker tracker = playback_trackers[key];
                             tracker.TrackedPlaybackInfo = play_info;
 
-                            _logger.Info("Saving playback tracking activity in DB");
+                            _logger.LogInformation("Saving playback tracking activity in DB");
                             _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
                         }
                         else
                         {
-                            _logger.Info("Playback trackler not found : " + key);
+                            _logger.LogInformation("Playback trackler not found : {Key}", key);
                         }
                     }
                     else
                     {
-                        _logger.Info("StartPlaybackTimer : Details do not match for play item");
+                        _logger.LogInformation("StartPlaybackTimer : Details do not match for play item");
                     }
 
                 }
                 else
                 {
-                    _logger.Info("StartPlaybackTimer : session Not Found");
+                    _logger.LogInformation("StartPlaybackTimer : session Not Found");
                 }
             }
-            catch(Exception exception)
+            catch(Exception ex)
             {
-                _logger.Info("StartPlaybackTimer : Error = " + exception.Message + "\n" + exception.StackTrace);
+                _logger.LogError(ex, "StartPlaybackTimer : Unexpected error occurred");
             }
-            _logger.Info("StartPlaybackTimer : Exited");
+            _logger.LogInformation("StartPlaybackTimer : Exited");
         }
 
         private string GetItemName(BaseItem item)
@@ -332,20 +326,15 @@ namespace playback_reporting
                 Episode epp_item = item as Episode;
                 if (epp_item != null)
                 {
-                    string series_name = "Not Known";
-                    if (epp_item.Series != null && string.IsNullOrEmpty(epp_item.Series.Name) == false)
-                    {
-                        series_name = epp_item.Series.Name;
-                    }
                     string season_no = "00";
                     if (epp_item.Season != null && epp_item.Season.IndexNumber != null)
                     {
-                        season_no = String.Format("{0:D2}", epp_item.Season.IndexNumber);
+                        season_no = $"{epp_item.Season.IndexNumber:D2}";
                     }
                     string epp_no = "00";
                     if (epp_item.IndexNumber != null)
                     {
-                        epp_no = String.Format("{0:D2}", epp_item.IndexNumber);
+                        epp_no = $"{epp_item.IndexNumber:D2}";
                     }
                     item_name = epp_item.Series.Name + " - s" + season_no + "e" + epp_no + " - " + epp_item.Name;
                 }
@@ -354,16 +343,16 @@ namespace playback_reporting
             {
                 Audio audio_item = item as Audio;
                 string artist = "Not Known";
-                if (audio_item.AlbumArtists != null && audio_item.AlbumArtists.Length > 0)
+                if (audio_item?.AlbumArtists != null && audio_item.AlbumArtists.Length > 0)
                 {
                     artist = string.Join(", ", audio_item.AlbumArtists);
                 }
                 string album = "Not Known";
-                if(string.IsNullOrEmpty(audio_item.Album) == false)
+                if(string.IsNullOrEmpty(audio_item?.Album) == false)
                 {
                     album = audio_item.Album;
                 }
-                item_name = artist + " - " + audio_item.Name + " (" + album + ")";
+                item_name = artist + " - " + audio_item?.Name + " (" + album + ")";
             }
             else
             {
