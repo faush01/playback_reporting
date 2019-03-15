@@ -20,11 +20,11 @@ define(['libraryMenu'], function (libraryMenu) {
     var my_bar_chart = null;
     var filter_names = [];
 
-    Date.prototype.toDateInputValue = (function () {
+    Date.prototype.toDateInputValue = function () {
         var local = new Date(this);
         local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
         return local.toJSON().slice(0, 10);
-    });
+    };
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -76,7 +76,7 @@ define(['libraryMenu'], function (libraryMenu) {
         //console.log("Text Lables: " + JSON.stringify(text_labels));
 
         var data_type = view.querySelector('#data_type');
-        var data_t = data_type.options[data_type.selectedIndex].value == "time";
+        var data_t = data_type.options[data_type.selectedIndex].value === "time";
 
         var chart_title = "";
         if (data_t) {
@@ -89,9 +89,10 @@ define(['libraryMenu'], function (libraryMenu) {
         // process user usage into data for chart
         var user_ids = [];
         var user_usage_datasets = [];
+        var user_count = 0;
         for (var index = 0; index < usage_data.length; ++index) {
             var user_usage = usage_data[index];
-            if (user_usage.user_id != "labels_user") {
+            if (user_usage.user_id !== "labels_user") {
                 user_ids.push(user_usage.user_id);
                 var point_data = [];
                 for (var point_date in user_usage.user_usage) {
@@ -100,7 +101,7 @@ define(['libraryMenu'], function (libraryMenu) {
                 }
                 var chart_data = {
                     label: user_usage.user_name,
-                    backgroundColor: color_list[index % 10],
+                    backgroundColor: color_list[user_count++ % 10],
                     data: point_data
                 };
                 user_usage_datasets.push(chart_data);
@@ -199,10 +200,6 @@ define(['libraryMenu'], function (libraryMenu) {
                     display: true,
                     text: chart_title
                 },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false
-                },
                 responsive: true,
                 scales: {
                     xAxes: [{
@@ -239,6 +236,8 @@ define(['libraryMenu'], function (libraryMenu) {
                     //Dashboard.navigate(href);
                 },
                 tooltips: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: tooltip_labels
                     }
@@ -391,9 +390,9 @@ define(['libraryMenu'], function (libraryMenu) {
 
     function seconds2time(seconds) {
         var h = Math.floor(seconds / 3600);
-        seconds = seconds - (h * 3600);
+        seconds = seconds - h * 3600;
         var m = Math.floor(seconds / 60);
-        var s = seconds - (m * 60);
+        var s = seconds - m * 60;
         var time_string = padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
         return time_string;
     }
@@ -462,16 +461,18 @@ define(['libraryMenu'], function (libraryMenu) {
                 
                     // build filter list
                     var filter_items = "";
-                    for (var x = 0; x < filter_names.length; x++) {
-                        var filter_name = filter_names[x];
+                    var filter_name = "";
+                    var x;
+                    for (x = 0; x < filter_names.length; x++) {
+                        filter_name = filter_names[x];
                         filter_items += "<input type='checkbox' id='media_type_filter_" + filter_name + "' data_fileter_name='" + filter_name + "' checked> " + filter_name + " ";
                     }
 
                     var filter_check_list = view.querySelector('#filter_check_list');
                     filter_check_list.innerHTML = filter_items;
 
-                    for (var x = 0; x < filter_names.length; x++) {
-                        var filter_name = filter_names[x];
+                    for (x = 0; x < filter_names.length; x++) {
+                        filter_name = filter_names[x];
                         view.querySelector('#media_type_filter_' + filter_name).addEventListener("click", process_click);
                     }
 
@@ -502,7 +503,7 @@ define(['libraryMenu'], function (libraryMenu) {
                             var filter_name = filter_names[x];
                             var filter_checked = view.querySelector('#media_type_filter_' + filter_name).checked;
                             if (filter_checked) {
-                                filter.push(filter_name)
+                                filter.push(filter_name);
                             }
                         }
 

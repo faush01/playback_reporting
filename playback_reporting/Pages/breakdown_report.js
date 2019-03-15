@@ -42,11 +42,12 @@ define(['libraryMenu'], function (libraryMenu) {
         var chart_data_values_time = [];
 
         data.sort(function (a, b) {
-            return ((a["count"] > b["count"]) ? -1 : ((a["count"] == b["count"]) ? 0 : 1));
+            return a["count"] > b["count"] ? -1 : a["count"] === b["count"] ? 0 : 1;
         });
 
         var count = 0;
-        for (var index in data) {
+        var index;
+        for (index in data) {
             if (count++ >= 10) {
                 break;
             }
@@ -55,11 +56,11 @@ define(['libraryMenu'], function (libraryMenu) {
         }
 
         data.sort(function (a, b) {
-            return ((a["time"] > b["time"]) ? -1 : ((a["time"] == b["time"]) ? 0 : 1));
+            return a["time"] > b["time"] ? -1 : a["time"] === b["time"] ? 0 : 1;
         });
 
         count = 0;
-        for (var index in data) {
+        for (index in data) {
             if (count++ >= 10) {
                 break;
             }
@@ -77,7 +78,7 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: "Breakdown",
                 backgroundColor: ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"],
-                data: chart_data_values_count,
+                data: chart_data_values_count
             }]
         };
 
@@ -86,7 +87,7 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: "Breakdown",
                 backgroundColor: ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"],
-                data: chart_data_values_time,
+                data: chart_data_values_time
             }]
         };
 
@@ -137,7 +138,7 @@ define(['libraryMenu'], function (libraryMenu) {
         });
 
         var chart_legend_count = view.querySelector('#' + group_type + '_breakdown_count_chart_legend');
-        if (chart_legend_count != null) {
+        if (chart_legend_count !== null) {
             chart_legend_count.innerHTML = chart_instance_map[group_type + "_count"].generateLegend();
         }
 
@@ -182,7 +183,7 @@ define(['libraryMenu'], function (libraryMenu) {
         });
 
         var chart_legend_time = view.querySelector('#' + group_type + '_breakdown_time_chart_legend');
-        if (chart_legend_time != null) {
+        if (chart_legend_time !== null) {
             chart_legend_time.innerHTML = chart_instance_map[group_type + "_time"].generateLegend();
         }
 
@@ -191,11 +192,11 @@ define(['libraryMenu'], function (libraryMenu) {
 
     function seconds2time(seconds) {
         var d = Math.floor(seconds / 86400);
-        seconds = seconds - (d * 86400);
+        seconds = seconds - d * 86400;
         var h = Math.floor(seconds / 3600);
-        seconds = seconds - (h * 3600);
+        seconds = seconds - h * 3600;
         var m = Math.floor(seconds / 60);
-        var s = seconds - (m * 60);
+        var s = seconds - m * 60;
         var time_string = "";
         if (d > 0) {
             time_string += d + ".";
@@ -266,17 +267,18 @@ define(['libraryMenu'], function (libraryMenu) {
 
                 function process_click() {
                     var days = parseInt(weeks.value) * 7;
-
+                    var url = "";
+                    
                     // build user chart
-                    var url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "User");
                     });
-
+                    
                     // build ItemType chart
-                    var url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -284,7 +286,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     });
 
                     // build PlaybackMethod chart
-                    var url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -292,7 +294,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     });
 
                     // build ClientName chart
-                    var url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -300,7 +302,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     });
 
                     // build DeviceName chart
-                    var url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -308,7 +310,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     });
 
                     // build TvShows chart
-                    var url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -316,7 +318,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     });
 
                     // build Movies chart
-                    var url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));

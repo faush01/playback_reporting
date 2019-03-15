@@ -114,24 +114,23 @@ define(['libraryMenu'], function (libraryMenu) {
         url = ApiClient.getUrl(url);
         ApiClient.getUserActivity(url).then(function (user_list) {
             //alert("Loaded Data: " + JSON.stringify(user_list));
-
+            var index = 0;
             var add_user_list = view.querySelector('#user_list_for_add');
             var options_html = "";
-            for (var index = 0; index < user_list.length; ++index) {
-                var item_details = user_list[index];
+            var item_details;
+            for (index = 0; index < user_list.length; ++index) {
+                item_details = user_list[index];
                 //if (item_details.in_list == false) {
                     options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
                 //}
             }
             add_user_list.innerHTML = options_html;
 
-
             var user_list_items = view.querySelector('#user_list_items');
             var list_html = "";
-
-            for (var index = 0; index < user_list.length; ++index) {
-                var item_details = user_list[index];
-                if (item_details.in_list == true) {
+            for (index = 0; index < user_list.length; ++index) {
+                item_details = user_list[index];
+                if (item_details.in_list === true) {
                     list_html += "<li>" + item_details.name + "</li>";
                 }
             }
@@ -151,7 +150,7 @@ define(['libraryMenu'], function (libraryMenu) {
             set_backup_path.addEventListener("click", setBackupPathPicker);
 
             var backup_data_now = view.querySelector('#backup_data_now');
-            backup_data_now.addEventListener("click", function () { saveBackup(view) });
+            backup_data_now.addEventListener("click", function () { saveBackup(view); });
 
             var load_backup_data = view.querySelector('#load_backup_data');
             load_backup_data.addEventListener("click", loadBackupDataPicker);

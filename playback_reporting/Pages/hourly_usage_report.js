@@ -22,11 +22,11 @@ define(['libraryMenu'], function (libraryMenu) {
     var weekly_bar_chart = null;
     var filter_names = [];
 
-    Date.prototype.toDateInputValue = (function () {
+    Date.prototype.toDateInputValue = function () {
         var local = new Date(this);
         local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
         return local.toJSON().slice(0, 10);
-    });
+    };
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -93,7 +93,7 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#c39bd3',
+                backgroundColor: '#d98880',
                 data: daily_chart_point_data
             }]
         };
@@ -116,7 +116,7 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#c39bd3',
+                backgroundColor: '#d98880',
                 data: hourly_chart_point_data
             }]
         };
@@ -129,8 +129,8 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#c39bd3',
-                data: chart_data, // [10,20,30,40,50,60,70]
+                backgroundColor: '#d98880',
+                data: chart_data // [10,20,30,40,50,60,70]
             }/*,
             {
                 label: "Minutes",
@@ -305,9 +305,9 @@ define(['libraryMenu'], function (libraryMenu) {
 
     function seconds2time(seconds) {
         var h = Math.floor(seconds / 3600);
-        seconds = seconds - (h * 3600);
+        seconds = seconds - h * 3600;
         var m = Math.floor(seconds / 60);
-        var s = seconds - (m * 60);
+        var s = seconds - m * 60;
         var time_string = padLeft(h) + ":" + padLeft(m) + ":" + padLeft(s);
         return time_string;
     }

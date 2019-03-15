@@ -20,11 +20,11 @@ define(['libraryMenu'], function (libraryMenu) {
     var my_bar_chart = null;
     var filter_names = [];
 
-    Date.prototype.toDateInputValue = (function () {
+    Date.prototype.toDateInputValue = function () {
         var local = new Date(this);
         local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
         return local.toJSON().slice(0, 10);
-    });
+    };
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -49,7 +49,7 @@ define(['libraryMenu'], function (libraryMenu) {
         var chart_data = [];
         for (var key in usage_data) {
             console.log(key + " " + usage_data[key]);
-            var label = (key * 5) + "-" + ((key * 5) + 4)
+            var label = (key * 5) + "-" + ((key * 5) + 4);
             chart_labels.push(label);
             chart_data.push(usage_data[key]);
         }
@@ -59,8 +59,8 @@ define(['libraryMenu'], function (libraryMenu) {
             datasets: [{
                 label: 'Count',
                 type: "bar",
-                backgroundColor: '#c39bd3',
-                data: chart_data, // [10,20,30,40,50,60,70]
+                backgroundColor: '#d98880',
+                data: chart_data // [10,20,30,40,50,60,70]
             }/*,
             {
                 label: "Minutes",
@@ -98,7 +98,7 @@ define(['libraryMenu'], function (libraryMenu) {
                 responsive: true,
                 scales: {
                     xAxes: [{
-                        stacked: false,
+                        stacked: false
                     }],
                     yAxes: [{
                         stacked: false,
