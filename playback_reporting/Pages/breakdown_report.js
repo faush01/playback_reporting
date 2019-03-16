@@ -122,13 +122,13 @@ define(['libraryMenu'], function (libraryMenu) {
                 },
                 legendCallback: function (chart) {
                     var legendHtml = [];
-                    legendHtml.push('<table style="width:80%">');
+                    legendHtml.push('<table style="width:95%">');
                     var item = chart.data.datasets[0];
                     for (var i = 0; i < item.data.length; i++) {
                         legendHtml.push('<tr>');
-                        legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
-                        legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
-                        legendHtml.push('<td style="text-align: right;">' + item.data[i] + '</td>');
+                        legendHtml.push('<td style="width: 20px"><div style="width: 20px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
+                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + chart.data.labels[i] + '</td>');
+                        legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + item.data[i] + '</td>');
                         legendHtml.push('</tr>');
                     }
                     legendHtml.push('</table>');
@@ -167,13 +167,13 @@ define(['libraryMenu'], function (libraryMenu) {
                 },
                 legendCallback: function (chart) {
                     var legendHtml = [];
-                    legendHtml.push('<table style="width:80%">');
+                    legendHtml.push('<table style="width:95%">');
                     var item = chart.data.datasets[0];
                     for (var i = 0; i < item.data.length; i++) {
                         legendHtml.push('<tr>');
-                        legendHtml.push('<td><div style="width: 30px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
-                        legendHtml.push('<td style="width: 100%">' + chart.data.labels[i] + '</td>');
-                        legendHtml.push('<td style="text-align: right;">' + seconds2time(item.data[i]) + '</td>');
+                        legendHtml.push('<td style="width: 20px"><div style="width: 20px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
+                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + chart.data.labels[i] + '</td>');
+                        legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + seconds2time(item.data[i]) + '</td>');
                         legendHtml.push('</tr>');
                     }
                     legendHtml.push('</table>');
