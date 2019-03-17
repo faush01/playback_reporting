@@ -454,7 +454,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', 1, getTabs);
+            libraryMenu.setTabs('user_playback_report', 2, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
