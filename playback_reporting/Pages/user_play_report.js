@@ -85,8 +85,7 @@ define(['libraryMenu'], function (libraryMenu) {
 
             var weeks = view.querySelector('#weeks');
             weeks.addEventListener("change", process_click);
-            var days = parseInt(weeks.value) * 7;
-
+            
             var user_list_selector = view.querySelector('#user_list');
             user_list_selector.addEventListener("change", process_click);
 
@@ -114,6 +113,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     return;
                 }
 
+                var days = parseInt(weeks.value) * 7;
                 var url_to_get = "user_usage_stats/UserPlaylist?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
                 url_to_get = ApiClient.getUrl(url_to_get);
                 console.log("User Report Details Url: " + url_to_get);
