@@ -41,5 +41,6 @@ namespace playback_reporting.Data
         List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date);
         List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);
         string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results);
+        List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types);
     }
 }

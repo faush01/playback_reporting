@@ -19,6 +19,8 @@
     <None Remove="Pages\playback_report_settings.js" />
     <None Remove="Pages\user_playback_report.html" />
     <None Remove="Pages\user_playback_report.js" />
+    <None Remove="Pages\user_play_report.html" />
+    <None Remove="Pages\user_play_report.js" />
     <None Remove="Pages\user_report.html" />
     <None Remove="Pages\user_report.js" />
     <None Remove="thumb.png" />
@@ -37,6 +39,8 @@
     <EmbeddedResource Include="Pages\user_playback_report.js" />
     <EmbeddedResource Include="Pages\custom_query.html" />
     <EmbeddedResource Include="Pages\custom_query.js" />
+    <EmbeddedResource Include="Pages\user_play_report.html" />
+    <EmbeddedResource Include="Pages\user_play_report.js" />
     <EmbeddedResource Include="Pages\user_report.html" />
     <EmbeddedResource Include="Pages\user_report.js" />
     <EmbeddedResource Include="thumb.png" />

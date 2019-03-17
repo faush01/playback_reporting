@@ -856,5 +856,55 @@ namespace playback_reporting.Data
 
             return report;
         }
+
+        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types)
+        {
+            List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
+
+            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
+            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
+
+            string sql = "";
+            sql += "SELECT strftime('%Y-%m-%d',DateCreated) AS PlayDate, ItemName, ItemType, SUM(PlayDuration) AS Duration ";
+            sql += "FROM PlaybackActivity ";
+            sql += "WHERE UserId = @user_id ";
+            sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
+            sql += "GROUP BY PlayDate, ItemName, ItemType ";
+            sql += "ORDER BY PlayDate DESC";
+
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@user_id", user_id);
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            Dictionary<string, object> row_data = new Dictionary<string, object>();
+
+                            string play_date = row[0].ToString();
+                            row_data.Add("date", play_date);
+
+                            string item_name = row[1].ToString();
+                            row_data.Add("name", item_name);
+
+                            string item_type = row[2].ToString();
+                            row_data.Add("type", item_type);
+
+                            string client_name = row[3].ToString();
+                            row_data.Add("duration", client_name);
+
+                            report.Add(row_data);
+                        }
+                    }
+                }
+            }
+
+            return report;
+        }
     }
 }

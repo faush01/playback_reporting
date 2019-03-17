@@ -120,6 +120,20 @@ namespace playback_reporting.Api
         public string Filter { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/UserPlaylist
+    [Route("/user_usage_stats/UserPlaylist", "GET", Summary = "Gets a report of all played items for a user in a date period")]
+    public class GetUserPlaylist : IReturn<Object>
+    {
+        [ApiMember(Name = "user_id", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string user_id { get; set; }
+        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int days { get; set; }
+        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string end_date { get; set; }
+        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string filter { get; set; }
+    }
+
     // http://localhost:8096/emby/user_usage_stats/HourlyReport
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
     public class GetHourlyReport : IReturn<Object>
@@ -714,5 +728,41 @@ namespace playback_reporting.Api
             
             return responce;
         }
+
+        public object Get(GetUserPlaylist request)
+        {
+            DateTime end_date;
+            if (string.IsNullOrEmpty(request.end_date))
+            {
+                end_date = DateTime.Now;
+            }
+            else
+            {
+                _logger.Info("End_Date: " + request.end_date);
+                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+
+            List<Dictionary<string, object>> report = Repository.GetUserPlayListReport(request.days, end_date, request.user_id, null);
+
+            /*
+            Dictionary<string, object> row_data = new Dictionary<string, object>();
+            row_data.Add("date", "2018-01-10");
+            row_data.Add("name", "The Last Moon Man");
+            row_data.Add("type", "Movie");
+            row_data.Add("duration", 2567);
+            report.Add(row_data);
+
+            row_data = new Dictionary<string, object>();
+            row_data.Add("date", "2018-01-10");
+            row_data.Add("name", "Hight Up There");
+            row_data.Add("type", "Movie");
+            row_data.Add("duration", 3654);
+            report.Add(row_data);
+            */
+
+            return report;
+        }
+
+
     }
 }

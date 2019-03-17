@@ -126,6 +126,10 @@ define(['libraryMenu'], function (libraryMenu) {
                 name: 'Users'
             },
             {
+                href: Dashboard.getConfigurationPageUrl('user_play_report'),
+                name: 'UserPlayList'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_playback_report'),
                 name: 'Playback'
             },
