@@ -33,7 +33,7 @@ define(['libraryMenu'], function (libraryMenu) {
         return Math.round(number * factor) / factor;
     }
 
-    function draw_chart_user_count(view, local_chart, data, group_type) {
+    function draw_chart_user_count(view, local_chart, data, group_type, max_item_count, add_other) {
 
         var chart_data_labels_count = [];
         var chart_data_values_count = [];
@@ -46,13 +46,21 @@ define(['libraryMenu'], function (libraryMenu) {
         });
 
         var count = 0;
+        var max_items = max_item_count;
         var index;
+        var other_count = 0;
         for (index in data) {
-            if (count++ >= 10) {
-                break;
+            if (count++ < max_items) {
+                chart_data_labels_count.push(data[index]["label"]);
+                chart_data_values_count.push(data[index]["count"]);
             }
-            chart_data_labels_count.push(data[index]["label"]);
-            chart_data_values_count.push(data[index]["count"]);
+            else {
+                other_count += data[index]["count"];
+            }
+        }
+        if (other_count > 0 && add_other) {
+            chart_data_labels_count.push("Other");
+            chart_data_values_count.push(other_count);
         }
 
         data.sort(function (a, b) {
@@ -60,12 +68,29 @@ define(['libraryMenu'], function (libraryMenu) {
         });
 
         count = 0;
+        other_count = 0;
         for (index in data) {
-            if (count++ >= 10) {
-                break;
+            if (count++ < max_items) {
+                chart_data_labels_time.push(data[index]["label"]);
+                chart_data_values_time.push(data[index]["time"]);
             }
-            chart_data_labels_time.push(data[index]["label"]);
-            chart_data_values_time.push(data[index]["time"]);
+            else {
+                other_count += data[index]["time"];
+            }
+        }
+        if (other_count > 0 && add_other) {
+            chart_data_labels_time.push("Other");
+            chart_data_values_time.push(other_count);
+        }
+
+        var colours_pallet = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
+        var all_colours = [];
+        var colour_max = max_items;
+        if (max_items) {
+            colour_max += 1;
+        }
+        while (all_colours.length < colour_max) {
+            all_colours = all_colours.concat(colours_pallet);
         }
 
         //console.log(chart_data_labels_count);
@@ -77,7 +102,7 @@ define(['libraryMenu'], function (libraryMenu) {
             labels: chart_data_labels_count,
             datasets: [{
                 label: "Breakdown",
-                backgroundColor: ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"],
+                backgroundColor: all_colours,
                 data: chart_data_values_count
             }]
         };
@@ -86,7 +111,7 @@ define(['libraryMenu'], function (libraryMenu) {
             labels: chart_data_labels_time,
             datasets: [{
                 label: "Breakdown",
-                backgroundColor: ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"],
+                backgroundColor: all_colours,
                 data: chart_data_values_time
             }]
         };
@@ -263,10 +288,18 @@ define(['libraryMenu'], function (libraryMenu) {
                 var weeks = view.querySelector('#weeks');
                 weeks.addEventListener("change", process_click);
 
+                var num_items = view.querySelector('#num_items');
+                num_items.addEventListener("change", process_click);
+
+                var add_other_items = view.querySelector('#add_other_items');
+                add_other_items.addEventListener("change", process_click);
+
                 process_click();
 
                 function process_click() {
                     var days = parseInt(weeks.value) * 7;
+                    var item_count = parseInt(num_items.value);
+                    var add_other_line = add_other_items.checked;
                     var url = "";
                     
                     // build user chart
@@ -274,7 +307,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "User");
+                        draw_chart_user_count(view, d3, data, "User", item_count, add_other_line);
                     });
                     
                     // build ItemType chart
@@ -282,7 +315,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "ItemType");
+                        draw_chart_user_count(view, d3, data, "ItemType", item_count, add_other_line);
                     });
 
                     // build PlaybackMethod chart
@@ -290,7 +323,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "PlayMethod");
+                        draw_chart_user_count(view, d3, data, "PlayMethod", item_count, add_other_line);
                     });
 
                     // build ClientName chart
@@ -298,7 +331,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "ClientName");
+                        draw_chart_user_count(view, d3, data, "ClientName", item_count, add_other_line);
                     });
 
                     // build DeviceName chart
@@ -306,7 +339,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "DeviceName");
+                        draw_chart_user_count(view, d3, data, "DeviceName", item_count, add_other_line);
                     });
 
                     // build TvShows chart
@@ -314,7 +347,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "TvShows");
+                        draw_chart_user_count(view, d3, data, "TvShows", item_count, add_other_line);
                     });
 
                     // build Movies chart
@@ -322,7 +355,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_chart_user_count(view, d3, data, "Movies");
+                        draw_chart_user_count(view, d3, data, "Movies", item_count, add_other_line);
                     });
                 }
             });
