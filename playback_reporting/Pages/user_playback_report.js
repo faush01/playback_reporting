@@ -236,8 +236,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     //Dashboard.navigate(href);
                 },
                 tooltips: {
-                    mode: 'index',
-                    intersect: false,
+                    intersect: true,
                     callbacks: {
                         label: tooltip_labels
                     }
