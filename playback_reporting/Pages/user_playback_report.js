@@ -490,7 +490,7 @@ define(['libraryMenu'], function (libraryMenu) {
                     weeks.addEventListener("change", process_click);
                     var days = parseInt(weeks.value) * 7;
 
-                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=count&stamp=" + new Date().getTime();
+                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=time&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (usage_data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
