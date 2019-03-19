@@ -17,6 +17,12 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
+    Date.prototype.toDateInputValue = function () {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0, 10);
+    };
+
     var chart_instance_map = {};
 
     ApiClient.getUserActivity = function (url_to_get) {

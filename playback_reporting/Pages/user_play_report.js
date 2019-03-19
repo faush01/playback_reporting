@@ -17,6 +17,21 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['libraryMenu'], function (libraryMenu) {
     'use strict';
 
+    Date.prototype.toDateInputValue = function () {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0, 10);
+    };
+
+    ApiClient.getUserActivity = function (url_to_get) {
+        console.log("getUserActivity Url = " + url_to_get);
+        return this.ajax({
+            type: "GET",
+            url: url_to_get,
+            dataType: "json"
+        });
+    };
+
     function getTabs() {
         var tabs = [
             {
@@ -108,7 +123,7 @@ define(['libraryMenu'], function (libraryMenu) {
 
                 var selected_user_id = user_list_selector.options[user_list_selector.selectedIndex].value;
 
-                if (selected_user_id == "Select User") {
+                if (selected_user_id === "Select User") {
                     view.querySelector('#user_playlist_results').innerHTML = "";
                     return;
                 }
