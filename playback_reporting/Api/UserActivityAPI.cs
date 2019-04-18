@@ -29,9 +29,17 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using MediaBrowser.Controller.Session;
 
 namespace playback_reporting.Api
 {
+
+    // http://localhost:8096/emby/user_usage_stats/session_list
+    [Route("/user_usage_stats/session_list", "GET", Summary = "Gets Session Info")]
+    public class GetSessionInfo : IReturn<Object>
+    {
+
+    }
 
     // http://localhost:8096/emby/user_usage_stats/user_activity
     [Route("/user_usage_stats/user_activity", "GET", Summary = "Gets a report of the available activity per hour")]
@@ -192,7 +200,7 @@ namespace playback_reporting.Api
 
     public class UserActivityAPI : IService, IRequiresRequest
     {
-
+        private readonly ISessionManager _sessionManager;
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly IFileSystem _fileSystem;
@@ -207,7 +215,8 @@ namespace playback_reporting.Api
             IServerConfigurationManager config,
             IJsonSerializer jsonSerializer,
             IUserManager userManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            ISessionManager sessionManager)
         {
             _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
             _jsonSerializer = jsonSerializer;
@@ -215,6 +224,7 @@ namespace playback_reporting.Api
             _config = config;
             _userManager = userManager;
             _libraryManager = libraryManager;
+            _sessionManager = sessionManager;
 
             _logger.Info("UserActivityAPI Loaded");
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
@@ -763,6 +773,44 @@ namespace playback_reporting.Api
             return report;
         }
 
+        public object Get(GetSessionInfo request)
+        {
+            List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
+
+            foreach (SessionInfo session in _sessionManager.Sessions)
+            {
+                Dictionary<string, object> data = new Dictionary<string, object>();
+
+                string sessionId = session.Id;
+                string userId = session.UserId;
+                string deviceId = session.DeviceId;
+                string deviceName = session.DeviceName;
+
+                if (session.NowPlayingItem != null)
+                {
+                    data.Add("NowPlayingItem", session.NowPlayingItem);
+                }
+
+                if (session.PlayState != null)
+                {
+                    data.Add("PlayState", session.PlayState);
+                }
+
+                if (session.TranscodingInfo != null)
+                {
+                    data.Add("TranscodingInfo", session.TranscodingInfo); 
+                }
+
+                data.Add("id", sessionId);
+                data.Add("device_id", deviceId);
+                data.Add("user_id", userId);
+                data.Add("device_name", deviceName);
+
+                report.Add(data);
+            }
+
+            return report;
+        }
 
     }
 }

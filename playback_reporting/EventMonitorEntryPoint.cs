@@ -83,6 +83,9 @@ namespace playback_reporting
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
             _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
             _sessionManager.PlaybackProgress += _sessionManager_PlaybackProgress;
+
+            // start playback monitor
+            //System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
         }
 
         void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
@@ -205,6 +208,45 @@ namespace playback_reporting
 
         }
 
+        /*
+        public async System.Threading.Tasks.Task PlaybackMonitoringTask()
+        {
+            _logger.Info("PlaybackMonitoringTask : Started");
+
+            while (true)
+            {
+                foreach (SessionInfo session in _sessionManager.Sessions)
+                {
+                    try
+                    {
+                        string sessionId = session.Id;
+                        string userId = session.UserId;
+                        string deviceId = session.DeviceId;
+                        string session_playing_id_guid = null;
+                        long session_playing_id_internal = -1;
+                        if (session.NowPlayingItem != null)
+                        {
+                            session_playing_id_guid = session.NowPlayingItem.Id;
+                            session_playing_id_internal = _libraryManager.GetInternalId(session_playing_id_guid);
+
+                            _logger.Info("PlaybackMonitoringTask : Id                = " + sessionId);
+                            _logger.Info("PlaybackMonitoringTask : UserId            = " + userId);
+                            _logger.Info("PlaybackMonitoringTask : DeviceId          = " + deviceId);
+                            _logger.Info("PlaybackMonitoringTask : NowPlayingItem.Id = " + session_playing_id_guid);
+                            _logger.Info("PlaybackMonitoringTask : GetInternalId     = " + session_playing_id_internal);
+                        }
+
+                    }
+                    catch(Exception err)
+                    {
+                        _logger.ErrorException("PlaybackMonitoringTask Exception", err);
+                    }
+                }
+                await System.Threading.Tasks.Task.Delay(10000);
+            }
+        }
+        */
+
         public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
         {
             _logger.Info("StartPlaybackTimer : Entered");
@@ -313,7 +355,8 @@ namespace playback_reporting
             }
             catch(Exception exception)
             {
-                _logger.Info("StartPlaybackTimer : Error = " + exception.Message + "\n" + exception.StackTrace);
+                _logger.ErrorException("StartPlaybackTimer: Error : " + exception.Message, exception);
+                //_logger.Info("StartPlaybackTimer : Error = " + exception.Message + "\n" + exception.StackTrace);
             }
             _logger.Info("StartPlaybackTimer : Exited");
         }
