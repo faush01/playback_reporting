@@ -45,6 +45,16 @@ namespace playback_reporting
             {
                 new PluginPageInfo
                 {
+                    Name = "playback_report_settings",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.html"                    
+                },
+                new PluginPageInfo
+                {
+                    Name = "playback_report_settings.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.js"
+                },
+                new PluginPageInfo
+                {
                     Name = "user_playback_report",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.user_playback_report.html"
                 },
@@ -57,16 +67,6 @@ namespace playback_reporting
                 {
                     Name = "Chart.bundle.min.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.Chart.bundle.min.js"
-                },
-                new PluginPageInfo
-                {
-                    Name = "playback_report_settings",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.html"
-                },
-                new PluginPageInfo
-                {
-                    Name = "playback_report_settings.js",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.playback_report_settings.js"
                 },
                 new PluginPageInfo
                 {
@@ -122,7 +122,7 @@ namespace playback_reporting
                 new PluginPageInfo
                 {
                     Name = "user_play_report",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_play_report.html",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_play_report.html"
                 },
                 new PluginPageInfo
                 {

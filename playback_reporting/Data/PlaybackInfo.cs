@@ -22,7 +22,6 @@ namespace playback_reporting.Data
 {
     public class PlaybackInfo
     {
-        public string Id { get; set; }
         public DateTime Date { get; set; }
         public string UserId { get; set; }
         public string ItemId { get; set; }
@@ -32,6 +31,7 @@ namespace playback_reporting.Data
         public string ClientName { get; set; }
         public string DeviceName { get; set; }
         public int PlaybackDuration { get; set; } = 0;
+        public bool StartupSaved { get; set; } = false;
 
     }
 }

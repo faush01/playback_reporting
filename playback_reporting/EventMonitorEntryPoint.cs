@@ -31,6 +31,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Model.Dto;
 
 namespace playback_reporting
 {
@@ -45,7 +46,7 @@ namespace playback_reporting
         private readonly IFileSystem _fileSystem;
         private readonly IJsonSerializer _jsonSerializer;
 
-        private Dictionary<string, PlaybackTracker> playback_trackers = null;
+        private Dictionary<string, PlaybackInfo> playback_trackers = null;
         private IActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
@@ -65,7 +66,7 @@ namespace playback_reporting
             _appHost = appHost;
             _fileSystem = fileSystem;
             _jsonSerializer = jsonSerializer;
-            playback_trackers = new Dictionary<string, PlaybackTracker>();
+            playback_trackers = new Dictionary<string, PlaybackInfo>();
         }
 
         public void Dispose()
@@ -80,288 +81,162 @@ namespace playback_reporting
             repo.Initialize();
             _repository = repo;
 
-            _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
-            _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
-            _sessionManager.PlaybackProgress += _sessionManager_PlaybackProgress;
-
             // start playback monitor
-            //System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
+            System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
         }
-
-        void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
-        {
-            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-            if (playback_trackers != null && playback_trackers.ContainsKey(key))
-            {
-                try
-                {
-                    PlaybackTracker tracker = playback_trackers[key];
-                    DateTime now = DateTime.Now;
-                    if (now.Subtract(tracker.last_updated).TotalSeconds > 20) // update every 20 seconds
-                    {
-                        tracker.last_updated = now;
-                        _logger.Info("Processing playback tracker : " + key);
-                        List<string> event_log = tracker.ProcessProgress(e);
-                        if (event_log.Count > 0)
-                        {
-                            _logger.Debug("ProcessProgress : " + String.Join("", event_log));
-                        }
-                        if (tracker.TrackedPlaybackInfo != null)
-                        {
-                            _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
-                        }
-                    }
-                }
-                catch (Exception exp)
-                {
-                    playback_trackers.Remove(key);
-                    throw new Exception("Error saving playback state: " + exp.Message);
-                }
-            }
-            else
-            {
-                _logger.Debug("Playback progress did not have a tracker : " + key);
-            }
-        }
-
-        void _sessionManager_PlaybackStop(object sender, PlaybackStopEventArgs e)
-        {
-            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-            if (playback_trackers.ContainsKey(key))
-            {
-                _logger.Info("Playback stop tracker found, processing stop : " + key);
-                PlaybackTracker tracker = playback_trackers[key];
-                List<string> event_log = tracker.ProcessStop(e);
-                if (event_log.Count > 0)
-                {
-                    _logger.Debug("ProcessProgress : " + String.Join("", event_log));
-                }
-
-                // if playback duration was long enough save the action
-                if (tracker.TrackedPlaybackInfo != null)
-                {
-                    _logger.Info("Saving playback tracking activity in DB");
-                    _repository.UpdatePlaybackAction(tracker.TrackedPlaybackInfo);
-                }
-                else
-                {
-                    _logger.Info("Playback stop but TrackedPlaybackInfo not found! not storing activity in DB");
-                }
-
-                // remove the playback tracer from the map as we no longer need it.
-                playback_trackers.Remove(key);
-            }
-            else
-            {
-                _logger.Info("Playback stop did not have a tracker : " + key);
-            }
-        }
-
-        void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
-        {
-            if (e.MediaInfo == null)
-            {
-                return;
-            }
-
-            if (e.Item != null && e.Item.IsThemeMedia)
-            {
-                // Don't report theme song or local trailer playback
-                return;
-            }
-
-            if (e.Users.Count == 0)
-            {
-                return;
-            }
-
-            string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-            if (playback_trackers.ContainsKey(key))
-            {
-                _logger.Info("Existing tracker found! : " + key);
-
-                PlaybackTracker track = playback_trackers[key];
-                if (track.TrackedPlaybackInfo != null)
-                {
-                    _logger.Info("Saving existing playback tracking activity in DB");
-                    List<string> event_log = new List<string>();
-                    track.CalculateDuration(event_log);
-                    if (event_log.Count > 0)
-                    {
-                        _logger.Debug("CalculateDuration : " + String.Join("", event_log));
-                    }
-                    _repository.UpdatePlaybackAction(track.TrackedPlaybackInfo);
-                }
-
-                _logger.Info("Removing existing tracker : " + key);
-                playback_trackers.Remove(key);
-            }
-
-            _logger.Info("Adding playback tracker : " + key);
-            PlaybackTracker tracker = new PlaybackTracker(key, _logger);
-            tracker.ProcessStart(e);
-            playback_trackers.Add(key, tracker);
-
-            // start a task to report playback started
-            _logger.Info("Creating StartPlaybackTimer Task");
-            System.Threading.Tasks.Task.Run(() => StartPlaybackTimer(e));
-
-        }
-
-        /*
+        
         public async System.Threading.Tasks.Task PlaybackMonitoringTask()
         {
             _logger.Info("PlaybackMonitoringTask : Started");
+            int thread_sleep = 10;
+            int max_thread_sleep = 300;
 
             while (true)
             {
-                foreach (SessionInfo session in _sessionManager.Sessions)
+                try
                 {
-                    try
-                    {
-                        string sessionId = session.Id;
-                        string userId = session.UserId;
-                        string deviceId = session.DeviceId;
-                        string session_playing_id_guid = null;
-                        long session_playing_id_internal = -1;
-                        if (session.NowPlayingItem != null)
-                        {
-                            session_playing_id_guid = session.NowPlayingItem.Id;
-                            session_playing_id_internal = _libraryManager.GetInternalId(session_playing_id_guid);
-
-                            _logger.Info("PlaybackMonitoringTask : Id                = " + sessionId);
-                            _logger.Info("PlaybackMonitoringTask : UserId            = " + userId);
-                            _logger.Info("PlaybackMonitoringTask : DeviceId          = " + deviceId);
-                            _logger.Info("PlaybackMonitoringTask : NowPlayingItem.Id = " + session_playing_id_guid);
-                            _logger.Info("PlaybackMonitoringTask : GetInternalId     = " + session_playing_id_internal);
-                        }
-
-                    }
-                    catch(Exception err)
-                    {
-                        _logger.ErrorException("PlaybackMonitoringTask Exception", err);
-                    }
+                    List<PlaybackInfo> playinfo_list = ProcessSessions();
+                    RemoveOldPlayinfo(playinfo_list);
+                    thread_sleep = 10;
                 }
-                await System.Threading.Tasks.Task.Delay(10000);
+                catch(Exception err)
+                {
+                    _logger.ErrorException("PlaybackMonitoringTask Exception", err);
+
+                    // try to throttle repeated exceptions up to a max of 5 min
+                    if (thread_sleep < max_thread_sleep)
+                    {
+                        thread_sleep = thread_sleep + 10;
+                    }
+                    _logger.Info("PlaybackMonitoringTask New Thread Sleep : " + thread_sleep);
+                }
+
+                await System.Threading.Tasks.Task.Delay(thread_sleep * 1000);
             }
         }
-        */
 
-        public async System.Threading.Tasks.Task StartPlaybackTimer(PlaybackProgressEventArgs e)
+        private List<PlaybackInfo> ProcessSessions()
         {
-            _logger.Info("StartPlaybackTimer : Entered");
-            await System.Threading.Tasks.Task.Delay(20000);
+            List<PlaybackInfo> active_playinfo_list = new List<PlaybackInfo>();
 
-            try
+            foreach (SessionInfo session in _sessionManager.Sessions)
             {
-                var session = _sessionManager.GetSession(e.DeviceId, e.ClientName, "");
-                if (session != null)
+                if (session.NowPlayingItem == null)
                 {
-                    string event_playing_id_guid = e.Item.Id.ToString("N");
-                    long event_playing_id_internal = e.Item.InternalId;
-
-                    string event_user_id_guid = e.Users[0].Id.ToString("N");
-                    long event_user_id_internal = e.Users[0].InternalId;
-
-                    string session_playing_id_guid = session.NowPlayingItem.Id;
-                    long session_playing_id_internal = _libraryManager.GetInternalId(session.NowPlayingItem.Id);
-
-                    long session_user_id_internal = session.UserInternalId;
-
-                    _logger.Info("session.RemoteEndPoint : " + session.RemoteEndPoint);
-
-                    string play_method = "na";
-                    if (session.PlayState != null && session.PlayState.PlayMethod != null)
-                    {
-                        play_method = session.PlayState.PlayMethod.Value.ToString();
-                    }
-                    if (session.PlayState != null && session.PlayState.PlayMethod == MediaBrowser.Model.Session.PlayMethod.Transcode)
-                    {
-                        if(session.TranscodingInfo !=  null)
-                        {
-                            string video_codec = "direct";
-                            if(session.TranscodingInfo.IsVideoDirect == false)
-                            {
-                                video_codec = session.TranscodingInfo.VideoCodec;
-                            }
-                            string audio_codec = "direct";
-                            if (session.TranscodingInfo.IsAudioDirect == false)
-                            {
-                                audio_codec = session.TranscodingInfo.AudioCodec;
-                            }
-                            play_method += " (v:" + video_codec + " a:" + audio_codec + ")";
-                        }
-                    }
-
-                    string item_name = GetItemName(e.Item);
-                    string item_id = e.Item.Id.ToString("N");
-                    string item_type = e.MediaInfo.Type;
-
-                    _logger.Info("StartPlaybackTimer : event_playing_id       = " + event_playing_id_guid);
-                    _logger.Info("StartPlaybackTimer : event_playing_id_int   = " + event_playing_id_internal);
-                    _logger.Info("StartPlaybackTimer : event_user_id          = " + event_user_id_guid);
-                    _logger.Info("StartPlaybackTimer : event_user_id_int      = " + event_user_id_internal);
-                    _logger.Info("StartPlaybackTimer : session_playing_id     = " + session_playing_id_guid);
-                    _logger.Info("StartPlaybackTimer : session_playing_id_int = " + session_playing_id_internal);
-                    _logger.Info("StartPlaybackTimer : session_user_id_int    = " + session_user_id_internal);
-                    _logger.Info("StartPlaybackTimer : play_method            = " + play_method);
-                    _logger.Info("StartPlaybackTimer : e.ClientName           = " + e.ClientName);
-                    _logger.Info("StartPlaybackTimer : e.DeviceName           = " + e.DeviceName);
-                    _logger.Info("StartPlaybackTimer : ItemName               = " + item_name);
-                    _logger.Info("StartPlaybackTimer : ItemId                 = " + item_id);
-                    _logger.Info("StartPlaybackTimer : ItemType               = " + item_type);
-
-                    PlaybackInfo play_info = new PlaybackInfo();
-                    play_info.Id = Guid.NewGuid().ToString("N");
-                    play_info.Date = DateTime.Now;
-                    play_info.ClientName = e.ClientName;
-                    play_info.DeviceName = e.DeviceName;
-                    play_info.PlaybackMethod = play_method;
-                    play_info.UserId = event_user_id_guid;
-                    play_info.ItemId = item_id;
-                    play_info.ItemName = item_name;
-                    play_info.ItemType = item_type;
-
-                    if (event_playing_id_internal == session_playing_id_internal && event_user_id_internal == session_user_id_internal)
-                    {
-                        _logger.Info("StartPlaybackTimer : All matches, playback registered");
-
-                        // update tracker with playback info
-                        string key = e.DeviceId + "-" + e.Users[0].Id.ToString("N") + "-" + e.Item.Id.ToString("N");
-                        if (playback_trackers.ContainsKey(key))
-                        {
-                            _logger.Info("Playback tracker found, adding playback info : " + key);
-                            PlaybackTracker tracker = playback_trackers[key];
-                            tracker.TrackedPlaybackInfo = play_info;
-
-                            _logger.Info("Saving playback tracking activity in DB");
-                            _repository.AddPlaybackAction(tracker.TrackedPlaybackInfo);
-                        }
-                        else
-                        {
-                            _logger.Info("Playback trackler not found : " + key);
-                        }
-                    }
-                    else
-                    {
-                        _logger.Info("StartPlaybackTimer : Details do not match for play item");
-                    }
-
+                    // nothing playing so move on to next
+                    continue;
                 }
-                else
+
+                PlaybackInfo playback_info = GetPlaybackInfo(session);
+                active_playinfo_list.Add(playback_info);
+
+                if (playback_info.StartupSaved == false)
                 {
-                    _logger.Info("StartPlaybackTimer : session Not Found");
+                    SavePlayStarted(playback_info);
                 }
+
+                TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
+                playback_info.PlaybackDuration = (int)diff.TotalSeconds;
+
+                _repository.UpdatePlaybackAction(playback_info);
             }
-            catch(Exception exception)
-            {
-                _logger.ErrorException("StartPlaybackTimer: Error : " + exception.Message, exception);
-                //_logger.Info("StartPlaybackTimer : Error = " + exception.Message + "\n" + exception.StackTrace);
-            }
-            _logger.Info("StartPlaybackTimer : Exited");
+
+            return active_playinfo_list;
         }
 
-        private string GetItemName(BaseItem item)
+        private void RemoveOldPlayinfo(List<PlaybackInfo> active_list)
+        {
+            List<string> key_list = new List<string>();
+            foreach (string key in playback_trackers.Keys)
+            {
+                key_list.Add(key);
+            }
+
+            foreach (string key in key_list)
+            {
+                PlaybackInfo info = playback_trackers[key];
+                if (active_list.Contains(info) == false)
+                {
+                    _logger.Info("Removing Old Key from playback_trackers : " + key);
+                    playback_trackers.Remove(key);
+                }
+            }
+        }
+
+        private void SavePlayStarted(PlaybackInfo playback_info)
+        {
+            _logger.Info("Saving playback info in DB");
+            _repository.AddPlaybackAction(playback_info);
+            playback_info.StartupSaved = true;
+        }
+
+        private PlaybackInfo GetPlaybackInfo(SessionInfo session)
+        {
+            string userId = session.UserId;
+            string deviceId = session.DeviceId;
+            string deviceName = session.DeviceName;
+            string clientName = session.Client;
+            string session_playing_id = session.NowPlayingItem.Id;
+
+            string key = deviceId + "-" + userId + "-" + session_playing_id;
+
+            PlaybackInfo playback_info = null;
+            if (playback_trackers.ContainsKey(key))
+            {
+                //_logger.Info("Existing tracker found! : " + key);
+                playback_info = playback_trackers[key];
+            }
+            else
+            {
+                _logger.Info("Adding playback tracker : " + key);
+                playback_info = new PlaybackInfo();
+
+                BaseItemDto item = session.NowPlayingItem;
+
+                playback_info.Date = DateTime.Now;
+                playback_info.UserId = userId;
+                playback_info.DeviceName = deviceName;
+                playback_info.ClientName = clientName;
+                playback_info.ItemId = session_playing_id;
+                playback_info.ItemName = GetItemName(session.NowPlayingItem);
+                playback_info.PlaybackMethod = GetPlaybackMethod(session);
+                playback_info.ItemType = session.NowPlayingItem.Type;
+
+                playback_trackers.Add(key, playback_info);
+            }
+
+            return playback_info;
+        }
+
+        private string GetPlaybackMethod(SessionInfo session)
+        {
+            string play_method = "na";
+            if (session.PlayState != null && session.PlayState.PlayMethod != null)
+            {
+                play_method = session.PlayState.PlayMethod.Value.ToString();
+            }
+            if (session.PlayState != null && session.PlayState.PlayMethod == MediaBrowser.Model.Session.PlayMethod.Transcode)
+            {
+                if (session.TranscodingInfo != null)
+                {
+                    string video_codec = "direct";
+                    if (session.TranscodingInfo.IsVideoDirect == false)
+                    {
+                        video_codec = session.TranscodingInfo.VideoCodec;
+                    }
+                    string audio_codec = "direct";
+                    if (session.TranscodingInfo.IsAudioDirect == false)
+                    {
+                        audio_codec = session.TranscodingInfo.AudioCodec;
+                    }
+                    play_method += " (v:" + video_codec + " a:" + audio_codec + ")";
+                }
+            }
+
+            return play_method;
+        }
+
+        private string GetItemName(BaseItemDto item)
         {
             string item_name = "Not Known";
 
@@ -370,43 +245,32 @@ namespace playback_reporting
                 return item_name;
             }
 
-            if (typeof(Episode) == item.GetType())
+            if (item.Type == "Episode")
             {
-                Episode epp_item = item as Episode;
-                if (epp_item != null)
-                {
-                    string series_name = "Not Known";
-                    if (epp_item.Series != null && string.IsNullOrEmpty(epp_item.Series.Name) == false)
-                    {
-                        series_name = epp_item.Series.Name;
-                    }
-                    string season_no = "00";
-                    if (epp_item.Season != null && epp_item.Season.IndexNumber != null)
-                    {
-                        season_no = String.Format("{0:D2}", epp_item.Season.IndexNumber);
-                    }
-                    string epp_no = "00";
-                    if (epp_item.IndexNumber != null)
-                    {
-                        epp_no = String.Format("{0:D2}", epp_item.IndexNumber);
-                    }
-                    item_name = epp_item.Series.Name + " - s" + season_no + "e" + epp_no + " - " + epp_item.Name;
-                }
+                string series_name = item.SeriesName;
+                string season_no = String.Format("{0:D2}", item.ParentIndexNumber);   
+                string epp_no = String.Format("{0:D2}", item.IndexNumber);
+                item_name = series_name + " - s" + season_no + "e" + epp_no + " - " + item.Name;
             }
-            else if (typeof(Audio) == item.GetType())
+            else if (item.Type == "Audio")
             {
-                Audio audio_item = item as Audio;
                 string artist = "Not Known";
-                if (audio_item.AlbumArtists != null && audio_item.AlbumArtists.Length > 0)
+                if (item.ArtistItems != null && item.AlbumArtists.Length > 0)
                 {
-                    artist = string.Join(", ", audio_item.AlbumArtists);
+                    List<string> artists_list = new List<string>();
+                    foreach(var artist_pair in item.AlbumArtists)
+                    {
+                        artists_list.Add(artist_pair.Name);
+                    }
+                    artist = string.Join(", ", artists_list);
                 }
                 string album = "Not Known";
-                if(string.IsNullOrEmpty(audio_item.Album) == false)
+                if (string.IsNullOrEmpty(item.Album) == false)
                 {
-                    album = audio_item.Album;
+                    album = item.Album;
                 }
-                item_name = artist + " - " + audio_item.Name + " (" + album + ")";
+                item_name = artist + " - " + item.Name + " (" + album + ")";
+
             }
             else
             {
@@ -415,5 +279,6 @@ namespace playback_reporting
 
             return item_name;
         }
+
     }
 }
