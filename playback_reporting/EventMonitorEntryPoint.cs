@@ -46,6 +46,7 @@ namespace playback_reporting
         private readonly IFileSystem _fileSystem;
         private readonly IJsonSerializer _jsonSerializer;
 
+        private readonly object syncLock = new object();
         private Dictionary<string, PlaybackInfo> playback_trackers = null;
         private IActivityRepository _repository;
 
@@ -81,23 +82,50 @@ namespace playback_reporting
             repo.Initialize();
             _repository = repo;
 
+            _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
+            _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
+
             // start playback monitor
             System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
         }
-        
+
+        void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
+        {
+            _logger.Info("_sessionManager_PlaybackStart : Entered");
+            lock (syncLock)
+            {
+                List<PlaybackInfo> playinfo_list = ProcessSessions();
+                RemoveOldPlayinfo(playinfo_list);
+            }
+        }
+
+        void _sessionManager_PlaybackStop(object sender, PlaybackStopEventArgs e)
+        {
+            _logger.Info("_sessionManager_PlaybackStop : Entered");
+            lock (syncLock)
+            {
+                List<PlaybackInfo> playinfo_list = ProcessSessions();
+                RemoveOldPlayinfo(playinfo_list);
+            }
+        }
+
         public async System.Threading.Tasks.Task PlaybackMonitoringTask()
         {
             _logger.Info("PlaybackMonitoringTask : Started");
-            int thread_sleep = 10;
+            int thread_sleep = 20;
             int max_thread_sleep = 300;
 
             while (true)
             {
                 try
                 {
-                    List<PlaybackInfo> playinfo_list = ProcessSessions();
-                    RemoveOldPlayinfo(playinfo_list);
-                    thread_sleep = 10;
+                    lock (syncLock)
+                    {
+                        List<PlaybackInfo> playinfo_list = ProcessSessions();
+                        RemoveOldPlayinfo(playinfo_list);
+                    }
+
+                    thread_sleep = 20;
                 }
                 catch(Exception err)
                 {
@@ -129,11 +157,7 @@ namespace playback_reporting
 
                 PlaybackInfo playback_info = GetPlaybackInfo(session);
                 active_playinfo_list.Add(playback_info);
-
-                if (playback_info.StartupSaved == false)
-                {
-                    SavePlayStarted(playback_info);
-                }
+                SavePlayStarted(playback_info);
 
                 TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
                 playback_info.PlaybackDuration = (int)diff.TotalSeconds;
@@ -165,9 +189,12 @@ namespace playback_reporting
 
         private void SavePlayStarted(PlaybackInfo playback_info)
         {
-            _logger.Info("Saving playback info in DB");
-            _repository.AddPlaybackAction(playback_info);
-            playback_info.StartupSaved = true;
+            if (playback_info.StartupSaved == false)
+            {
+                _logger.Info("Saving PlaybackInfo to DB");
+                _repository.AddPlaybackAction(playback_info);
+                playback_info.StartupSaved = true;
+            }
         }
 
         private PlaybackInfo GetPlaybackInfo(SessionInfo session)
@@ -188,11 +215,12 @@ namespace playback_reporting
             }
             else
             {
-                _logger.Info("Adding playback tracker : " + key);
+                _logger.Info("Adding PlaybackInfo to playback_trackers : " + key);
                 playback_info = new PlaybackInfo();
 
                 BaseItemDto item = session.NowPlayingItem;
 
+                playback_info.Key = key;
                 playback_info.Date = DateTime.Now;
                 playback_info.UserId = userId;
                 playback_info.DeviceName = deviceName;
@@ -200,6 +228,7 @@ namespace playback_reporting
                 playback_info.ItemId = session_playing_id;
                 playback_info.ItemName = GetItemName(session.NowPlayingItem);
                 playback_info.PlaybackMethod = GetPlaybackMethod(session);
+                playback_info.ItemType = session.NowPlayingItem.Type;
                 playback_info.ItemType = session.NowPlayingItem.Type;
 
                 playback_trackers.Add(key, playback_info);
