@@ -35,6 +35,10 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('activity_report'),
+                name: 'Activity'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_report'),
                 name: 'Users'
             },
@@ -74,7 +78,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('user_report', 0, getTabs);
+            libraryMenu.setTabs('user_report', 1, getTabs);
 
             var end_date = view.querySelector('#end_date');
             end_date.value = new Date().toDateInputValue();
@@ -106,7 +110,7 @@ define(['libraryMenu'], function (libraryMenu) {
                             user_image = ApiClient.getUrl(user_image);
                         }                      
 
-                        row_html += "<td><img src='" + user_image + "' width='50px' style='background-color: black;'></td>";
+                        row_html += "<td><img src='" + user_image + "' style='height:2.9em;border-radius:60px;margin-right:.5em;'></td>";
                         row_html += "<td>" + user_info.user_name + "</td>";
                         row_html += "<td>" + user_info.last_seen + "</td>";
                         row_html += "<td>" + user_info.item_name + "</td>";

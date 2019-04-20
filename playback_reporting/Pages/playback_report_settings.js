@@ -53,6 +53,10 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('activity_report'),
+                name: 'Activity'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_report'),
                 name: 'Users'
             },
@@ -148,7 +152,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_report_settings', 7, getTabs);
+            libraryMenu.setTabs('playback_report_settings', 8, getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", setBackupPathPicker);

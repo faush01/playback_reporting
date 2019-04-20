@@ -775,36 +775,30 @@ namespace playback_reporting.Api
 
         public object Get(GetSessionInfo request)
         {
+            //return _sessionManager.Sessions;
+
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
             foreach (SessionInfo session in _sessionManager.Sessions)
             {
                 Dictionary<string, object> data = new Dictionary<string, object>();
 
-                string sessionId = session.Id;
-                string userId = session.UserId;
-                string deviceId = session.DeviceId;
-                string deviceName = session.DeviceName;
+                data.Add("TranscodingInfo", session.TranscodingInfo);
+                data.Add("PlayState", session.PlayState);
+                data.Add("NowPlayingItem", session.NowPlayingItem);
+                data.Add("device_name", session.DeviceName);
+                data.Add("client_name", session.Client);
+                data.Add("app_icon", session.AppIconUrl);
+                data.Add("app_version", session.ApplicationVersion);
 
-                if (session.NowPlayingItem != null)
-                {
-                    data.Add("NowPlayingItem", session.NowPlayingItem);
-                }
+                data.Add("user_id", session.UserId);
+                data.Add("user_name", session.UserName);
+                data.Add("has_image", session.UserPrimaryImageTag);
 
-                if (session.PlayState != null)
-                {
-                    data.Add("PlayState", session.PlayState);
-                }
+                data.Add("remote_address", session.RemoteEndPoint);
 
-                if (session.TranscodingInfo != null)
-                {
-                    data.Add("TranscodingInfo", session.TranscodingInfo); 
-                }
-
-                data.Add("id", sessionId);
-                data.Add("device_id", deviceId);
-                data.Add("user_id", userId);
-                data.Add("device_name", deviceName);
+                TimeSpan ts = DateTime.UtcNow.Subtract(session.LastActivityDate.DateTime);
+                data.Add("last_active", ts.ToString(@"dd\.hh\:mm\:ss"));
 
                 report.Add(data);
             }

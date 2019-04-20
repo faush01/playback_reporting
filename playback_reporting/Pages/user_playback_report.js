@@ -413,6 +413,10 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('activity_report'),
+                name: 'Activity'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_report'),
                 name: 'Users'
             },
@@ -453,7 +457,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('user_playback_report', 2, getTabs);
+            libraryMenu.setTabs('user_playback_report', 3, getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 

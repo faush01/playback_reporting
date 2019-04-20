@@ -34,6 +34,10 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('activity_report'),
+                name: 'Activity'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_report'),
                 name: 'Users'
             },
@@ -73,7 +77,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('custom_query', 6, getTabs);
+            libraryMenu.setTabs('custom_query', 7, getTabs);
 
             var run_custom_query = view.querySelector('#run_custom_query');
             run_custom_query.addEventListener("click", runQuery);

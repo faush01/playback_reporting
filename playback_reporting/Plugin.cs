@@ -101,8 +101,7 @@ namespace playback_reporting
                 new PluginPageInfo
                 {
                     Name = "user_report",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.html",
-                    EnableInMainMenu = true
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.html"
                 },
                 new PluginPageInfo
                 {
@@ -128,7 +127,18 @@ namespace playback_reporting
                 {
                     Name = "user_play_report.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.user_play_report.js"
-                }
+                },
+                new PluginPageInfo
+                {
+                    Name = "activity_report",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.activity_report.html",
+                    EnableInMainMenu = true
+                },
+                new PluginPageInfo
+                {
+                    Name = "activity_report.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.activity_report.js"
+                },
             };
         }
 

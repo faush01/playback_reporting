@@ -22,6 +22,7 @@ namespace playback_reporting.Data
 {
     public class PlaybackInfo
     {
+        public string Key { set; get;  }
         public DateTime Date { get; set; }
         public string UserId { get; set; }
         public string ItemId { get; set; }

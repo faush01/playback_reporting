@@ -35,6 +35,10 @@ define(['libraryMenu'], function (libraryMenu) {
     function getTabs() {
         var tabs = [
             {
+                href: Dashboard.getConfigurationPageUrl('activity_report'),
+                name: 'Activity'
+            },
+            {
                 href: Dashboard.getConfigurationPageUrl('user_report'),
                 name: 'Users'
             },
@@ -92,7 +96,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('user_play_report', 1, getTabs);
+            libraryMenu.setTabs('user_play_report', 2, getTabs);
 
             var end_date = view.querySelector('#end_date');
             end_date.value = new Date().toDateInputValue();
