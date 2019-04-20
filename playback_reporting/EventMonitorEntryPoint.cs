@@ -178,9 +178,14 @@ namespace playback_reporting
 
             foreach (string key in key_list)
             {
-                PlaybackInfo info = playback_trackers[key];
-                if (active_list.Contains(info) == false)
+                PlaybackInfo playback_info = playback_trackers[key];
+                if (active_list.Contains(playback_info) == false)
                 {
+                    _logger.Info("Saving final duration for Item : " + key);
+                    TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
+                    playback_info.PlaybackDuration = (int)diff.TotalSeconds;
+                    _repository.UpdatePlaybackAction(playback_info);
+
                     _logger.Info("Removing Old Key from playback_trackers : " + key);
                     playback_trackers.Remove(key);
                 }
