@@ -75,8 +75,12 @@ namespace playback_reporting.Data
                         _logger.Info("PlaybackActivity table schema miss match!");
                         _logger.Info("Expected : " + required_schema);
                         _logger.Info("Received : " + actual_schema);
-                        _logger.Info("Dropping and recreating PlaybackActivity table");
-                        connection.Execute("drop table if exists PlaybackActivity");
+                        
+                        string new_table_name = DateTime.Now.ToString("PlaybackActivity_yyyy_MM_dd_HH_mm_ss");
+                        _logger.Info("Renaming table to : " + new_table_name);
+                        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                        //_logger.Info("Dropping and recreating PlaybackActivity table");
+                        //connection.Execute("drop table if exists PlaybackActivity");
                     }
                     else
                     {
