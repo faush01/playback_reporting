@@ -111,7 +111,11 @@ define(['libraryMenu'], function (libraryMenu) {
                         }                      
 
                         row_html += "<td><img src='" + user_image + "' style='height:2.9em;border-radius:60px;margin-right:.5em;'></td>";
-                        row_html += "<td>" + user_info.user_name + "</td>";
+
+                        var report_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
+                        var name_link = "<a is='emby-linkbutton' href='" + report_url + "'>" + user_info.user_name + "</a>";
+                        row_html += "<td>" + name_link + "</td>";
+
                         row_html += "<td>" + user_info.last_seen + "</td>";
                         row_html += "<td>" + user_info.item_name + "</td>";
                         row_html += "<td>" + user_info.client_name + "</td>";

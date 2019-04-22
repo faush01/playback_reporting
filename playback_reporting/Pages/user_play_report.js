@@ -98,6 +98,13 @@ define(['libraryMenu'], function (libraryMenu) {
 
             libraryMenu.setTabs('user_play_report', 2, getTabs);
 
+            var user_name = "";
+            var user_name_index = window.location.href.indexOf("user=");
+            if (user_name_index > -1) {
+                user_name = window.location.href.substring(user_name_index + 5);
+            }
+            //alert(user_name);
+
             var end_date = view.querySelector('#end_date');
             end_date.value = new Date().toDateInputValue();
             end_date.addEventListener("change", process_click);
@@ -118,15 +125,24 @@ define(['libraryMenu'], function (libraryMenu) {
                 var item_details;
                 for (index = 0; index < user_list.length; ++index) {
                     item_details = user_list[index];
-                    options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                    if (user_name === item_details.name) {
+                        options_html += "<option value='" + item_details.id + "' selected>" + item_details.name + "</option>";
+                    }
+                    else {
+                        options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                    }
+
                 }
                 user_list_selector.innerHTML = options_html;
+
+                process_click();
             });
 
+            
             function process_click() {
-
+                
                 var selected_user_id = user_list_selector.options[user_list_selector.selectedIndex].value;
-
+                
                 if (selected_user_id === "Select User") {
                     view.querySelector('#user_playlist_results').innerHTML = "";
                     return;
