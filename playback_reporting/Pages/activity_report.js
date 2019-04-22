@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu'], function (libraryMenu) {
+define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
     'use strict';
 
     ApiClient.getActivity = function (url_to_get) {
@@ -25,47 +25,6 @@ define(['libraryMenu'], function (libraryMenu) {
             dataType: "json"
         });
     };
-
-    function getTabs() {
-        var tabs = [
-            {
-                href: Dashboard.getConfigurationPageUrl('activity_report'),
-                name: 'Activity'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_report'),
-                name: 'Users'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_play_report'),
-                name: 'UserPlayList'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Usage'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('custom_query'),
-                name: 'Query'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
-                name: 'Settings'
-            }];
-        return tabs;
-    }
 
     function displayTime(ticks) {
         var ticksInSeconds = ticks / 10000000;
@@ -86,7 +45,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('activity_report', 0, getTabs);
+            libraryMenu.setTabs('playback_reporting', getTabIndex("activity_report"), getTabs);
 
             var style = document.createElement('style');
             style.innerHTML =

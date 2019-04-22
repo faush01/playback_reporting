@@ -139,6 +139,11 @@ namespace playback_reporting
                     Name = "activity_report.js",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.activity_report.js"
                 },
+                new PluginPageInfo
+                {
+                    Name = "helper_function.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.helper_function.js"
+                }
             };
         }
 

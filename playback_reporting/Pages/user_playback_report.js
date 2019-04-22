@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu'], function (libraryMenu) {
+define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
     'use strict';
 
     var my_bar_chart = null;
@@ -410,54 +410,13 @@ define(['libraryMenu'], function (libraryMenu) {
         return Math.round(number * factor) / factor;
     }
 
-    function getTabs() {
-        var tabs = [
-            {
-                href: Dashboard.getConfigurationPageUrl('activity_report'),
-                name: 'Activity'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_report'),
-                name: 'Users'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_play_report'),
-                name: 'UserPlayList'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Usage'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('custom_query'),
-                name: 'Query'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
-                name: 'Settings'
-            }];
-        return tabs;
-    }
-
     return function (view, params) {
 
         // init code here
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('user_playback_report', 3, getTabs);
+            libraryMenu.setTabs('playback_reporting', getTabIndex("user_playback_report"), getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 

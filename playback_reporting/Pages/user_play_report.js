@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu'], function (libraryMenu) {
+define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
     'use strict';
 
     Date.prototype.toDateInputValue = function () {
@@ -31,47 +31,6 @@ define(['libraryMenu'], function (libraryMenu) {
             dataType: "json"
         });
     };
-
-    function getTabs() {
-        var tabs = [
-            {
-                href: Dashboard.getConfigurationPageUrl('activity_report'),
-                name: 'Activity'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_report'),
-                name: 'Users'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_play_report'),
-                name: 'UserPlayList'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-                name: 'Playback'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('breakdown_report'),
-                name: 'Breakdown'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('hourly_usage_report'),
-                name: 'Usage'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-                name: 'Duration'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('custom_query'),
-                name: 'Query'
-            },
-            {
-                href: Dashboard.getConfigurationPageUrl('playback_report_settings'),
-                name: 'Settings'
-            }];
-        return tabs;
-    }
 
     function seconds2time(seconds) {
         var h = Math.floor(seconds / 3600);
@@ -96,7 +55,7 @@ define(['libraryMenu'], function (libraryMenu) {
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('user_play_report', 2, getTabs);
+            libraryMenu.setTabs('playback_reporting', getTabIndex("user_report"), getTabs);
 
             var user_name = "";
             var user_name_index = window.location.href.indexOf("user=");
