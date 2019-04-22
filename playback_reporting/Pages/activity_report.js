@@ -86,7 +86,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                             user_image = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
                             user_image = ApiClient.getUrl(user_image);
                         } 
-                        row_html += "<td><img src='" + user_image + "' style='height:2.9em;border-radius:60px;margin-right:.5em;'></td>";
+                        row_html += "<td><img src='" + user_image + "' style='width:50px;height:50px;border-radius:10px;'></td>";
 
                         /*
                         var test_table = "<table>";
