@@ -17,12 +17,6 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
     'use strict';
 
-    Date.prototype.toDateInputValue = function () {
-        var local = new Date(this);
-        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-        return local.toJSON().slice(0, 10);
-    };
-
     var chart_instance_map = {};
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -254,12 +248,18 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                var end_date = view.querySelector('#end_date');
-                end_date.value = new Date().toDateInputValue();
-                end_date.addEventListener("change", process_click);
+                var start_picker = view.querySelector('#start_date');
+                var start_date = new Date();
+                start_date.setDate(start_date.getDate() - 28);
+                start_picker.value = start_date.toDateInputValue();
+                start_picker.addEventListener("change", process_click);
 
-                var weeks = view.querySelector('#weeks');
-                weeks.addEventListener("change", process_click);
+                var end_picker = view.querySelector('#end_date');
+                var end_date = new Date();
+                end_picker.value = end_date.toDateInputValue();
+                end_picker.addEventListener("change", process_click);
+
+                var span_days_text = view.querySelector('#span_days');
 
                 var num_items = view.querySelector('#num_items');
                 num_items.addEventListener("change", process_click);
@@ -270,13 +270,22 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                 process_click();
 
                 function process_click() {
-                    var days = parseInt(weeks.value) * 7;
+                    var start = new Date(start_picker.value);
+                    var end = new Date(end_picker.value);
+                    if (end > new Date()) {
+                        end = new Date();
+                        end_picker.value = end.toDateInputValue();
+                    }
+
+                    var days = Date.daysBetween(start, end);
+                    span_days_text.innerHTML = days;
+
                     var item_count = parseInt(num_items.value);
                     var add_other_line = add_other_items.checked;
                     var url = "";
                     
                     // build user chart
-                    url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -284,7 +293,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
                     
                     // build ItemType chart
-                    url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -292,7 +301,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
 
                     // build PlaybackMethod chart
-                    url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -300,7 +309,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
 
                     // build ClientName chart
-                    url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -308,7 +317,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
 
                     // build DeviceName chart
-                    url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -316,7 +325,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
 
                     // build TvShows chart
-                    url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -324,7 +333,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     });
 
                     // build Movies chart
-                    url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_date.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));

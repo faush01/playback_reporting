@@ -20,12 +20,6 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
     var my_bar_chart = null;
     var filter_names = [];
 
-    Date.prototype.toDateInputValue = function () {
-        var local = new Date(this);
-        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-        return local.toJSON().slice(0, 10);
-    };
-
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -445,15 +439,22 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     var data_type = view.querySelector('#data_type');
                     data_type.addEventListener("change", process_click);
 
-                    var end_date = view.querySelector('#end_date');
-                    end_date.value = new Date().toDateInputValue();
-                    end_date.addEventListener("change", process_click);
+                    var start_picker = view.querySelector('#start_date');
+                    var start_date = new Date();
+                    start_date.setDate(start_date.getDate() - 28);
+                    start_picker.value = start_date.toDateInputValue();
+                    start_picker.addEventListener("change", process_click);
 
-                    var weeks = view.querySelector('#weeks');
-                    weeks.addEventListener("change", process_click);
-                    var days = parseInt(weeks.value) * 7;
+                    var end_picker = view.querySelector('#end_date');
+                    var end_date = new Date();
+                    end_picker.value = end_date.toDateInputValue();
+                    end_picker.addEventListener("change", process_click);
 
-                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=time&stamp=" + new Date().getTime();
+                    var span_days_text = view.querySelector('#span_days');
+                    var days = Date.daysBetween(start_date, end_date);
+                    span_days_text.innerHTML = days;
+
+                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=time&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (usage_data) {
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -475,9 +476,17 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                         var data_t = data_type.options[data_type.selectedIndex].value;
 
-                        days = parseInt(weeks.value) * 7;
+                        var start = new Date(start_picker.value);
+                        var end = new Date(end_picker.value);
+                        if (end > new Date()) {
+                            end = new Date();
+                            end_picker.value = end.toDateInputValue();
+                        }
 
-                        var filtered_url = "user_usage_stats/PlayActivity?filter=" + filter.join(",") + "&days=" + days + "&end_date=" + end_date.value + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
+                        days = Date.daysBetween(start, end);
+                        span_days_text.innerHTML = days;
+
+                        var filtered_url = "user_usage_stats/PlayActivity?filter=" + filter.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                         filtered_url = ApiClient.getUrl(filtered_url);
                         ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
                             draw_graph(view, d3, usage_data);
