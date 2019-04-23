@@ -4,16 +4,36 @@
 
 	<div data-role="content">
 		<div class="content-primary">
-			<h2>Custom Query Report</h2>
+			<h2>Custom Query</h2>
 
 
-			<h3>Custom SQL Query</h3>
+			<h3>SQL Query</h3>
 			<textarea id="custom_query_text" style="width: 100%; height:75px">
 SELECT ROWID, * 
 FROM PlaybackActivity 
 LIMIT 10
 			</textarea>
 			<br />
+<!--
+
+SELECT date(DateCreated),
+		SUM(PlayDuration)
+FROM PlaybackActivity
+WHERE ItemType = 'Movie'
+GROUP BY date(DateCreated)
+ORDER BY date(DateCreated) ASC
+
+
+SELECT
+ItemId,
+DateCreated AS StartTime,
+datetime(DateCreated , '+' || CAST(PlayDuration AS VARCHAR) || ' seconds') AS EndTime
+FROM PlaybackActivity 
+LIMIT 10
+
+-->
+
+
 			<input type='checkbox' id="replace_userid"> Replace UserId with UserName<br />
 			<button id="run_custom_query">Run</button>
 
