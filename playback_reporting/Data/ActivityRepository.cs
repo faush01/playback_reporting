@@ -78,7 +78,14 @@ namespace playback_reporting.Data
                         
                         string new_table_name = DateTime.Now.ToString("PlaybackActivity_yyyy_MM_dd_HH_mm_ss");
                         _logger.Info("Renaming table to : " + new_table_name);
-                        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                        try
+                        {
+                            connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                        }
+                        catch(Exception e)
+                        {
+                            _logger.ErrorException("Error Renaming PlaybackActivity Table to : " + new_table_name, e);
+                        }
                         //_logger.Info("Dropping and recreating PlaybackActivity table");
                         //connection.Execute("drop table if exists PlaybackActivity");
                     }

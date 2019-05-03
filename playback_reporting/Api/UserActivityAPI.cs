@@ -518,11 +518,25 @@ namespace playback_reporting.Api
                 }
                 else
                 {
-                    Guid user_guid = new Guid(user_id);
-                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                    User user = null;
+                    try
+                    {
+                        Guid user_guid = new Guid(user_id);
+                        user = _userManager.GetUserById(user_guid);
+                    }
+                    catch(Exception e)
+                    {
+                        _logger.ErrorException("Error parsing user GUID : (" + user_id + ")", e);
+                    }
+
                     if (user != null)
                     {
                         user_name = user.Name;
+                    }
+                    else
+                    {
+                        // if we could not get the user just use the user ID
+                        user_name = user_id;
                     }
                 }
 
