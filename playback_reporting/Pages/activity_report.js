@@ -75,8 +75,12 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
-                        var device_image = activity_info.app_icon;
-                        row_html += "<td><img src='" + device_image + "' width='40px'></td>";
+                        if (activity_info.app_icon) {
+                            row_html += "<td><img src='" + activity_info.app_icon + "' width='40px'></td>";
+                        }
+                        else {
+                            row_html += "<td>&nbsp;</td>";
+                        }
 
                         row_html += "<td>" + activity_info.device_name + "</td>";
                         row_html += "<td>" + activity_info.client_name + " (" + activity_info.app_version + ")</td>";

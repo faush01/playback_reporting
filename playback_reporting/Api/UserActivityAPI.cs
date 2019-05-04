@@ -805,6 +805,7 @@ namespace playback_reporting.Api
                 data.Add("app_icon", session.AppIconUrl);
                 data.Add("app_version", session.ApplicationVersion);
 
+                data.Add("has_user", session.HasUser);
                 data.Add("user_id", session.UserId);
                 data.Add("user_name", session.UserName);
                 data.Add("has_image", session.UserPrimaryImageTag);
