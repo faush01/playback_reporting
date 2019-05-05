@@ -116,23 +116,29 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, object>> GetResourceCounters()
+        public List<Dictionary<string, object>> GetResourceCounters(int hours)
         {
             List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
+
+            DateTime from_when = DateTime.Now.AddHours(-1 * hours);
 
             var res_counters = resource_counters.GetCounters();
             foreach (Dictionary<string, object> counter in res_counters)
             {
                 Dictionary<string, object> new_record = new Dictionary<string, object>();
 
-                string date_string = ((DateTime)counter["date"]).ToString("yyyy-MM-dd HH:mm:ss");
-                new_record.Add("date", date_string);
-                double cpu = Math.Round((double)counter["cpu"], 1);
-                new_record.Add("cpu", cpu);
-                double mem = Math.Round((double)counter["mem"], 0);
-                new_record.Add("mem", mem);
+                DateTime counter_time = (DateTime)counter["date"];
+                if (counter_time >= from_when)
+                {
+                    string date_string = counter_time.ToString("yyyy-MM-dd HH:mm:ss");
+                    new_record.Add("date", date_string);
+                    double cpu = Math.Round((double)counter["cpu"], 1);
+                    new_record.Add("cpu", cpu);
+                    double mem = Math.Round((double)counter["mem"], 0);
+                    new_record.Add("mem", mem);
 
-                results.Add(new_record);
+                    results.Add(new_record);
+                }
             }
 
             return results;
@@ -147,6 +153,7 @@ namespace playback_reporting.Data
                 res_counters.RemoveFirst();
             }
 
+            /*
             foreach(Dictionary<string, object> counter in res_counters)
             {
                 string log_line = "";
@@ -156,7 +163,7 @@ namespace playback_reporting.Data
                 }
                 _logger.Info("Counter Data : " + log_line);
             }
-
+            */
         }
 
         public string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results)

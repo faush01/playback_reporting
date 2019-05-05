@@ -152,14 +152,23 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
-                var resource_url = "user_usage_stats/resource_usage?stamp=" + new Date().getTime();
-                resource_url = ApiClient.getUrl(resource_url);
+                var hours_selection = view.querySelector('#requested_number_hours');
+                hours_selection.addEventListener("change", process_click);
 
-                ApiClient.getServerData(resource_url).then(function (result_data) {
-               
-                    draw_graph(view, d3, result_data);
+                process_click();
 
-                });
+                function process_click() {
+
+                    var hours_value = hours_selection.options[hours_selection.selectedIndex].value;
+                    var resource_url = "user_usage_stats/resource_usage?hours=" + hours_value + "&stamp=" + new Date().getTime();
+                    resource_url = ApiClient.getUrl(resource_url);
+
+                    ApiClient.getServerData(resource_url).then(function (result_data) {
+
+                        draw_graph(view, d3, result_data);
+
+                    });
+                }
 
             });
 

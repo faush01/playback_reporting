@@ -38,7 +38,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/resource_usage", "GET", Summary = "Gets Resource Usage Info")]
     public class GetResourceUsageInfo : IReturn<Object>
     {
-
+        [ApiMember(Name = "hours", Description = "Number of Hours", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int hours { get; set; }
     }
 
     // http://localhost:8096/emby/user_usage_stats/session_list
@@ -830,7 +831,7 @@ namespace playback_reporting.Api
 
         public object Get(GetResourceUsageInfo request)
         {
-            List<Dictionary<string, object>> report = Repository.GetResourceCounters();
+            List<Dictionary<string, object>> report = Repository.GetResourceCounters(request.hours);
 
             return report;
         }

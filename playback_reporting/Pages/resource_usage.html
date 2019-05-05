@@ -5,9 +5,30 @@
 		<div class="content-primary">
 			<h2>Resource Usage</h2>
 
+			<table style="border: 1px solid #808080; padding: 1px;" cellpadding="1" cellspacing="1">
+				<tr>
+					<td>
+						&nbsp;<span id="span_days"></span>&nbsp;Hours&nbsp;&nbsp;
+					</td>
+					<td>
+						<select id="requested_number_hours">
+							<option value="1" selected>1</option>
+							<option value="3">3</option>
+							<option value="6">6</option>
+							<option value="9">9</option>
+							<option value="12">12</option>
+							<option value="15">15</option>
+							<option value="18">18</option>
+							<option value="21">21</option>
+							<option value="24">24</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+
 			<br />
 
-			<div style="width: 75%">
+			<div style="width: 95%">
 				<canvas id="resource_usage_chart_canvas"></canvas>
 			</div>
 
