@@ -32,6 +32,8 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Model.Dto;
+using System.Diagnostics;
+using System.Linq;
 
 namespace playback_reporting
 {
@@ -51,8 +53,8 @@ namespace playback_reporting
         private IActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
-            ILibraryManager libraryManager, 
-            IUserManager userManager, 
+            ILibraryManager libraryManager,
+            IUserManager userManager,
             IServerConfigurationManager config,
             IServerApplicationHost appHost,
             ILogManager logger,
@@ -87,6 +89,8 @@ namespace playback_reporting
 
             // start playback monitor
             System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
+
+            System.Threading.Tasks.Task.Run(() => ResourceMonitoringTask());
         }
 
         void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
@@ -127,7 +131,7 @@ namespace playback_reporting
 
                     thread_sleep = 20;
                 }
-                catch(Exception err)
+                catch (Exception err)
                 {
                     _logger.ErrorException("PlaybackMonitoringTask Exception", err);
 
@@ -282,7 +286,7 @@ namespace playback_reporting
             if (item.Type == "Episode")
             {
                 string series_name = item.SeriesName;
-                string season_no = String.Format("{0:D2}", item.ParentIndexNumber);   
+                string season_no = String.Format("{0:D2}", item.ParentIndexNumber);
                 string epp_no = String.Format("{0:D2}", item.IndexNumber);
                 item_name = series_name + " - s" + season_no + "e" + epp_no + " - " + item.Name;
             }
@@ -292,7 +296,7 @@ namespace playback_reporting
                 if (item.ArtistItems != null && item.AlbumArtists.Length > 0)
                 {
                     List<string> artists_list = new List<string>();
-                    foreach(var artist_pair in item.AlbumArtists)
+                    foreach (var artist_pair in item.AlbumArtists)
                     {
                         artists_list.Add(artist_pair.Name);
                     }
@@ -312,6 +316,130 @@ namespace playback_reporting
             }
 
             return item_name;
+        }
+
+        public async System.Threading.Tasks.Task ResourceMonitoringTask()
+        {
+            _logger.Info("ResourceMonitoringTask : Started");
+            DateTime last_run_time = DateTime.Now;
+            //double last_total_time = -1;
+
+            List<double> cpu_values = new List<double>();
+            List<double> mem_values = new List<double>();
+            Dictionary<string, double> process_list = new Dictionary<string, double>();
+
+            while (true)
+            {
+                try
+                {
+                    double total_mem = 0;
+                    double last_total_time = -1;
+                    double total_time = 0;
+                    int process_count = 0;
+                    int process_count_error = 0;
+                    List<string> current_proceses = new List<string>();
+
+                    foreach (var proc in Process.GetProcesses())
+                    {
+                        try
+                        {
+                            total_mem += proc.WorkingSet64;
+                            total_time += proc.TotalProcessorTime.TotalMilliseconds;
+                            process_count++;
+
+                            string process_key = proc.Id + "-" + proc.ProcessName;
+                            current_proceses.Add(process_key);
+                            if (process_list.ContainsKey(process_key))
+                            {
+                                last_total_time = last_total_time + process_list[process_key];
+                                process_list[process_key] = proc.TotalProcessorTime.TotalMilliseconds;
+                            }
+                            else
+                            {
+                                //_logger.Info("Adding Process: " + process_key);
+                                process_list.Add(process_key, proc.TotalProcessorTime.TotalMilliseconds);
+                            }
+
+                            //_logger.Info("Process Info : " + proc.ProcessName + " TT : " + proc.TotalProcessorTime.TotalMilliseconds);
+                        }
+                        catch(Exception e1)
+                        {
+                            process_count_error++;
+                        }
+                    }
+
+                    // remove exited processes
+                    string[] proc_keys = process_list.Keys.ToArray();
+                    foreach(string key in proc_keys)
+                    {
+                        if(current_proceses.Contains(key) == false)
+                        {
+                            //_logger.Info("Removing Process: " + key);
+                            process_list.Remove(key);
+                        }
+                    }
+
+
+                    if (last_total_time == -1)
+                    {
+                        last_total_time = total_time;
+                    }
+
+                    DateTime now = DateTime.Now;
+                    double time_diff = (now - last_run_time).TotalMilliseconds;
+                    double this_total = total_time - last_total_time;
+                    double cpuUsageTotal = this_total / (Environment.ProcessorCount * time_diff);
+                    double percentage = cpuUsageTotal * 100;
+
+                    last_run_time = now;
+                    //last_total_time = total_time;
+
+                    //_logger.Info("CPU: " + percentage + " Mem: " + total_mem + " P_count: " + process_count + " P_error: " + process_count_error + " core: " + Environment.ProcessorCount);
+
+                    cpu_values.Add(percentage);
+                    mem_values.Add(total_mem);
+
+                    /*
+                    Dictionary<string, object> counters = new Dictionary<string, object>();
+                    counters.Add("date", DateTime.Now);
+                    counters.Add("cpu", percentage);
+                    counters.Add("mem", total_mem);
+                    counters.Add("p_count", process_count);
+                    counters.Add("p_error", process_count_error);
+                    counters.Add("l_cores", Environment.ProcessorCount);
+                    _repository.AddResourceCounter(counters);
+                    */
+
+                    
+                    if (cpu_values.Count >= 6)
+                    {
+                        double cpu_running_average = cpu_values.Sum(x => Convert.ToDouble(x));
+                        cpu_running_average = cpu_running_average / cpu_values.Count;
+                        cpu_values.Clear();
+
+                        double mem_running_average = mem_values.Sum(x => Convert.ToDouble(x));
+                        mem_running_average = mem_running_average / mem_values.Count;
+                        mem_values.Clear();
+
+                        Dictionary<string, object> counters = new Dictionary<string, object>();
+                        counters.Add("date", DateTime.Now);
+                        counters.Add("cpu", cpu_running_average);
+                        counters.Add("mem", mem_running_average);
+                        counters.Add("p_count", process_count);
+                        counters.Add("p_error", process_count_error);
+                        counters.Add("l_cores", Environment.ProcessorCount);
+                        _repository.AddResourceCounter(counters);
+                    }
+                    
+                }
+                catch(Exception e)
+                {
+                    _logger.Debug("ResourceMonitoringTask Error: " + e.ToString());
+                    //_logger.ErrorException("ResourceMonitoringTask Error", e);
+                }
+
+                await System.Threading.Tasks.Task.Delay(10000);
+            }
         }
 
     }

@@ -34,6 +34,13 @@ using MediaBrowser.Controller.Session;
 namespace playback_reporting.Api
 {
 
+    // http://localhost:8096/emby/user_usage_stats/resource_usage
+    [Route("/user_usage_stats/resource_usage", "GET", Summary = "Gets Resource Usage Info")]
+    public class GetResourceUsageInfo : IReturn<Object>
+    {
+
+    }
+
     // http://localhost:8096/emby/user_usage_stats/session_list
     [Route("/user_usage_stats/session_list", "GET", Summary = "Gets Session Info")]
     public class GetSessionInfo : IReturn<Object>
@@ -817,6 +824,13 @@ namespace playback_reporting.Api
 
                 report.Add(data);
             }
+
+            return report;
+        }
+
+        public object Get(GetResourceUsageInfo request)
+        {
+            List<Dictionary<string, object>> report = Repository.GetResourceCounters();
 
             return report;
         }

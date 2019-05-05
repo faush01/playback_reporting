@@ -30,9 +30,11 @@ namespace playback_reporting.Data
     {
         private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
+        private ResourcesCounters resource_counters = null;
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
+            resource_counters = ResourcesCounters.Instance;
             DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
             _logger = logger;
@@ -112,6 +114,49 @@ namespace playback_reporting.Data
                     connection.Execute("create table if not exists UserList (UserId TEXT)");
                 }
             }
+        }
+
+        public List<Dictionary<string, object>> GetResourceCounters()
+        {
+            List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
+
+            var res_counters = resource_counters.GetCounters();
+            foreach (Dictionary<string, object> counter in res_counters)
+            {
+                Dictionary<string, object> new_record = new Dictionary<string, object>();
+
+                string date_string = ((DateTime)counter["date"]).ToString("yyyy-MM-dd HH:mm:ss");
+                new_record.Add("date", date_string);
+                double cpu = Math.Round((double)counter["cpu"], 1);
+                new_record.Add("cpu", cpu);
+                double mem = Math.Round((double)counter["mem"], 0);
+                new_record.Add("mem", mem);
+
+                results.Add(new_record);
+            }
+
+            return results;
+        }
+
+        public void AddResourceCounter(Dictionary<string, object> counters)
+        {
+            var res_counters = resource_counters.GetCounters();
+            res_counters.AddLast(counters);
+            if (res_counters.Count > 1440)
+            {
+                res_counters.RemoveFirst();
+            }
+
+            foreach(Dictionary<string, object> counter in res_counters)
+            {
+                string log_line = "";
+                foreach(KeyValuePair<string, object> line in counter)
+                {
+                    log_line += line.Key + ":" + line.Value + "  ";
+                }
+                _logger.Info("Counter Data : " + log_line);
+            }
+
         }
 
         public string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results)

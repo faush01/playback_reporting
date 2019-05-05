@@ -21,6 +21,10 @@ function getTabs() {
             name: 'Active'
         },
         {
+            href: Dashboard.getConfigurationPageUrl('resource_usage'),
+            name: 'Resources'
+        },
+        {
             href: Dashboard.getConfigurationPageUrl('user_report'),
             name: 'Users'
         },
