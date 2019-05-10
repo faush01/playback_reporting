@@ -328,6 +328,11 @@ namespace playback_reporting
             Dictionary<string, double> process_list = new Dictionary<string, double>();
             StringBuilder error_proceses = new StringBuilder(4096);
 
+            string main_module_filename = Process.GetCurrentProcess().MainModule.FileName;
+            _logger.Debug("MainModule FileName:{0}", main_module_filename);
+            string main_module_path = System.IO.Path.GetDirectoryName(main_module_filename);
+            _logger.Debug("App Path:{0}", main_module_path);
+
             while (true)
             {
                 try
@@ -344,6 +349,14 @@ namespace playback_reporting
                     {
                         try
                         {
+                            //string proc_app_path = System.IO.Path.GetDirectoryName(proc.MainModule.FileName);
+                            //_logger.Debug("Proc main_module_path:{0}", proc_app_path);
+
+                            //if (main_module_path != proc_app_path)
+                            //{
+                            //    continue;
+                            //}
+
                             total_mem += proc.WorkingSet64;
                             total_time += proc.TotalProcessorTime.TotalMilliseconds;
                             process_count++;
@@ -365,7 +378,7 @@ namespace playback_reporting
                         }
                         catch(Exception e1)
                         {
-                            error_proceses.Append(proc.ProcessName + "|");
+                            error_proceses.Append(proc.ProcessName + "(" + e1.Message + ")|");
                             process_count_error++;
                         }
                     }
