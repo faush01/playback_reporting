@@ -320,24 +320,25 @@ namespace playback_reporting
 
         public async System.Threading.Tasks.Task ResourceMonitoringTask()
         {
-            _logger.Info("ResourceMonitoringTask : Started");
+            _logger.Info("ResourceMonitoringTask:Started");
             DateTime last_run_time = DateTime.Now;
-            //double last_total_time = -1;
 
             List<double> cpu_values = new List<double>();
-            List<double> mem_values = new List<double>();
+            List<long> mem_values = new List<long>();
             Dictionary<string, double> process_list = new Dictionary<string, double>();
+            StringBuilder error_proceses = new StringBuilder(4096);
 
             while (true)
             {
                 try
                 {
-                    double total_mem = 0;
+                    long total_mem = 0;
                     double last_total_time = -1;
                     double total_time = 0;
                     int process_count = 0;
                     int process_count_error = 0;
                     List<string> current_proceses = new List<string>();
+                    error_proceses.Clear();
 
                     foreach (var proc in Process.GetProcesses())
                     {
@@ -356,14 +357,15 @@ namespace playback_reporting
                             }
                             else
                             {
-                                //_logger.Info("Adding Process: " + process_key);
+                                _logger.Debug("Adding Process:{0}", process_key);
                                 process_list.Add(process_key, proc.TotalProcessorTime.TotalMilliseconds);
                             }
 
-                            //_logger.Info("Process Info : " + proc.ProcessName + " TT : " + proc.TotalProcessorTime.TotalMilliseconds);
+                            _logger.Debug("Process Info:{0} TT:{1} WS:{2}", proc.ProcessName, proc.TotalProcessorTime.TotalMilliseconds, proc.WorkingSet64);
                         }
                         catch(Exception e1)
                         {
+                            error_proceses.Append(proc.ProcessName + "|");
                             process_count_error++;
                         }
                     }
@@ -374,7 +376,7 @@ namespace playback_reporting
                     {
                         if(current_proceses.Contains(key) == false)
                         {
-                            //_logger.Info("Removing Process: " + key);
+                            _logger.Debug("Removing Process:{0}", key);
                             process_list.Remove(key);
                         }
                     }
@@ -392,9 +394,9 @@ namespace playback_reporting
                     double percentage = cpuUsageTotal * 100;
 
                     last_run_time = now;
-                    //last_total_time = total_time;
 
-                    //_logger.Info("CPU: " + percentage + " Mem: " + total_mem + " P_count: " + process_count + " P_error: " + process_count_error + " core: " + Environment.ProcessorCount);
+                    _logger.Debug("CPU:{0} Mem:{1} P_count:{2} P_error:{3} core:{4}", percentage, total_mem, process_count, process_count_error, Environment.ProcessorCount);
+                    _logger.Debug("Process Error List:{0}", error_proceses);
 
                     cpu_values.Add(percentage);
                     mem_values.Add(total_mem);
@@ -417,7 +419,7 @@ namespace playback_reporting
                         cpu_running_average = cpu_running_average / cpu_values.Count;
                         cpu_values.Clear();
 
-                        double mem_running_average = mem_values.Sum(x => Convert.ToDouble(x));
+                        long mem_running_average = mem_values.Sum(x => Convert.ToInt64(x));
                         mem_running_average = mem_running_average / mem_values.Count;
                         mem_values.Clear();
 
@@ -434,8 +436,7 @@ namespace playback_reporting
                 }
                 catch(Exception e)
                 {
-                    _logger.Debug("ResourceMonitoringTask Error: " + e.ToString());
-                    //_logger.ErrorException("ResourceMonitoringTask Error", e);
+                    _logger.Debug("ResourceMonitoringTask Error: {0}", e);
                 }
 
                 await System.Threading.Tasks.Task.Delay(10000);

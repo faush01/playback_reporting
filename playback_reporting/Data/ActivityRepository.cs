@@ -134,8 +134,12 @@ namespace playback_reporting.Data
                     new_record.Add("date", date_string);
                     double cpu = Math.Round((double)counter["cpu"], 1);
                     new_record.Add("cpu", cpu);
-                    double mem = Math.Round((double)counter["mem"], 0);
+                    long mem = (long)counter["mem"];
                     new_record.Add("mem", mem);
+                    int p_count = (int)counter["p_count"];
+                    new_record.Add("p_count", p_count);
+                    int p_error = (int)counter["p_error"];
+                    new_record.Add("p_error", p_error);
 
                     results.Add(new_record);
                 }

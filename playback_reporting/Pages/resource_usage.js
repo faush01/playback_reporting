@@ -63,11 +63,18 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
         var server_load_data = [];
         var server_mem_data = [];
+        var process_count = [];
+        var process_count_error = [];
         for (var index = 0; index < resource_data.length; ++index) {
             var resource_counter = resource_data[index];
+
             server_load_data.push({ x: resource_counter.date, y: resource_counter.cpu });
+
             var mem_value = Math.round(resource_counter.mem / (1024 * 1024));
             server_mem_data.push({ x: resource_counter.date, y: mem_value });
+
+            process_count.push({ x: resource_counter.date, y: resource_counter.p_count });
+            process_count_error.push({ x: resource_counter.date, y: resource_counter.p_error });
         }
         console.log("resource_data_len: " + index);
 
@@ -91,6 +98,24 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     fill: false,
                     data: server_mem_data,
                     yAxisID: "y-axis-2"
+                },
+                {
+                    label: 'Process Count',
+                    backgroundColor: '#007777',
+                    borderColor: '#666666',
+                    fill: false,
+                    data: process_count,
+                    yAxisID: "y-axis-2",
+                    hidden: true
+                },
+                {
+                    label: 'Process Errors',
+                    backgroundColor: '#777700',
+                    borderColor: '#666666',
+                    fill: false,
+                    data: process_count_error,
+                    yAxisID: "y-axis-2",
+                    hidden: true
                 }]
             },
             options: {
@@ -112,8 +137,8 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     }],
                     yAxes: [{
                         scaleLabel: {
-                            display: true,
-                            labelString: 'CPU'
+                            display: false,
+                            labelString: 'value'
                         },
                         beginAtZero: true,
                         type: 'linear',
@@ -123,8 +148,8 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     },
                     {
                         scaleLabel: {
-                            display: true,
-                            labelString: 'MEM MB'
+                            display: false,
+                            labelString: 'value'
                         },
                         beginAtZero: true,
                         type: 'linear',
