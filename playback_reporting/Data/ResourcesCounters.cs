@@ -24,6 +24,7 @@ namespace playback_reporting.Data
     {
         private static readonly ResourcesCounters instance = new ResourcesCounters();
         private LinkedList<Dictionary<string, object>> resources = new LinkedList<Dictionary<string, object>>();
+        private Dictionary<string, ProcessDetails> process_list = new Dictionary<string, ProcessDetails>();
 
         static ResourcesCounters()
         {
@@ -44,6 +45,11 @@ namespace playback_reporting.Data
         public LinkedList<Dictionary<string, object>> GetCounters()
         {
             return resources;
+        }
+
+        public Dictionary<string, ProcessDetails> GetProcessList()
+        {
+            return process_list;
         }
 
     }

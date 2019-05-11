@@ -63,8 +63,6 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
         var server_load_data = [];
         var server_mem_data = [];
-        var process_count = [];
-        var process_count_error = [];
         for (var index = 0; index < resource_data.length; ++index) {
             var resource_counter = resource_data[index];
 
@@ -72,9 +70,6 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
             var mem_value = Math.round(resource_counter.mem / (1024 * 1024));
             server_mem_data.push({ x: resource_counter.date, y: mem_value });
-
-            process_count.push({ x: resource_counter.date, y: resource_counter.p_count });
-            process_count_error.push({ x: resource_counter.date, y: resource_counter.p_error });
         }
         console.log("resource_data_len: " + index);
 
@@ -98,24 +93,6 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     fill: false,
                     data: server_mem_data,
                     yAxisID: "y-axis-2"
-                },
-                {
-                    label: 'Process Count',
-                    backgroundColor: '#007777',
-                    borderColor: '#666666',
-                    fill: false,
-                    data: process_count,
-                    yAxisID: "y-axis-2",
-                    hidden: true
-                },
-                {
-                    label: 'Process Errors',
-                    backgroundColor: '#777700',
-                    borderColor: '#666666',
-                    fill: false,
-                    data: process_count_error,
-                    yAxisID: "y-axis-2",
-                    hidden: true
                 }]
             },
             options: {
@@ -166,6 +143,55 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         console.log("Chart Done");
     }
 
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function show_process_list(view, process_list_data) {
+
+        //console.log("process_list_data: " + JSON.stringify(process_list_data));
+
+        var sort_order_selection = view.querySelector('#process_list_sort_order');
+        var sort_order = sort_order_selection.options[sort_order_selection.selectedIndex].value;
+
+        if (sort_order === "id") {
+            process_list_data.sort((a, b) => (a.id > b.id) ? 1 : -1);
+        }
+        else if (sort_order === "name") {
+            process_list_data.sort((a, b) => (a.name > b.name) ? 1 : -1);
+        }
+        else if (sort_order === "mem") {
+            process_list_data.sort((a, b) => (a.mem < b.mem) ? 1 : -1);
+        }
+        else {
+            process_list_data.sort((a, b) => (a.cpu < b.cpu) ? 1 : -1);
+        }
+
+        var table_body = view.querySelector('#process_list_results');
+
+        var table_rows = "";
+
+        process_list_data.forEach(function (item_details, index) {
+            table_rows += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+            table_rows += "<td style='padding-right: 20px'>" + item_details.id + "</td>";
+            table_rows += "<td style='padding-right: 20px'>" + item_details.name + "</td>";
+            table_rows += "<td style='padding-right: 20px'>" + item_details.cpu + "</td>";
+            table_rows += "<td style='padding-right: 20px'>" + formatBytes(item_details.mem, 2) + "</td>";
+            table_rows += "<td style='padding-right: 20px'>" + item_details.error + "</td>";
+            table_rows += "</tr>";
+        });
+
+        table_body.innerHTML = table_rows;
+    }
+
 
     return function (view, params) {
 
@@ -180,6 +206,9 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                 var hours_selection = view.querySelector('#requested_number_hours');
                 hours_selection.addEventListener("change", process_click);
 
+                var chart_refresh_button = view.querySelector('#resource_chart_refresh');
+                chart_refresh_button.addEventListener("click", process_click);
+                
                 process_click();
 
                 function process_click() {
@@ -196,6 +225,22 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                 }
 
             });
+
+            var refresh_button = view.querySelector('#process_list_refresh');
+            refresh_button.addEventListener("click", reresh_process_table);
+
+            var sort_type = view.querySelector('#process_list_sort_order');
+            sort_type.addEventListener("change", reresh_process_table);
+
+            reresh_process_table();
+
+            function reresh_process_table() {
+                var process_list_url = "user_usage_stats/process_list?stamp=" + new Date().getTime();
+                process_list_url = ApiClient.getUrl(process_list_url);
+                ApiClient.getServerData(process_list_url).then(function (result_data) {
+                    show_process_list(view, result_data);
+                });
+            }
 
         });
 

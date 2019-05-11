@@ -325,107 +325,111 @@ namespace playback_reporting
 
             List<double> cpu_values = new List<double>();
             List<long> mem_values = new List<long>();
-            Dictionary<string, double> process_list = new Dictionary<string, double>();
-            StringBuilder error_proceses = new StringBuilder(4096);
 
-            string main_module_filename = Process.GetCurrentProcess().MainModule.FileName;
-            _logger.Debug("MainModule FileName:{0}", main_module_filename);
-            string main_module_path = System.IO.Path.GetDirectoryName(main_module_filename);
-            _logger.Debug("App Path:{0}", main_module_path);
+            ResourcesCounters resource_counters = ResourcesCounters.Instance;
+            Dictionary<string, ProcessDetails> process_list = resource_counters.GetProcessList();
 
             while (true)
             {
                 try
                 {
-                    long total_mem = 0;
-                    double last_total_time = -1;
-                    double total_time = 0;
-                    int process_count = 0;
-                    int process_count_error = 0;
                     List<string> current_proceses = new List<string>();
-                    error_proceses.Clear();
 
                     foreach (var proc in Process.GetProcesses())
                     {
                         try
                         {
-                            //string proc_app_path = System.IO.Path.GetDirectoryName(proc.MainModule.FileName);
-                            //_logger.Debug("Proc main_module_path:{0}", proc_app_path);
-
-                            //if (main_module_path != proc_app_path)
-                            //{
-                            //    continue;
-                            //}
-
-                            total_mem += proc.WorkingSet64;
-                            total_time += proc.TotalProcessorTime.TotalMilliseconds;
-                            process_count++;
-
                             string process_key = proc.Id + "-" + proc.ProcessName;
                             current_proceses.Add(process_key);
+
+                            ProcessDetails proc_details = null;
+
                             if (process_list.ContainsKey(process_key))
                             {
-                                last_total_time = last_total_time + process_list[process_key];
-                                process_list[process_key] = proc.TotalProcessorTime.TotalMilliseconds;
+                                proc_details = process_list[process_key];
+                                proc_details.Memory = proc.WorkingSet64;
+                                proc_details.Error = "";
+                                DateTime now = DateTime.Now;
+                                double proc_total_ms = 0;
+                                try
+                                {
+                                    proc_total_ms = proc.TotalProcessorTime.TotalMilliseconds;
+                                }
+                                catch(Exception e)
+                                {
+                                    proc_details.Error = "Error getting TotalProcessorTime";
+                                }
+
+                                if (proc_total_ms > 0 && proc_details.LastSampleTime != DateTime.MinValue)
+                                {
+                                    double time_diff = (now - proc_details.LastSampleTime).TotalMilliseconds;
+                                    double proc_time_diff = proc_total_ms - proc_details.TotalMilliseconds_last;
+                                    double cpuUsageTotal = proc_time_diff / (Environment.ProcessorCount * time_diff);
+                                    proc_details.CpuUsage = cpuUsageTotal * 100;
+                                }
+                                else
+                                {
+                                    proc_details.CpuUsage = 0;
+                                }
+
+                                proc_details.LastSampleTime = now;
+                                proc_details.TotalMilliseconds_last = proc_total_ms;
+
+                                process_list[process_key] = proc_details;
                             }
                             else
                             {
                                 _logger.Debug("Adding Process:{0}", process_key);
-                                process_list.Add(process_key, proc.TotalProcessorTime.TotalMilliseconds);
+                                proc_details = new ProcessDetails(proc);
+                                process_list.Add(process_key, proc_details);
                             }
 
-                            _logger.Debug("Process Info:{0} TT:{1} WS:{2}", proc.ProcessName, proc.TotalProcessorTime.TotalMilliseconds, proc.WorkingSet64);
+                            _logger.Debug("Process Info:{0}", proc_details);
                         }
-                        catch(Exception e1)
+                        catch (Exception e1)
                         {
-                            error_proceses.Append(proc.ProcessName + "(" + e1.Message + ")|");
-                            process_count_error++;
+                            string process_key = proc.Id + "-" + proc.ProcessName;
+                            if (process_list.ContainsKey(process_key))
+                            {
+                                ProcessDetails proc_details = process_list[process_key];
+                                proc_details.Error = e1.Message;
+                            }
+                            else
+                            {
+                                ProcessDetails proc_details = new ProcessDetails();
+                                proc_details.Id = proc.Id;
+                                proc_details.Name = proc.ProcessName;
+                                proc_details.Error = e1.Message;
+                                process_list.Add(process_key, proc_details);
+                            }
                         }
                     }
 
-                    // remove exited processes
+                    // calculate totals
+                    double total_cpu = 0;
+                    long total_mem = 0;
                     string[] proc_keys = process_list.Keys.ToArray();
-                    foreach(string key in proc_keys)
+                    foreach (string key in proc_keys)
                     {
-                        if(current_proceses.Contains(key) == false)
+                        if (current_proceses.Contains(key) == false)
                         {
                             _logger.Debug("Removing Process:{0}", key);
                             process_list.Remove(key);
                         }
+                        else
+                        {
+                            ProcessDetails proc_details = process_list[key];
+
+                            total_cpu += proc_details.CpuUsage;
+                            total_mem += proc_details.Memory;
+                        }
                     }
 
+                    _logger.Debug("CPU:{0} Mem:{1}", total_cpu, total_mem);
 
-                    if (last_total_time == -1)
-                    {
-                        last_total_time = total_time;
-                    }
-
-                    DateTime now = DateTime.Now;
-                    double time_diff = (now - last_run_time).TotalMilliseconds;
-                    double this_total = total_time - last_total_time;
-                    double cpuUsageTotal = this_total / (Environment.ProcessorCount * time_diff);
-                    double percentage = cpuUsageTotal * 100;
-
-                    last_run_time = now;
-
-                    _logger.Debug("CPU:{0} Mem:{1} P_count:{2} P_error:{3} core:{4}", percentage, total_mem, process_count, process_count_error, Environment.ProcessorCount);
-                    _logger.Debug("Process Error List:{0}", error_proceses);
-
-                    cpu_values.Add(percentage);
+                    cpu_values.Add(total_cpu);
                     mem_values.Add(total_mem);
 
-                    /*
-                    Dictionary<string, object> counters = new Dictionary<string, object>();
-                    counters.Add("date", DateTime.Now);
-                    counters.Add("cpu", percentage);
-                    counters.Add("mem", total_mem);
-                    counters.Add("p_count", process_count);
-                    counters.Add("p_error", process_count_error);
-                    counters.Add("l_cores", Environment.ProcessorCount);
-                    _repository.AddResourceCounter(counters);
-                    */
-
-                    
                     if (cpu_values.Count >= 6)
                     {
                         double cpu_running_average = cpu_values.Sum(x => Convert.ToDouble(x));
@@ -440,14 +444,11 @@ namespace playback_reporting
                         counters.Add("date", DateTime.Now);
                         counters.Add("cpu", cpu_running_average);
                         counters.Add("mem", mem_running_average);
-                        counters.Add("p_count", process_count);
-                        counters.Add("p_error", process_count_error);
-                        counters.Add("l_cores", Environment.ProcessorCount);
                         _repository.AddResourceCounter(counters);
                     }
-                    
+
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     _logger.Debug("ResourceMonitoringTask Error: {0}", e);
                 }
@@ -455,6 +456,5 @@ namespace playback_reporting
                 await System.Threading.Tasks.Task.Delay(10000);
             }
         }
-
     }
 }

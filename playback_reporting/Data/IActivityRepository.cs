@@ -44,5 +44,6 @@ namespace playback_reporting.Data
         List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types);
         void AddResourceCounter(Dictionary<string, object> counters);
         List<Dictionary<string, object>> GetResourceCounters(int hours);
+        List<Dictionary<string, object>> GetProcessList();
     }
 }

@@ -116,6 +116,27 @@ namespace playback_reporting.Data
             }
         }
 
+        public List<Dictionary<string, object>> GetProcessList()
+        {
+            List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
+
+            var res_counters = resource_counters.GetProcessList();
+            foreach(ProcessDetails proc_details in res_counters.Values)
+            {
+                Dictionary<string, object> new_record = new Dictionary<string, object>();
+
+                new_record.Add("id", proc_details.Id);
+                new_record.Add("name", proc_details.Name);
+                new_record.Add("cpu", Math.Round((double)proc_details.CpuUsage, 1));
+                new_record.Add("mem", proc_details.Memory);
+                new_record.Add("error", proc_details.Error);
+
+                results.Add(new_record);
+            }
+
+            return results;
+        }
+
         public List<Dictionary<string, object>> GetResourceCounters(int hours)
         {
             List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
@@ -136,10 +157,6 @@ namespace playback_reporting.Data
                     new_record.Add("cpu", cpu);
                     long mem = (long)counter["mem"];
                     new_record.Add("mem", mem);
-                    int p_count = (int)counter["p_count"];
-                    new_record.Add("p_count", p_count);
-                    int p_error = (int)counter["p_error"];
-                    new_record.Add("p_error", p_error);
 
                     results.Add(new_record);
                 }

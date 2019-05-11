@@ -34,6 +34,13 @@ using MediaBrowser.Controller.Session;
 namespace playback_reporting.Api
 {
 
+    // http://localhost:8096/emby/user_usage_stats/process_list
+    [Route("/user_usage_stats/process_list", "GET", Summary = "Gets a list of process Info")]
+    public class GetProcessList : IReturn<Object>
+    {
+
+    }
+
     // http://localhost:8096/emby/user_usage_stats/resource_usage
     [Route("/user_usage_stats/resource_usage", "GET", Summary = "Gets Resource Usage Info")]
     public class GetResourceUsageInfo : IReturn<Object>
@@ -832,7 +839,12 @@ namespace playback_reporting.Api
         public object Get(GetResourceUsageInfo request)
         {
             List<Dictionary<string, object>> report = Repository.GetResourceCounters(request.hours);
+            return report;
+        }
 
+        public object Get(GetProcessList request)
+        {
+            List<Dictionary<string, object>> report = Repository.GetProcessList();
             return report;
         }
 

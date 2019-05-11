@@ -23,6 +23,9 @@
 							<option value="24">24</option>
 						</select>
 					</td>
+					<td>
+						<button id="resource_chart_refresh">&#8634;</button>
+					</td>
 				</tr>
 			</table>
 
@@ -31,6 +34,32 @@
 			<div style="width: 95%">
 				<canvas id="resource_usage_chart_canvas"></canvas>
 			</div>
+
+			<br />
+			<h3>Process List</h3>
+			Sort By :  
+			<select id="process_list_sort_order">
+				<option value="id">Id</option>
+				<option value="name">Name</option>
+				<option value="cpu" selected>Cpu</option>
+				<option value="mem">Mem</option>
+			</select>
+			<button id="process_list_refresh">&#8634;</button>
+			<br />
+			<br />
+			<table cellpadding="1" id="process_list_table">
+				<thead>
+					<tr style="text-align: left;">
+						<th class="detailTableHeaderCell" data-priority="2">Id</th>
+						<th class="detailTableHeaderCell" data-priority="1">Name</th>
+						<th class="detailTableHeaderCell" data-priority="3">Cpu</th>
+						<th class="detailTableHeaderCell" data-priority="3">Mem</th>
+						<th class="detailTableHeaderCell" data-priority="3">Message</th>
+					</tr>
+				</thead>
+				<tbody class="resultBody" id="process_list_results"></tbody>
+			</table>
+
 
 		</div>
 	</div>
