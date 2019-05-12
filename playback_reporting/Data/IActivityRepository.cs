@@ -45,5 +45,6 @@ namespace playback_reporting.Data
         void AddResourceCounter(Dictionary<string, object> counters);
         List<Dictionary<string, object>> GetResourceCounters(int hours);
         List<Dictionary<string, object>> GetProcessList();
+        List<KeyValuePair<string, int>> GetPlayActivityCounts(int hours);
     }
 }

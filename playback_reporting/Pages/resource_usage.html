@@ -37,15 +37,26 @@
 
 			<br />
 			<h3>Process List</h3>
-			Sort By :  
-			<select id="process_list_sort_order">
-				<option value="id">Id</option>
-				<option value="name">Name</option>
-				<option value="cpu" selected>Cpu</option>
-				<option value="mem">Mem</option>
-			</select>
-			<button id="process_list_refresh">&#8634;</button>
-			<br />
+
+			<table style="border: 1px solid #808080; padding: 1px;" cellpadding="1" cellspacing="1">
+				<tr>
+					<td>
+						&nbsp;<span id="span_days"></span>&nbsp;Sort By&nbsp;&nbsp;
+					</td>
+					<td>
+						<select id="process_list_sort_order">
+							<option value="id">Id</option>
+							<option value="name">Name</option>
+							<option value="cpu" selected>Cpu</option>
+							<option value="mem">Mem</option>
+						</select>
+					</td>
+					<td>
+						<button id="process_list_refresh">&#8634;</button>
+					</td>
+				</tr>
+			</table>
+
 			<br />
 			<table cellpadding="1" id="process_list_table">
 				<thead>

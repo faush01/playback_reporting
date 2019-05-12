@@ -23,6 +23,8 @@ using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Globalization;
 
 namespace playback_reporting.Data
 {
@@ -114,6 +116,63 @@ namespace playback_reporting.Data
                     connection.Execute("create table if not exists UserList (UserId TEXT)");
                 }
             }
+        }
+
+        public List<KeyValuePair<string, int>> GetPlayActivityCounts(int hours)
+        {
+            string sql =
+                "SELECT " + 
+                "DateCreated AS StartTime, " +
+                "PlayDuration, " +
+                "datetime(DateCreated, '+' || CAST(PlayDuration AS VARCHAR) || ' seconds') AS EndTime " + 
+                "FROM PlaybackActivity " +
+                "WHERE EndTime > @start_time";
+
+            DateTime start_date_sql = DateTime.Now.AddHours(-1 * hours);
+
+            Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
+            using (WriteLock.Read())
+            {
+                using (var connection = CreateConnection(true))
+                {
+                    using (var statement = connection.PrepareStatement(sql))
+                    {
+                        statement.TryBind("@start_time", start_date_sql.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            DateTime start_time = row[0].ReadDateTime().ToLocalTime();
+                            int duration = row[1].ToInt();
+                            DateTime end_time = start_time.AddSeconds(duration);
+
+                            actions.Add(start_time, 1);
+                            actions.Add(end_time, 0);
+
+                            _logger.Info("Play Action : " + start_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + " - " + end_time.ToString("yyyy-MM-dd HH:mm:ss.fffff"));
+                        }
+                    }
+                }
+            }
+
+            List<KeyValuePair<string, int>> results = new List<KeyValuePair<string, int>>();
+            List<DateTime> keyList = actions.Keys.ToList();
+            keyList.Sort();
+            int count = 0;
+            foreach(DateTime key in keyList)
+            {
+                if (actions[key] == 1)
+                {
+                    count++;
+                }
+                else if (actions[key] == 0)
+                {
+                    count--;
+                }
+                results.Add(new KeyValuePair<string, int>(key.ToString("yyyy-MM-dd HH:mm:ss"), count));
+                _logger.Info("Play Count : " + key.ToString("yyyy-MM-dd HH:mm:ss.fffff") + " - " + count);
+            }
+
+            return results;
         }
 
         public List<Dictionary<string, object>> GetProcessList()

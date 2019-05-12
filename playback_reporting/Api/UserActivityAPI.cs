@@ -838,8 +838,14 @@ namespace playback_reporting.Api
 
         public object Get(GetResourceUsageInfo request)
         {
-            List<Dictionary<string, object>> report = Repository.GetResourceCounters(request.hours);
-            return report;
+            List<Dictionary<string, object>> counters = Repository.GetResourceCounters(request.hours);
+            List<KeyValuePair<string, int>> play_counts = Repository.GetPlayActivityCounts(request.hours);
+
+            Dictionary<string, object> results = new Dictionary<string, object>();
+            results.Add("counters", counters);
+            results.Add("play_counts", play_counts);
+
+            return results;
         }
 
         public object Get(GetProcessList request)

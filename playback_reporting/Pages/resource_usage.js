@@ -61,17 +61,31 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         }];
         */
 
+        var counter_data = resource_data.counters;
         var server_load_data = [];
         var server_mem_data = [];
-        for (var index = 0; index < resource_data.length; ++index) {
-            var resource_counter = resource_data[index];
+        for (var index = 0; index < counter_data.length; ++index) {
+            var resource_counter = counter_data[index];
 
             server_load_data.push({ x: resource_counter.date, y: resource_counter.cpu });
 
             var mem_value = Math.round(resource_counter.mem / (1024 * 1024));
             server_mem_data.push({ x: resource_counter.date, y: mem_value });
         }
-        console.log("resource_data_len: " + index);
+        console.log("counter_data_len: " + index);
+
+        var play_counts = [];
+        var play_counts_data = resource_data.play_counts;
+        var lastr_count = 0;
+        for (var index2 = 0; index2 < play_counts_data.length; ++index2) {
+            var play_counter = play_counts_data[index2];
+
+            play_counts.push({ x: play_counter.Key, y: lastr_count });
+            play_counts.push({ x: play_counter.Key, y: play_counter.Value });
+
+            lastr_count = play_counter.Value;
+        }
+
 
         var timeFormat = 'YYYY/MM/DD HH:mm:ss';
 
@@ -80,18 +94,27 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
             data: {
                 datasets: [{
                     label: 'CPU Load',
-                    backgroundColor: '#FF0000',
-                    borderColor: '#666666',
+                    backgroundColor: color_list[0],
+                    borderColor: color_list[0],
                     fill: false,
                     data: server_load_data,
                     yAxisID: "y-axis-1"
                 },
                 {
                     label: 'MEM Used (MB)',
-                    backgroundColor: '#0000FF',
-                    borderColor: '#666666',
+                    backgroundColor: color_list[1],
+                    borderColor: color_list[1],
                     fill: false,
                     data: server_mem_data,
+                    yAxisID: "y-axis-2"
+                },
+                {
+                    label: 'Playback Count',
+                    backgroundColor: color_list[2],
+                    borderColor: color_list[2],
+                    fill: false,
+                    data: play_counts,
+                    lineTension: 0,
                     yAxisID: "y-axis-2"
                 }]
             },

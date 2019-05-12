@@ -26,10 +26,14 @@ ORDER BY date(DateCreated) ASC
 
 SELECT
 ItemId,
+ItemName,
 DateCreated AS StartTime,
-datetime(DateCreated , '+' || CAST(PlayDuration AS VARCHAR) || ' seconds') AS EndTime
-FROM PlaybackActivity 
-LIMIT 10
+datetime(DateCreated , '+' || CAST(PlayDuration AS VARCHAR) || ' seconds') AS EndTime,
+PlayDuration 
+FROM PlaybackActivity
+WHERE StartTime > datetime('now', '-1 day')
+
+
 
 -->
 
