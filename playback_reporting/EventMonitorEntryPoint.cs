@@ -348,7 +348,6 @@ namespace playback_reporting
                             {
                                 proc_details = process_list[process_key];
                                 proc_details.Memory = proc.WorkingSet64;
-                                proc_details.Error = "";
                                 DateTime now = DateTime.Now;
                                 double proc_total_ms = 0;
                                 try
@@ -357,7 +356,10 @@ namespace playback_reporting
                                 }
                                 catch(Exception e)
                                 {
-                                    proc_details.Error = "Error getting TotalProcessorTime";
+                                    if (string.IsNullOrEmpty(proc_details.Error))
+                                    {
+                                        proc_details.Error = "TotalProcessorTime:" + e.Message;
+                                    }
                                 }
 
                                 if (proc_total_ms > 0 && proc_details.LastSampleTime != DateTime.MinValue)
@@ -379,12 +381,10 @@ namespace playback_reporting
                             }
                             else
                             {
-                                _logger.Debug("Adding Process:{0}", process_key);
                                 proc_details = new ProcessDetails(proc);
+                                _logger.Debug("Adding Process:{0}", proc_details);
                                 process_list.Add(process_key, proc_details);
                             }
-
-                            _logger.Debug("Process Info:{0}", proc_details);
                         }
                         catch (Exception e1)
                         {
@@ -413,7 +413,8 @@ namespace playback_reporting
                     {
                         if (current_proceses.Contains(key) == false)
                         {
-                            _logger.Debug("Removing Process:{0}", key);
+                            ProcessDetails proc_details = process_list[key];
+                            _logger.Debug("Removing Process:{0}", proc_details);
                             process_list.Remove(key);
                         }
                         else
@@ -425,7 +426,7 @@ namespace playback_reporting
                         }
                     }
 
-                    _logger.Debug("CPU:{0} Mem:{1}", total_cpu, total_mem);
+                    //_logger.Debug("CPU:{0} Mem:{1}", total_cpu, total_mem);
 
                     cpu_values.Add(total_cpu);
                     mem_values.Add(total_mem);
