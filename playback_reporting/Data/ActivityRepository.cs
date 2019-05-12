@@ -121,7 +121,8 @@ namespace playback_reporting.Data
         public List<KeyValuePair<string, int>> GetPlayActivityCounts(int hours)
         {
             string sql =
-                "SELECT " + 
+                "SELECT " +
+                "ItemId, " +
                 "DateCreated AS StartTime, " +
                 "PlayDuration, " +
                 "datetime(DateCreated, '+' || CAST(PlayDuration AS VARCHAR) || ' seconds') AS EndTime " + 
@@ -130,7 +131,9 @@ namespace playback_reporting.Data
 
             DateTime start_date_sql = DateTime.Now.AddHours(-1 * hours);
 
-            Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
+            //Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
+
+            Dictionary<string, KeyValuePair<DateTime, int>> actions = new Dictionary<string, KeyValuePair<DateTime, int>>();
             using (WriteLock.Read())
             {
                 using (var connection = CreateConnection(true))
@@ -141,35 +144,42 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            DateTime start_time = row[0].ReadDateTime().ToLocalTime();
-                            int duration = row[1].ToInt();
+                            string item_id = row[0].ToString();
+                            DateTime start_time = row[1].ReadDateTime().ToLocalTime();
+                            int duration = row[2].ToInt();
                             DateTime end_time = start_time.AddSeconds(duration);
 
-                            actions.Add(start_time, 1);
-                            actions.Add(end_time, 0);
+                            string start_key = start_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + "-" + item_id + "-A";
+                            KeyValuePair<DateTime, int> data_start = new KeyValuePair<DateTime, int>(start_time, 1);
+                            string end_key = end_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + "-" + item_id + "-B";
+                            KeyValuePair<DateTime, int> data_end = new KeyValuePair<DateTime, int>(end_time, 0);
 
-                            _logger.Info("Play Action : " + start_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + " - " + end_time.ToString("yyyy-MM-dd HH:mm:ss.fffff"));
+                            _logger.Info("Play Action : " + start_key + " - " + end_key);
+
+                            actions.Add(start_key, data_start);
+                            actions.Add(end_key, data_end);
                         }
                     }
                 }
             }
 
             List<KeyValuePair<string, int>> results = new List<KeyValuePair<string, int>>();
-            List<DateTime> keyList = actions.Keys.ToList();
+            List<string> keyList = actions.Keys.ToList();
             keyList.Sort();
             int count = 0;
-            foreach(DateTime key in keyList)
+            foreach(string key in keyList)
             {
-                if (actions[key] == 1)
+                KeyValuePair<DateTime, int> data = actions[key];
+                if (data.Value == 1)
                 {
                     count++;
                 }
-                else if (actions[key] == 0)
+                else if (data.Value == 0)
                 {
                     count--;
                 }
-                results.Add(new KeyValuePair<string, int>(key.ToString("yyyy-MM-dd HH:mm:ss"), count));
-                _logger.Info("Play Count : " + key.ToString("yyyy-MM-dd HH:mm:ss.fffff") + " - " + count);
+                _logger.Info("Play Count : " + key + " | " + data.Value + " | " + data.Key.ToString("yyyy-MM-dd HH:mm:ss") + " | " + count);
+                results.Add(new KeyValuePair<string, int>(data.Key.ToString("yyyy-MM-dd HH:mm:ss"), count));
             }
 
             return results;
