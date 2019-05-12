@@ -55,12 +55,24 @@ function getTabs() {
     return tabs;
 }
 
+if (!String.prototype.endsWith2) {
+    String.prototype.endsWith2 = function (searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+}
+
 function getTabIndex(tab_name) {
     var tabs = getTabs();
     var index = 0;
     for (index = 0; index < tabs.length; ++index) {
         var path = tabs[index].href;
-        if (path.endsWith("=" + tab_name)) {
+        if (path.endsWith2("=" + tab_name)) {
             return index;
         }
     }
