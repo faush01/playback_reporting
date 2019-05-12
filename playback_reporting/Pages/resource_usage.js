@@ -20,7 +20,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
     var resource_chart = null;
 
     ApiClient.getServerData = function (url_to_get) {
-        console.log("getUserActivity Url = " + url_to_get);
+        console.log("getServerData Url = " + url_to_get);
         return this.ajax({
             type: "GET",
             url: url_to_get,
@@ -143,8 +143,8 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         console.log("Chart Done");
     }
 
-    function formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
+    function formatBytes(bytes, decimals) {
+        if (bytes === 0) return '0 B';
 
         const k = 1024;
         const dm = decimals < 0 ? 0 : decimals;
@@ -161,20 +161,20 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
         var sort_order_selection = view.querySelector('#process_list_sort_order');
         var sort_order = sort_order_selection.options[sort_order_selection.selectedIndex].value;
-
+        
         if (sort_order === "id") {
-            process_list_data.sort((a, b) => (a.id > b.id) ? 1 : -1);
+            process_list_data.sort(function (a, b) { return a.id > b.id ? 1 : -1; });
         }
         else if (sort_order === "name") {
-            process_list_data.sort((a, b) => (a.name > b.name) ? 1 : -1);
+            process_list_data.sort(function (a, b) { return a.name > b.name ? 1 : -1; });
         }
         else if (sort_order === "mem") {
-            process_list_data.sort((a, b) => (a.mem < b.mem) ? 1 : -1);
+            process_list_data.sort(function (a, b) { return a.mem < b.mem ? 1 : -1; });
         }
         else {
-            process_list_data.sort((a, b) => (a.cpu < b.cpu) ? 1 : -1);
+            process_list_data.sort(function (a, b) { return a.cpu < b.cpu ? 1 : -1; });
         }
-
+        
         var table_body = view.querySelector('#process_list_results');
 
         var table_rows = "";
@@ -192,13 +192,11 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         table_body.innerHTML = table_rows;
     }
 
-
     return function (view, params) {
 
         // init code here
         // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
-
             libraryMenu.setTabs('playback_reporting', getTabIndex("resource_usage"), getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
