@@ -238,11 +238,13 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     var resource_url = "user_usage_stats/resource_usage?hours=" + hours_value + "&stamp=" + new Date().getTime();
                     resource_url = ApiClient.getUrl(resource_url);
 
+                    var chart_status = view.querySelector('#resource_usage_chart_status');
+                    chart_status.innerHTML = "Loading Data...";
+                    chart_status.style.display = "block";
                     ApiClient.getServerData(resource_url).then(function (result_data) {
-
                         draw_graph(view, d3, result_data);
-
-                    });
+                        chart_status.style.display = "none";
+                    }, function (response) { chart_status.innerHTML = response.status + ":" + response.statusText; });
                 }
 
             });
@@ -258,9 +260,14 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
             function reresh_process_table() {
                 var process_list_url = "user_usage_stats/process_list?stamp=" + new Date().getTime();
                 process_list_url = ApiClient.getUrl(process_list_url);
+
+                var process_list_status = view.querySelector('#process_list_status');
+                process_list_status.innerHTML = "Loading Data...";
+                process_list_status.style.display = "block";
                 ApiClient.getServerData(process_list_url).then(function (result_data) {
                     show_process_list(view, result_data);
-                });
+                    process_list_status.style.display = "none";
+                }, function (response) { process_list_status.innerHTML = response.status + ":" + response.statusText; });
             }
 
         });
