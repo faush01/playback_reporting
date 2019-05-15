@@ -61,8 +61,14 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                 var url = "user_usage_stats/user_activity?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                 url = ApiClient.getUrl(url);
+
+                var load_status = view.querySelector('#user_usage_report_status');
+                load_status.innerHTML = "Loading Data...";
+
                 ApiClient.getUserActivity(url).then(function (user_data) {
+                    load_status.innerHTML = "&nbsp;";
                     console.log("usage_data: " + JSON.stringify(user_data));
+
                     var table_body = view.querySelector('#user_report_results');
                     var row_html = "";
 
@@ -94,7 +100,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                     table_body.innerHTML = row_html;
 
-                });
+                }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
             }
         });
 

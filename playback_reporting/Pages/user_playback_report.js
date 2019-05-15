@@ -456,10 +456,15 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                     var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=time&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
+
+                    var load_status = view.querySelector('#user_stats_chart_status');
+                    load_status.innerHTML = "Loading Data...";
+
                     ApiClient.getUserActivity(url).then(function (usage_data) {
+                        load_status.innerHTML = "&nbsp;";
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_graph(view, d3, usage_data);
-                    });
+                    }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     function process_click() {
                         var table_body = view.querySelector('#user_usage_report_results');
@@ -488,9 +493,13 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                         var filtered_url = "user_usage_stats/PlayActivity?filter=" + filter.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                         filtered_url = ApiClient.getUrl(filtered_url);
+
+                        load_status.innerHTML = "Loading Data...";
+
                         ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
+                            load_status.innerHTML = "&nbsp;";
                             draw_graph(view, d3, usage_data);
-                        });
+                        }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
                     }
 
                 });

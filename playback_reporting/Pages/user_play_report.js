@@ -77,6 +77,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
             // add user list to selector
             var url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
             url = ApiClient.getUrl(url);
+
             ApiClient.getUserActivity(url).then(function (user_list) {
                 //alert("Loaded Data: " + JSON.stringify(user_list));
                 var index = 0;
@@ -121,7 +122,11 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                 url_to_get = ApiClient.getUrl(url_to_get);
                 console.log("User Report Details Url: " + url_to_get);
 
+                var load_status = view.querySelector('#user_playlist_status');
+                load_status.innerHTML = "Loading Data...";
+
                 ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
+                    load_status.innerHTML = "&nbsp;";
                     //alert("Loaded Data: " + JSON.stringify(usage_data));
 
                     var row_html = "";
@@ -145,7 +150,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     var table_body = view.querySelector('#user_playlist_results');
                     table_body.innerHTML = row_html;
                     
-                });
+                }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
 
             }
 

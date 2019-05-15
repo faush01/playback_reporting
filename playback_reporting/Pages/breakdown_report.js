@@ -283,62 +283,73 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     var item_count = parseInt(num_items.value);
                     var add_other_line = add_other_items.checked;
                     var url = "";
+
+                    var load_status = view.querySelector('#breakdown_report_status');
+                    load_status.innerHTML = "Loading Data...";
+                    var load_count = 0;
                     
                     // build user chart
                     url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "User", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
                     
                     // build ItemType chart
                     url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "ItemType", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build PlaybackMethod chart
                     url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "PlayMethod", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build ClientName chart
                     url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "ClientName", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build DeviceName chart
                     url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "DeviceName", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build TvShows chart
                     url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "TvShows", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build Movies chart
                     url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
+                        if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
                         draw_chart_user_count(view, d3, data, "Movies", item_count, add_other_line);
-                    });
+                    }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
                 }
             });
         });

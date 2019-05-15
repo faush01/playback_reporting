@@ -851,7 +851,10 @@ namespace playback_reporting.Api
         public object Get(GetProcessList request)
         {
             List<Dictionary<string, object>> report = Repository.GetProcessList();
+
             //System.Threading.Thread.Sleep(5000);
+            //throw new Exception("Test Error");
+
             return report;
         }
 

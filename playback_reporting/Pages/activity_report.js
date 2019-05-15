@@ -63,8 +63,11 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                 var url = "user_usage_stats/session_list?stamp=" + new Date().getTime();
                 url = ApiClient.getUrl(url);
 
-                ApiClient.getActivity(url).then(function (activity_data) {
+                var load_status = view.querySelector('#activity_report_status');
+                load_status.innerHTML = "Loading Data...";
 
+                ApiClient.getActivity(url).then(function (activity_data) {
+                    load_status.innerHTML = "&nbsp;";
                     console.log("activity_data: " + JSON.stringify(activity_data));
 
                     var table_body = view.querySelector('#activity_report_results');
@@ -182,7 +185,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                     table_body.innerHTML = row_html;
 
-                });
+                }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
             }
         });
 
