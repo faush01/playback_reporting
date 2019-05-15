@@ -115,7 +115,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     fill: false,
                     data: play_counts,
                     lineTension: 0,
-                    yAxisID: "y-axis-2"
+                    yAxisID: "y-axis-3"
                 }]
             },
             options: {
@@ -143,6 +143,12 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                         beginAtZero: true,
                         type: 'linear',
                         display: true,
+                        ticks: {
+                            max: 100,
+                            stepSize: 5,
+                            min: 0,
+                            beginAtZero: true
+                        },
                         position: 'left',
                         id: 'y-axis-1'
                     },
@@ -154,8 +160,27 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                         beginAtZero: true,
                         type: 'linear',
                         display: true,
+                        ticks: {
+                            min: 0,
+                            beginAtZero: true
+                        },
                         position: 'right',
                         id: 'y-axis-2'
+                    },
+                    {
+                        scaleLabel: {
+                            display: false,
+                            labelString: 'value'
+                        },
+                        type: 'linear',
+                        display: true,
+                        ticks: {
+                            stepSize: 1,
+                            min: 0,
+                            beginAtZero: true
+                        },
+                        position: 'right',
+                        id: 'y-axis-3'
                     }]
                 }
             }
@@ -201,6 +226,8 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         var table_body = view.querySelector('#process_list_results');
 
         var table_rows = "";
+        var cpu_total = 0;
+        var mem_total = 0;
 
         process_list_data.forEach(function (item_details, index) {
             table_rows += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
@@ -208,11 +235,26 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
             table_rows += "<td style='padding-right: 20px'>" + item_details.name + "</td>";
             table_rows += "<td style='padding-right: 20px'>" + item_details.cpu + "</td>";
             table_rows += "<td style='padding-right: 20px'>" + formatBytes(item_details.mem, 2) + "</td>";
-            table_rows += "<td style='padding-right: 20px'>" + item_details.error + "</td>";
+            if (item_details.error) {
+                table_rows += "<td style='padding-right: 20px'>" + item_details.error + "</td>";
+            }
+            else {
+                table_rows += "<td style='padding-right: 20px'>&nbsp;</td>";
+            }
             table_rows += "</tr>";
+
+            cpu_total += item_details.cpu;
+            mem_total += item_details.mem;
         });
 
         table_body.innerHTML = table_rows;
+
+        var total_cpu_span = view.querySelector('#total_cpu');
+        total_cpu_span.innerHTML = "(" + Math.round(cpu_total * 10) / 10 + ")";
+
+        var total_mem_span = view.querySelector('#total_mem');
+        total_mem_span.innerHTML = "(" + formatBytes(mem_total, 2) + ")";
+
     }
 
     return function (view, params) {
