@@ -21,6 +21,11 @@ using System.Text;
 
 namespace playback_reporting.Data
 {
+    public enum ExceptionType {
+        TimeException = 2,
+        MemoryException = 3
+    };
+
     public class ProcessDetails
     {
         public int Id { get; set; }
@@ -29,7 +34,8 @@ namespace playback_reporting.Data
         public double TotalMilliseconds_last { get; set; }
         public DateTime LastSampleTime { get; set; }
         public double CpuUsage { set; get; }
-        public string Error { get; set; }
+        public string ErrorMessage { get; set; }
+        public List<ExceptionType> ExceptionTypes { get; } = new List<ExceptionType>();
         public ProcessDetails(Process proc)
         {
             Name = proc.ProcessName;
@@ -37,6 +43,8 @@ namespace playback_reporting.Data
             Memory = proc.WorkingSet64;
             TotalMilliseconds_last = 0;
             LastSampleTime = DateTime.MinValue;
+            CpuUsage = 0;
+            Memory = 0;
         }
         public ProcessDetails()
         {
@@ -45,7 +53,7 @@ namespace playback_reporting.Data
         override
         public string ToString()
         {
-            return string.Format("{0} | {1} | {2} | {3} | {4}", Id, Name, CpuUsage, Memory, Error);
+            return string.Format("{0} | {1} | {2} | {3} | {4}", Id, Name, CpuUsage, Memory, ErrorMessage);
         }
     }
 }

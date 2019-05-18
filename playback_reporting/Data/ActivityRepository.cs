@@ -198,7 +198,7 @@ namespace playback_reporting.Data
                 new_record.Add("name", proc_details.Name);
                 new_record.Add("cpu", Math.Round((double)proc_details.CpuUsage, 1));
                 new_record.Add("mem", proc_details.Memory);
-                new_record.Add("error", proc_details.Error);
+                new_record.Add("error", proc_details.ErrorMessage);
 
                 results.Add(new_record);
             }

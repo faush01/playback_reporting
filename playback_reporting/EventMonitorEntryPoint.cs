@@ -337,6 +337,132 @@ namespace playback_reporting
 
                     foreach (var proc in Process.GetProcesses())
                     {
+                        DateTime now = DateTime.Now;
+                        string process_key = proc.Id + "-" + proc.ProcessName;
+                        current_proceses.Add(process_key);
+
+                        ProcessDetails proc_details = null;
+
+                        if (process_list.ContainsKey(process_key) == false)
+                        {
+                            proc_details = new ProcessDetails(proc);
+                            _logger.Debug("Adding Process:{0}", proc_details);
+                            process_list.Add(process_key, proc_details);
+                        }
+                        else
+                        {
+                            proc_details = process_list[process_key];
+                        }
+
+                        // try to get working set memory if we have not thrown an exception in the past
+                        if (proc_details.ExceptionTypes.Contains(ExceptionType.MemoryException) == false)
+                        {
+                            try
+                            {
+                                proc_details.Memory = proc.WorkingSet64;
+                            }
+                            catch(Exception e)
+                            {
+                                _logger.Debug("Adding Exception Thrown Error for MemoryException");
+                                proc_details.ExceptionTypes.Add(ExceptionType.MemoryException);
+                                if (string.IsNullOrEmpty(proc_details.ErrorMessage))
+                                {
+                                    proc_details.ErrorMessage = "Mem:" + e.Message;
+                                }
+                            }
+                        }
+                            
+                        double proc_total_ms = 0;
+                        if (proc_details.ExceptionTypes.Contains(ExceptionType.TimeException) == false)
+                        {
+                            try
+                            {
+                                proc_total_ms = proc.TotalProcessorTime.TotalMilliseconds;
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.Debug("Adding Exception Thrown Error for TimeException");
+                                proc_details.ExceptionTypes.Add(ExceptionType.TimeException);
+                                if (string.IsNullOrEmpty(proc_details.ErrorMessage))
+                                {
+                                    proc_details.ErrorMessage = "Cpu:" + e.Message;
+                                }
+                            }
+                        }
+
+                        if (proc_total_ms > 0 && proc_details.LastSampleTime != DateTime.MinValue)
+                        {
+                            double time_diff = (now - proc_details.LastSampleTime).TotalMilliseconds;
+                            double proc_time_diff = proc_total_ms - proc_details.TotalMilliseconds_last;
+                            double cpuUsageTotal = proc_time_diff / (Environment.ProcessorCount * time_diff);
+                            proc_details.CpuUsage = cpuUsageTotal * 100;
+                        }
+                        else
+                        {
+                            proc_details.CpuUsage = 0;
+                        }
+
+                        proc_details.LastSampleTime = now;
+                        proc_details.TotalMilliseconds_last = proc_total_ms;
+
+                     }
+
+                    // calculate totals
+                    double total_cpu = 0;
+                    long total_mem = 0;
+                    string[] proc_keys = process_list.Keys.ToArray();
+                    foreach (string key in proc_keys)
+                    {
+                        if (current_proceses.Contains(key) == false)
+                        {
+                            ProcessDetails proc_details = process_list[key];
+                            _logger.Debug("Removing Process:{0}", proc_details);
+                            process_list.Remove(key);
+                        }
+                        else
+                        {
+                            ProcessDetails proc_details = process_list[key];
+
+                            total_cpu += proc_details.CpuUsage;
+                            total_mem += proc_details.Memory;
+                        }
+                    }
+
+                    //_logger.Debug("CPU:{0} Mem:{1}", total_cpu, total_mem);
+                    Dictionary<string, object> counters = new Dictionary<string, object>();
+                    counters.Add("date", DateTime.Now);
+                    counters.Add("cpu", total_cpu);
+                    counters.Add("mem", total_mem);
+                    _repository.AddResourceCounter(counters);
+                }
+                catch (Exception e)
+                {
+                    _logger.Debug("ResourceMonitoringTask Error: {0}", e);
+                }
+
+                await System.Threading.Tasks.Task.Delay(60000);
+            }
+        }
+
+        public async System.Threading.Tasks.Task ResourceMonitoringTask2()
+        {
+            _logger.Info("ResourceMonitoringTask:Started");
+            DateTime last_run_time = DateTime.Now;
+
+            List<double> cpu_values = new List<double>();
+            List<long> mem_values = new List<long>();
+
+            ResourcesCounters resource_counters = ResourcesCounters.Instance;
+            Dictionary<string, ProcessDetails> process_list = resource_counters.GetProcessList();
+
+            while (true)
+            {
+                try
+                {
+                    List<string> current_proceses = new List<string>();
+
+                    foreach (var proc in Process.GetProcesses())
+                    {
                         try
                         {
                             string process_key = proc.Id + "-" + proc.ProcessName;
@@ -356,9 +482,9 @@ namespace playback_reporting
                                 }
                                 catch(Exception e)
                                 {
-                                    if (string.IsNullOrEmpty(proc_details.Error))
+                                    if (string.IsNullOrEmpty(proc_details.ErrorMessage))
                                     {
-                                        proc_details.Error = "TotalProcessorTime:" + e.Message;
+                                        proc_details.ErrorMessage = "TotalProcessorTime:" + e.Message;
                                     }
                                 }
 
@@ -392,14 +518,14 @@ namespace playback_reporting
                             if (process_list.ContainsKey(process_key))
                             {
                                 ProcessDetails proc_details = process_list[process_key];
-                                proc_details.Error = e1.Message;
+                                proc_details.ErrorMessage = e1.Message;
                             }
                             else
                             {
                                 ProcessDetails proc_details = new ProcessDetails();
                                 proc_details.Id = proc.Id;
                                 proc_details.Name = proc.ProcessName;
-                                proc_details.Error = e1.Message;
+                                proc_details.ErrorMessage = e1.Message;
                                 process_list.Add(process_key, proc_details);
                             }
                         }
