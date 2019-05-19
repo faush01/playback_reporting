@@ -36,6 +36,7 @@ namespace playback_reporting.Data
         public double CpuUsage { set; get; }
         public string ErrorMessage { get; set; }
         public List<ExceptionType> ExceptionTypes { get; } = new List<ExceptionType>();
+        public bool Updated { set; get; } = false;
         public ProcessDetails(Process proc)
         {
             Name = proc.ProcessName;

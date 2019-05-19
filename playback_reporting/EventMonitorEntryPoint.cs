@@ -333,14 +333,10 @@ namespace playback_reporting
             {
                 try
                 {
-                    List<string> current_proceses = new List<string>();
-
                     foreach (var proc in Process.GetProcesses())
                     {
                         DateTime now = DateTime.Now;
                         string process_key = proc.Id + "-" + proc.ProcessName;
-                        current_proceses.Add(process_key);
-
                         ProcessDetails proc_details = null;
 
                         if (process_list.ContainsKey(process_key) == false)
@@ -402,6 +398,7 @@ namespace playback_reporting
                             proc_details.CpuUsage = 0;
                         }
 
+                        proc_details.Updated = true;
                         proc_details.LastSampleTime = now;
                         proc_details.TotalMilliseconds_last = proc_total_ms;
 
@@ -413,18 +410,17 @@ namespace playback_reporting
                     string[] proc_keys = process_list.Keys.ToArray();
                     foreach (string key in proc_keys)
                     {
-                        if (current_proceses.Contains(key) == false)
+                        ProcessDetails proc_details = process_list[key];
+                        if(proc_details.Updated)
                         {
-                            ProcessDetails proc_details = process_list[key];
-                            _logger.Debug("Removing Process:{0}", proc_details);
-                            process_list.Remove(key);
+                            proc_details.Updated = false;
+                            total_cpu += proc_details.CpuUsage;
+                            total_mem += proc_details.Memory;
                         }
                         else
                         {
-                            ProcessDetails proc_details = process_list[key];
-
-                            total_cpu += proc_details.CpuUsage;
-                            total_mem += proc_details.Memory;
+                            _logger.Debug("Removing Process:{0}", proc_details);
+                            process_list.Remove(key);
                         }
                     }
 
