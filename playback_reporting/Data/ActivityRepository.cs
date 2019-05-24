@@ -73,14 +73,14 @@ namespace playback_reporting.Data
                         cols.Add(table_schema);
                     }
                     string actual_schema = string.Join("|", cols);
-                    string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int";
+                    string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int";
                     if (required_schema != actual_schema)
                     {
                         _logger.Info("PlaybackActivity table schema miss match!");
                         _logger.Info("Expected : " + required_schema);
                         _logger.Info("Received : " + actual_schema);
                         
-                        string new_table_name = DateTime.Now.ToString("PlaybackActivity_yyyy_MM_dd_HH_mm_ss");
+                        string new_table_name = "PlaybackActivity_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
                         _logger.Info("Renaming table to : " + new_table_name);
                         try
                         {
@@ -110,7 +110,8 @@ namespace playback_reporting.Data
                                     "PlaybackMethod TEXT, " +
                                     "ClientName TEXT, " +
                                     "DeviceName TEXT, " +
-                                    "PlayDuration INT" +
+                                    "PlayDuration INT, " +
+                                    "PauseDuration INT" +
                                     ")");
 
                     connection.Execute("create table if not exists UserList (UserId TEXT)");
@@ -414,7 +415,7 @@ namespace playback_reporting.Data
                     {
                         string[] tokens = line.Split('\t');
                         _logger.Info("Line Length : " + tokens.Length);
-                        if (tokens.Length != 9)
+                        if (tokens.Length != 10)
                         {
                             line = sr.ReadLine();
                             continue;
@@ -428,7 +429,8 @@ namespace playback_reporting.Data
                         string play_method = tokens[5];
                         string client_name = tokens[6];
                         string device_name = tokens[7];
-                        string duration = tokens[8];
+                        string play_duration = tokens[8];
+                        string paused_duration = tokens[9];
 
                         //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
 
@@ -451,9 +453,9 @@ namespace playback_reporting.Data
                                 _logger.Info("Not Found, Adding");
 
                                 string sql_add = "insert into PlaybackActivity " +
-                                    "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
+                                    "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration) " +
                                     "values " +
-                                    "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration)";
+                                    "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration)";
 
                                 connection.RunInTransaction(db =>
                                 {
@@ -467,7 +469,8 @@ namespace playback_reporting.Data
                                         add_statment.TryBind("@PlaybackMethod", play_method);
                                         add_statment.TryBind("@ClientName", client_name);
                                         add_statment.TryBind("@DeviceName", device_name);
-                                        add_statment.TryBind("@PlayDuration", duration);
+                                        add_statment.TryBind("@PlayDuration", play_duration);
+                                        add_statment.TryBind("@PauseDuration", paused_duration);
                                         add_statment.MoveNext();
                                     }
                                 }, TransactionMode);

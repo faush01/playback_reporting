@@ -163,6 +163,19 @@ namespace playback_reporting
                 active_playinfo_list.Add(playback_info);
                 SavePlayStarted(playback_info);
 
+                // if we had a last paused increment paused time
+                if (playback_info.LastPauseTime != null)
+                {
+                    TimeSpan pause_diff = DateTime.Now.Subtract((DateTime)playback_info.LastPauseTime);
+                    playback_info.LastPauseTime = null;
+                    playback_info.PausedDuration += (int)pause_diff.TotalSeconds;
+                }
+                // if paused then set this interval paused start time
+                if (session.PlayState != null && session.PlayState.IsPaused)
+                {
+                    playback_info.LastPauseTime = DateTime.Now;
+                }
+
                 TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
                 playback_info.PlaybackDuration = (int)diff.TotalSeconds;
 
@@ -188,6 +201,15 @@ namespace playback_reporting
                     _logger.Info("Saving final duration for Item : " + key);
                     TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
                     playback_info.PlaybackDuration = (int)diff.TotalSeconds;
+
+                    // if we had a last paused increment paused time
+                    if (playback_info.LastPauseTime != null)
+                    {
+                        TimeSpan pause_diff = DateTime.Now.Subtract((DateTime)playback_info.LastPauseTime);
+                        playback_info.LastPauseTime = null;
+                        playback_info.PausedDuration += (int)pause_diff.TotalSeconds;
+                    }
+
                     _repository.UpdatePlaybackAction(playback_info);
 
                     _logger.Info("Removing Old Key from playback_trackers : " + key);

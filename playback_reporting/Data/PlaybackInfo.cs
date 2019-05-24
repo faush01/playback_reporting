@@ -24,6 +24,7 @@ namespace playback_reporting.Data
     {
         public string Key { set; get;  }
         public DateTime Date { get; set; }
+        
         public string UserId { get; set; }
         public string ItemId { get; set; }
         public string ItemType { get; set; }
@@ -32,6 +33,8 @@ namespace playback_reporting.Data
         public string ClientName { get; set; }
         public string DeviceName { get; set; }
         public int PlaybackDuration { get; set; } = 0;
+        public DateTime? LastPauseTime { get; set; }
+        public int PausedDuration { get; set; } = 0;
         public bool StartupSaved { get; set; } = false;
 
     }

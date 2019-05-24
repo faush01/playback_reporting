@@ -16,6 +16,11 @@ LIMIT 10
 			<br />
 <!--
 
+SELECT name FROM sqlite_master 
+INSERT INTO PlaybackActivity SELECT *, 0 FROM PlaybackActivity_20190524_150121
+DROP TABLE PlaybackActivity_20190524_150121
+
+
 SELECT date(DateCreated),
 		SUM(PlayDuration)
 FROM PlaybackActivity
