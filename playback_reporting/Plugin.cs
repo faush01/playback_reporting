@@ -16,6 +16,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
@@ -28,12 +29,21 @@ namespace playback_reporting
 {
     class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+        private readonly IServerApplicationHost _appHost;
+        private string plugin_name = "Playback Reporting";
+
+
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, IServerApplicationHost appHost) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
+            _appHost = appHost;
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                plugin_name = plugin_name + "(not compatible)";
+            }
         }
 
-        public override string Name => "Playback Reporting";
+        public override string Name => plugin_name;
         public override Guid Id => new Guid("9E6EB40F-9A1A-4CA1-A299-62B4D252453E");
         public override string Description => "Show reports for playback activity";
         public static Plugin Instance { get; private set; }
@@ -41,6 +51,11 @@ namespace playback_reporting
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                return new PluginPageInfo[0];
+            }
+
             return new[]
             {
                 new PluginPageInfo

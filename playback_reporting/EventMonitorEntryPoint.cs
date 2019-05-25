@@ -17,7 +17,6 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 using playback_reporting.Data;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
@@ -26,11 +25,6 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Model.Dto;
 using System.Diagnostics;
 using System.Linq;
@@ -80,6 +74,13 @@ namespace playback_reporting
         public void Run()
         {
             _logger.Info("EventMonitorEntryPoint Running");
+
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                _logger.Info("ERROR : Plugin not compatible with this server version");
+                return;
+            }
+
             var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             repo.Initialize();
             _repository = repo;

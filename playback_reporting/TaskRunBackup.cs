@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
@@ -32,19 +33,30 @@ namespace playback_reporting
         private ILogger _logger;
         private readonly IServerConfigurationManager _config;
         private readonly IFileSystem _fileSystem;
+        private readonly IServerApplicationHost _appHost;
 
-        public string Name => "Playback Reporting Run Backup";
+        private string task_name = "Playback Reporting Run Backup";
+
+        public string Name => task_name;
         public string Key => "PlaybackHistoryRunBackup";
         public string Description => "Runs the report data backup";
         public string Category => "Playback Reporting";
 
 
-        public TaskRunBackup(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem)
+        public TaskRunBackup(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem, IServerApplicationHost appHost)
         {
-            _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
+            _logger = logger.GetLogger("PlaybackReporting - TaskRunBackup");
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
+
+            _appHost = appHost;
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                task_name = task_name + " (disabled)";
+                _logger.Info("ERROR : Plugin not compatible with this server version");
+                return;
+            }
 
             _logger.Info("TaskCleanDb Loaded");
         }
@@ -62,6 +74,12 @@ namespace playback_reporting
 
         public async System.Threading.Tasks.Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                _logger.Info("ERROR : Plugin not compatible with this server version");
+                return;
+            }
+
             await System.Threading.Tasks.Task.Run(() =>
             {
 
