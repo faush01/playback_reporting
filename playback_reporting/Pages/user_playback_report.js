@@ -414,6 +414,9 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
+                var load_status = view.querySelector('#user_stats_chart_status');
+                load_status.innerHTML = "Loading Data...";
+
                 // get filter types form sever
                 var filter_url = ApiClient.getUrl("user_usage_stats/type_filter_list");
                 ApiClient.getUserActivity(filter_url).then(function (filter_data) {
@@ -457,9 +460,6 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=time&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
 
-                    var load_status = view.querySelector('#user_stats_chart_status');
-                    load_status.innerHTML = "Loading Data...";
-
                     ApiClient.getUserActivity(url).then(function (usage_data) {
                         load_status.innerHTML = "&nbsp;";
                         //alert("Loaded Data: " + JSON.stringify(usage_data));
@@ -502,7 +502,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                         }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
                     }
 
-                });
+                }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
 
             });
 
