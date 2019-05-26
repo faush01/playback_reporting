@@ -23,6 +23,7 @@ using MediaBrowser.Model.Logging;
 using SQLitePCL.pretty;
 using System.Linq;
 using SQLitePCL;
+using System.Text;
 
 namespace playback_reporting.Data
 {
@@ -52,38 +53,21 @@ namespace playback_reporting.Data
 
         internal static int ThreadSafeMode { get; set; }
 
-        static BaseSqliteRepository()
-        {
-            SQLite3.EnableSharedCache = false;
-
-            int rc = raw.sqlite3_config(raw.SQLITE_CONFIG_MEMSTATUS, 0);
-            //CheckOk(rc);
-
-            rc = raw.sqlite3_config(raw.SQLITE_CONFIG_MULTITHREAD, 1);
-            //rc = raw.sqlite3_config(raw.SQLITE_CONFIG_SINGLETHREAD, 1);
-            //rc = raw.sqlite3_config(raw.SQLITE_CONFIG_SERIALIZED, 1);
-            //CheckOk(rc);
-
-            rc = raw.sqlite3_enable_shared_cache(1);
-
-            ThreadSafeMode = raw.sqlite3_threadsafe();
-        }
-
         private static bool _versionLogged;
 
         private string _defaultWal;
-        protected ManagedConnection _connection;
+        protected IDatabaseConnection _connection;
 
         protected virtual bool EnableSingleConnection
         {
             get { return true; }
         }
 
-        protected ManagedConnection CreateConnection(bool isReadOnly = false)
+        protected IDatabaseConnection CreateConnection(bool isReadOnly = false)
         {
             if (_connection != null)
             {
-                return _connection;
+                return _connection.Clone(false);
             }
 
             lock (WriteLock)
@@ -122,13 +106,20 @@ namespace playback_reporting.Data
 
                 connectionFlags |= ConnectionFlags.NoMutex;
 
-                var db = SQLite3.Open(DbFilePath, connectionFlags, null);
+                var db = SQLite3.Open(DbFilePath, connectionFlags, null, false);
 
                 try
                 {
                     if (string.IsNullOrWhiteSpace(_defaultWal))
                     {
-                        _defaultWal = db.Query("PRAGMA journal_mode").SelectScalarString().First();
+                        using (var statement = PrepareStatement(db, "PRAGMA journal_mode".AsSpan()))
+                        {
+                            foreach (var row in statement.ExecuteQuery())
+                            {
+                                _defaultWal = row.GetString(0);
+                                break;
+                            }
+                        }
 
                         Logger.Info("Default journal_mode for {0} is {1}", DbFilePath, _defaultWal);
                     }
@@ -154,10 +145,11 @@ namespace playback_reporting.Data
                         queries.Add("PRAGMA temp_store = file");
                     }
 
-                    foreach (var query in queries)
-                    {
-                        db.Execute(query);
-                    }
+                    //foreach (var query in queries)
+                    //{
+                    //    db.Execute(query);
+                    //}
+                    db.ExecuteAll(string.Join(";", queries.ToArray()));
                 }
                 catch
                 {
@@ -169,43 +161,113 @@ namespace playback_reporting.Data
                     throw;
                 }
 
-                _connection = new ManagedConnection(db, false);
+                _connection = db;
 
-                return _connection;
+                return db;
             }
         }
 
-        public IStatement PrepareStatement(ManagedConnection connection, string sql)
+        protected static ReadOnlyMemory<byte> GetBytes(string sql)
         {
-            return connection.PrepareStatement(sql);
-        }
-
-        public IStatement PrepareStatementSafe(ManagedConnection connection, string sql)
-        {
-            return connection.PrepareStatement(sql);
+            return System.Text.Encoding.UTF8.GetBytes(sql).AsMemory();
         }
 
         public IStatement PrepareStatement(IDatabaseConnection connection, string sql)
         {
-            return connection.PrepareStatement(sql);
+            return PrepareStatement(connection, sql.AsSpan());
         }
 
-        public IStatement PrepareStatementSafe(IDatabaseConnection connection, string sql)
+        public IStatement PrepareStatement(IDatabaseConnection connection, ReadOnlySpan<char> sql)
         {
-            return connection.PrepareStatement(sql);
+            var encoding = System.Text.Encoding.UTF8;
+
+#if NETCOREAPP
+            var byteSpan = new Span<byte>(new byte[encoding.GetMaxByteCount(sql.Length)]);
+            var length = encoding.GetBytes(sql, byteSpan);
+            byteSpan = byteSpan.Slice(0, length);
+            return connection.PrepareStatement(byteSpan);
+#else
+            return connection.PrepareStatement(encoding.GetBytes(sql.ToString()).AsSpan());
+#endif
         }
 
-        public List<IStatement> PrepareAll(IDatabaseConnection connection, IEnumerable<string> sql)
+        public IStatement PrepareStatement(IDatabaseConnection connection, ReadOnlySpan<byte> sqlUtf8)
         {
-            return PrepareAllSafe(connection, sql);
+            return connection.PrepareStatement(sqlUtf8);
         }
 
-        public List<IStatement> PrepareAllSafe(IDatabaseConnection connection, IEnumerable<string> sql)
+        public IStatement[] PrepareAll(IDatabaseConnection connection, List<string> sql)
         {
-            return sql.Select(connection.PrepareStatement).ToList();
+            var list = new List<ReadOnlyMemory<byte>>();
+
+            var length = sql.Count;
+            for (var i = 0; i < length; i++)
+            {
+                list.Add(System.Text.Encoding.UTF8.GetBytes(sql[i]).AsMemory());
+            }
+
+            return PrepareAll(connection, list);
         }
 
-        protected void RunDefaultInitialization(ManagedConnection db)
+        public IStatement[] PrepareAll(IDatabaseConnection connection, List<ReadOnlyMemory<byte>> sqlUtf8)
+        {
+            var length = sqlUtf8.Count;
+            var result = new IStatement[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = connection.PrepareStatement(sqlUtf8[i].Span);
+            }
+
+            return result;
+        }
+
+        public IStatement[] PrepareAll(IDatabaseConnection connection, ReadOnlyMemory<byte>[] sqlUtf8)
+        {
+            var length = sqlUtf8.Length;
+            var result = new IStatement[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = connection.PrepareStatement(sqlUtf8[i].Span);
+            }
+
+            return result;
+        }
+
+        protected bool TableExists(IDatabaseConnection db, string name)
+        {
+            db.BeginTransaction(ReadTransactionMode);
+
+            try
+            {
+                var retval = false;
+
+                using (var statement = PrepareStatement(db, "select DISTINCT tbl_name from sqlite_master".AsSpan()))
+                {
+                    foreach (var row in statement.ExecuteQuery())
+                    {
+                        if (string.Equals(name, row.GetString(0), StringComparison.OrdinalIgnoreCase))
+                        {
+                            retval = true;
+                            break;
+                        }
+                    }
+                }
+
+                db.CommitTransaction();
+
+                return retval;
+            }
+            catch (Exception)
+            {
+                db.RollbackTransaction();
+
+                throw;
+            }
+        }
+
+        protected void RunDefaultInitialization(IDatabaseConnection db)
         {
             var queries = new List<string>
             {
@@ -230,8 +292,7 @@ namespace playback_reporting.Data
                 });
             }
 
-            db.ExecuteAll(string.Join(";", queries.ToArray()));
-            Logger.Info("PRAGMA synchronous=" + db.Query("PRAGMA synchronous").SelectScalarString().First());
+            db.ExecuteAll(GetBytes(string.Join(";", queries.ToArray())));
         }
 
         protected virtual bool EnableTempStoreMemory
@@ -247,16 +308,6 @@ namespace playback_reporting.Data
             get
             {
                 return null;
-            }
-        }
-
-        internal static void CheckOk(int rc)
-        {
-            string msg = "";
-
-            if (raw.SQLITE_OK != rc)
-            {
-                throw CreateException((ErrorCode)rc, msg);
             }
         }
 
@@ -280,7 +331,6 @@ namespace playback_reporting.Data
         {
             _disposed = true;
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         private readonly object _disposeLock = new object();
@@ -333,27 +383,31 @@ namespace playback_reporting.Data
         {
             var list = new List<string>();
 
-            foreach (var row in connection.Query("PRAGMA table_info(" + table + ")"))
+            using (var statement = PrepareStatement(connection, "PRAGMA table_info(" + table + ")"))
             {
-                if (row[1].SQLiteType != SQLiteType.Null)
+                foreach (var row in statement.ExecuteQuery())
                 {
-                    var name = row[1].ToString();
+                    if (!row.IsDBNull(1))
+                    {
+                        var name = row.GetString(1);
 
-                    list.Add(name);
+                        list.Add(name);
+                    }
                 }
             }
 
             return list;
         }
 
-        protected void AddColumn(IDatabaseConnection connection, string table, string columnName, string type, List<string> existingColumnNames)
+        protected bool AddColumn(IDatabaseConnection connection, string table, string columnName, string type, List<string> existingColumnNames)
         {
             if (existingColumnNames.Contains(columnName, StringComparer.OrdinalIgnoreCase))
             {
-                return;
+                return false;
             }
 
             connection.Execute("alter table " + table + " add column " + columnName + " " + type + " NULL");
+            return true;
         }
     }
 

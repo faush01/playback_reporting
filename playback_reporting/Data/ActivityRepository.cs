@@ -67,10 +67,13 @@ namespace playback_reporting.Data
 
                     string sql_info = "pragma table_info('PlaybackActivity')";
                     List<string> cols = new List<string>();
-                    foreach (var row in connection.Query(sql_info))
+                    using (var statement = connection.PrepareStatement(sql_info))
                     {
-                        string table_schema = row[1].ToString().ToLower() + ":" + row[2].ToString().ToLower();
-                        cols.Add(table_schema);
+                        foreach (var row in statement.ExecuteQuery())
+                        {
+                            string table_schema = row.GetString(1).ToLower() + ":" + row.GetString(2).ToLower();
+                            cols.Add(table_schema);
+                        }
                     }
                     string actual_schema = string.Join("|", cols);
                     string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int";
@@ -145,9 +148,9 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_id = row[0].ToString();
-                            DateTime start_time = row[1].ReadDateTime().ToLocalTime();
-                            int duration = row[2].ToInt();
+                            string item_id = row.GetString(0);
+                            DateTime start_time = row.ReadDateTime(1).ToLocalTime();
+                            int duration = row.GetInt(2);
                             DateTime end_time = start_time.AddSeconds(duration);
 
                             string start_key = start_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + "-" + item_id + "-A";
@@ -260,7 +263,6 @@ namespace playback_reporting.Data
         public string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results)
         {
             string message = "";
-            bool columns_done = false;
             int change_count = 0;
             using (WriteLock.Write())
             {
@@ -270,28 +272,26 @@ namespace playback_reporting.Data
                     {
                         using (var statement = connection.PrepareStatement(query_string))
                         {
-                            foreach (var row in statement.ExecuteQuery())
-                            {
-                                if (!columns_done)
-                                {
-                                    foreach (var col in row.Columns())
-                                    {
-                                        col_names.Add(col.Name);
-                                    }
-                                    columns_done = true;
-                                }
+                            var result_set = statement.ExecuteQuery();
 
+                            foreach (var col in statement.Columns)
+                            {
+                                col_names.Add(col.Name);
+                            }
+
+                            int col_count = statement.Columns.Count;
+
+                            foreach (var row in result_set)
+                            {
                                 List<object> row_date = new List<object>();
-                                for(int x = 0; x < row.Count; x++)
+                                for(int x = 0; x < col_count; x++)
                                 {
-                                    string cell_data = row[x].ToString();
+                                    string cell_data = row.GetString(x);
                                     row_date.Add(cell_data);
                                 }
                                 results.Add(row_date);
-
-                                string type = row[0].ToString();
                             }
-                            change_count = connection.GetChangeCount();
+                            change_count = connection.TotalChanges;
                         }
                     }
                     catch(Exception e)
@@ -369,7 +369,7 @@ namespace playback_reporting.Data
                     {
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string type = row[0].ToString();
+                            string type = row.GetString(0);
                             user_id_list.Add(type);
                         }
                     }
@@ -391,7 +391,7 @@ namespace playback_reporting.Data
                     {
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string type = row[0].ToString();
+                            string type = row.GetString(0);
                             filter_Type_list.Add(type);
                         }
                     }
@@ -500,12 +500,14 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_raw))
                     {
-                        foreach (var row in statement.ExecuteQuery())
+                        var row_set = statement.ExecuteQuery();
+                        int col_count = statement.Columns.Count;
+                        foreach (var row in row_set)
                         {
                             List<string> row_data = new List<string>();
-                            for (int x = 0; x < row.Count; x++)
+                            for (int x = 0; x < col_count; x++)
                             {
-                                row_data.Add(row[x].ToString());
+                                row_data.Add(row.GetString(x));
                             }
                             sw.WriteLine(string.Join("\t", row_data));
                         }
@@ -619,18 +621,18 @@ namespace playback_reporting.Data
                         statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_id = row[1].ToString();
+                            string item_id = row.GetString(1);
 
                             Dictionary<string, string> item = new Dictionary<string, string>();
-                            item["Time"] = row[0].ReadDateTime().ToLocalTime().ToString("HH:mm");
-                            item["Id"] = row[1].ToString();
-                            item["Type"] = row[2].ToString();
-                            item["ItemName"] = row[3].ToString();
-                            item["ClientName"] = row[4].ToString();
-                            item["PlaybackMethod"] = row[5].ToString();
-                            item["DeviceName"] = row[6].ToString();
-                            item["PlayDuration"] = row[7].ToString();
-                            item["RowId"] = row[8].ToString();
+                            item["Time"] = row.ReadDateTime(0).ToLocalTime().ToString("HH:mm");
+                            item["Id"] = row.GetString(1);
+                            item["Type"] = row.GetString(2);
+                            item["ItemName"] = row.GetString(3);
+                            item["ClientName"] = row.GetString(4);
+                            item["PlaybackMethod"] = row.GetString(5);
+                            item["DeviceName"] = row.GetString(6);
+                            item["PlayDuration"] = row.GetString(7);
+                            item["RowId"] = row.GetString(8);
 
                             items.Add(item);
                         }
@@ -678,7 +680,7 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string user_id = row[0].ToString();
+                            string user_id = row.GetString(0);
                             Dictionary<string, int> uu = null;
                             if (usage.ContainsKey(user_id))
                             {
@@ -689,8 +691,8 @@ namespace playback_reporting.Data
                                 uu = new Dictionary<string, int>();
                                 usage.Add(user_id, uu);
                             }
-                            string date_string = row[1].ToString();
-                            int count_int = row[2].ToInt();
+                            string date_string = row.GetString(1);
+                            int count_int = row.GetInt(2);
                             uu.Add(date_string, count_int);
                         }
                     }
@@ -729,8 +731,8 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            DateTime date = row[0].ReadDateTime().ToLocalTime();
-                            int duration = row[1].ToInt();
+                            DateTime date = row.ReadDateTime(0).ToLocalTime();
+                            int duration = row.GetInt(1);
 
                             int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
                             _logger.Info("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
@@ -797,9 +799,9 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_label = row[0].ToString();
-                            int action_count = row[1].ToInt();
-                            int seconds_sum = row[2].ToInt();
+                            string item_label = row.GetString(0);
+                            int action_count = row.GetInt(1);
+                            int seconds_sum = row.GetInt(2);
 
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
                             row_data.Add("label", item_label);
@@ -854,8 +856,8 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            int block_num = row[0].ToInt();
-                            int count = row[1].ToInt();
+                            int block_num = row.GetInt(0);
+                            int count = row.GetInt(1);
                             report.Add(block_num, count);
                         }
                     }
@@ -893,9 +895,9 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_label = row[0].ToString();
-                            int action_count = row[1].ToInt();
-                            int seconds_sum = row[2].ToInt();
+                            string item_label = row.GetString(0);
+                            int action_count = row.GetInt(1);
+                            int seconds_sum = row.GetInt(2);
 
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
                             row_data.Add("label", item_label);
@@ -938,9 +940,9 @@ namespace playback_reporting.Data
 
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_label = row[0].ToString();
-                            int action_count = row[1].ToInt();
-                            int seconds_sum = row[2].ToInt();
+                            string item_label = row.GetString(0);
+                            int action_count = row.GetInt(1);
+                            int seconds_sum = row.GetInt(2);
 
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
                             row_data.Add("label", item_label);
@@ -987,21 +989,21 @@ namespace playback_reporting.Data
                         {
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
 
-                            DateTime latest_date = row[0].ReadDateTime().ToLocalTime();
+                            DateTime latest_date = row.ReadDateTime(0).ToLocalTime();
                             row_data.Add("latest_date", latest_date);
 
-                            string user_id = row[1].ToString();
+                            string user_id = row.GetString(1);
                             row_data.Add("user_id", user_id);
 
-                            int action_count = row[2].ToInt();
-                            int seconds_sum = row[3].ToInt();
+                            int action_count = row.GetInt(2);
+                            int seconds_sum = row.GetInt(3);
                             row_data.Add("total_count", action_count);
                             row_data.Add("total_time", seconds_sum);
 
-                            string item_name = row[4].ToString();
+                            string item_name = row.GetString(4);
                             row_data.Add("item_name", item_name);
 
-                            string client_name = row[5].ToString();
+                            string client_name = row.GetString(5);
                             row_data.Add("client_name", client_name);
 
                             report.Add(row_data);
@@ -1042,16 +1044,16 @@ namespace playback_reporting.Data
                         {
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
 
-                            string play_date = row[0].ToString();
+                            string play_date = row.GetString(0);
                             row_data.Add("date", play_date);
 
-                            string item_name = row[1].ToString();
+                            string item_name = row.GetString(1);
                             row_data.Add("name", item_name);
 
-                            string item_type = row[2].ToString();
+                            string item_type = row.GetString(2);
                             row_data.Add("type", item_type);
 
-                            string client_name = row[3].ToString();
+                            string client_name = row.GetString(3);
                             row_data.Add("duration", client_name);
 
                             report.Add(row_data);
