@@ -1020,13 +1020,15 @@ namespace playback_reporting.Data
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
-            string sql = "";
-            sql += "SELECT strftime('%Y-%m-%d',DateCreated) AS PlayDate, ItemName, ItemType, SUM(PlayDuration) AS Duration ";
+            string sql = "SELECT ";
+            sql += "strftime('%Y-%m-%d',DateCreated) AS PlayDate, ";
+            sql += "MIN(strftime('%H-%M-%S', DateCreated)) AS PlayTime, ";
+            sql += "ItemName, ItemType, SUM(PlayDuration) AS Duration ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE UserId = @user_id ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "GROUP BY PlayDate, ItemName, ItemType ";
-            sql += "ORDER BY PlayDate DESC";
+            sql += "ORDER BY PlayDate DESC, PlayTime DESC";
 
             using (WriteLock.Read())
             {
@@ -1045,13 +1047,13 @@ namespace playback_reporting.Data
                             string play_date = row[0].ToString();
                             row_data.Add("date", play_date);
 
-                            string item_name = row[1].ToString();
+                            string item_name = row[2].ToString();
                             row_data.Add("name", item_name);
 
-                            string item_type = row[2].ToString();
+                            string item_type = row[3].ToString();
                             row_data.Add("type", item_type);
 
-                            string client_name = row[3].ToString();
+                            string client_name = row[4].ToString();
                             row_data.Add("duration", client_name);
 
                             report.Add(row_data);
