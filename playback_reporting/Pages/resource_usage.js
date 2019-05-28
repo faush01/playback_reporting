@@ -28,7 +28,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         });
     };
 
-    var color_list = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
+    var color_list = ["#d98880", "#c39bd3", "#7fb3d545"];
 
     function draw_graph(view, local_chart, resource_data) {
 
@@ -97,6 +97,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     backgroundColor: color_list[0],
                     borderColor: color_list[0],
                     fill: false,
+                    pointRadius: 2,
                     data: server_load_data,
                     yAxisID: "y-axis-1"
                 },
@@ -105,6 +106,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     backgroundColor: color_list[1],
                     borderColor: color_list[1],
                     fill: false,
+                    pointRadius: 2,
                     data: server_mem_data,
                     yAxisID: "y-axis-2"
                 },
@@ -112,7 +114,8 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                     label: 'Playback Count',
                     backgroundColor: color_list[2],
                     borderColor: color_list[2],
-                    fill: false,
+                    fill: true,
+                    pointRadius: 1,
                     data: play_counts,
                     lineTension: 0,
                     yAxisID: "y-axis-3"
