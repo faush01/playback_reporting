@@ -544,9 +544,9 @@ namespace playback_reporting.Data
         public void AddPlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "insert into PlaybackActivity " +
-                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration) " +
+                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration) " +
                 "values " +
-                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration)";
+                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration)";
 
             using (WriteLock.Write())
             {
@@ -565,6 +565,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@ClientName", play_info.ClientName);
                             statement.TryBind("@DeviceName", play_info.DeviceName);
                             statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                            statement.TryBind("@PauseDuration", play_info.PausedDuration);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -574,7 +575,7 @@ namespace playback_reporting.Data
 
         public void UpdatePlaybackAction(PlaybackInfo play_info)
         {
-            string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
+            string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration, PauseDuration = @PauseDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
             using (WriteLock.Write())
             {
                 using (var connection = CreateConnection())
@@ -587,6 +588,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@UserId", play_info.UserId);
                             statement.TryBind("@ItemId", play_info.ItemId);
                             statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                            statement.TryBind("@PauseDuration", play_info.PausedDuration);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
