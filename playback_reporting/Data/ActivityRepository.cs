@@ -604,7 +604,7 @@ namespace playback_reporting.Data
                 filters.Add("'" + filter + "'");
             }
 
-            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, PlayDuration, rowid " +
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, (PlayDuration - PauseDuration) AS PlayDuration , rowid " +
                                "FROM PlaybackActivity " +
                                "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
                                "AND UserId = @user_id " +
@@ -660,7 +660,7 @@ namespace playback_reporting.Data
             }
             else
             {
-                sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration) AS count ";
+                sql_query += "SELECT UserId, strftime('%Y-%m-%d', DateCreated) AS date, SUM(PlayDuration - PauseDuration) AS count ";
             }
             sql_query += "FROM PlaybackActivity ";
             sql_query += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
@@ -784,7 +784,7 @@ namespace playback_reporting.Data
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
-            string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration) AS Seconds ";
+            string sql = "SELECT " + type + ", COUNT(1) AS PlayCount, SUM(PlayDuration - PauseDuration) AS Seconds ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
@@ -839,13 +839,13 @@ namespace playback_reporting.Data
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             string sql =
-                "SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
+                "SELECT CAST((PlayDuration - PauseDuration) / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
                 "FROM PlaybackActivity " +
                 "WHERE DateCreated >= @start_date AND DateCreated <= @end_date " +
                 "AND UserId not IN (select UserId from UserList) " +
                 "AND ItemType IN (" + string.Join(",", filters) + ") " +
-                "GROUP BY CAST(PlayDuration / 300 as int) " +
-                "ORDER BY CAST(PlayDuration / 300 as int) ASC";
+                "GROUP BY CAST((PlayDuration - PauseDuration) / 300 as int) " +
+                "ORDER BY CAST((PlayDuration - PauseDuration) / 300 as int) ASC";
 
             using (WriteLock.Read())
             {
@@ -879,7 +879,7 @@ namespace playback_reporting.Data
             string sql = "";
             sql += "SELECT substr(ItemName,0, instr(ItemName, ' - ')) AS name, ";
             sql += "COUNT(1) AS play_count, ";
-            sql += "SUM(PlayDuration) AS total_duarion ";
+            sql += "SUM(PlayDuration - PauseDuration) AS total_duarion ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE ItemType = 'Episode' ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
@@ -924,7 +924,7 @@ namespace playback_reporting.Data
             string sql = "";
             sql += "SELECT ItemName AS name, ";
             sql += "COUNT(1) AS play_count, ";
-            sql += "SUM(PlayDuration) AS total_duarion ";
+            sql += "SUM(PlayDuration - PauseDuration) AS total_duarion ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE ItemType = 'Movie' ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
@@ -969,7 +969,7 @@ namespace playback_reporting.Data
             string sql = "";
             sql += "SELECT x.latest_date, x.UserId, x.play_count, x.total_duarion, y.ItemName, y.DeviceName ";
             sql += "FROM( ";
-            sql += "SELECT MAX(DateCreated) AS latest_date, UserId, COUNT(1) AS play_count, SUM(PlayDuration) AS total_duarion ";
+            sql += "SELECT MAX(DateCreated) AS latest_date, UserId, COUNT(1) AS play_count, SUM(PlayDuration - PauseDuration) AS total_duarion ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
@@ -1027,7 +1027,7 @@ namespace playback_reporting.Data
             string sql = "SELECT ";
             sql += "strftime('%Y-%m-%d',DateCreated) AS PlayDate, ";
             sql += "MIN(strftime('%H-%M-%S', DateCreated)) AS PlayTime, ";
-            sql += "ItemName, ItemType, SUM(PlayDuration) AS Duration ";
+            sql += "ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE UserId = @user_id ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";

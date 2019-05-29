@@ -98,12 +98,40 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                         }
 
                         var table_area_div = view.querySelector('#table_area_div');
-                        table_area_div.setAttribute("style", "overflow:hidden;height:500px;");
+                        table_area_div.setAttribute("style", "overflow:hidden;");
                         
                         var table_body = view.querySelector('#custom_query_results');
                         table_body.innerHTML = table_row_html;
 
-                        table_area_div.setAttribute("style", "overflow:auto;height:500px;");
+                        table_area_div.setAttribute("style", "overflow:auto;");
+                        
+                        let isDown = false;
+                        let startX;
+                        let scrollLeft;
+
+                        table_area_div.addEventListener('mousedown', (e) => {
+                            isDown = true;
+                            //table_area_div.classList.add('active');
+                            startX = e.pageX - table_area_div.offsetLeft;
+                            scrollLeft = table_area_div.scrollLeft;
+                        });
+                        table_area_div.addEventListener('mouseleave', () => {
+                            isDown = false;
+                            //table_area_div.classList.remove('active');
+                        });
+                        table_area_div.addEventListener('mouseup', () => {
+                            isDown = false;
+                            //table_area_div.classList.remove('active');
+                        });
+                        table_area_div.addEventListener('mousemove', (e) => {
+                            if (!isDown) return;
+                            e.preventDefault();
+                            const x = e.pageX - table_area_div.offsetLeft;
+                            const walk = (x - startX) * 1; //scroll-fast, for now set to 1 for 1:1 scrolling
+                            table_area_div.scrollLeft = scrollLeft - walk;
+                            //console.log(walk);
+                        });
+                        
                     }
                 });
             }
