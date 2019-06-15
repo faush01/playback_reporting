@@ -37,7 +37,7 @@ namespace playback_reporting
         private readonly IFileSystem _fileSystem;
         private readonly IServerApplicationHost _appHost;
 
-        private string task_name = "Playback Reporting Trim Db";
+        private string task_name = "Trim Db";
 
         public string Name => task_name;
         public string Key => "PlaybackHistoryTrimTask";

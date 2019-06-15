@@ -35,7 +35,7 @@ namespace playback_reporting
         private readonly IFileSystem _fileSystem;
         private readonly IServerApplicationHost _appHost;
 
-        private string task_name = "Playback Reporting Run Backup";
+        private string task_name = "Run Backup";
 
         public string Name => task_name;
         public string Key => "PlaybackHistoryRunBackup";
