@@ -105,7 +105,7 @@ namespace playback_reporting
             query.OrderBy = sort;
 
             BaseItem[] results = _libraryManager.GetItemList(query, false);
-            DateTime cutoff = DateTime.Now.AddDays(-180);
+            DateTime cutoff = DateTime.Now.AddDays(-1);
             int added_count = 0;
             foreach(BaseItem item in results)
             {
