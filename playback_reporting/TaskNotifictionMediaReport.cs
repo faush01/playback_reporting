@@ -23,6 +23,7 @@ using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
+using MediaBrowser.Model.Library;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Notifications;
 using MediaBrowser.Model.Tasks;
@@ -44,6 +45,7 @@ namespace playback_reporting
         private readonly INotificationManager _notificationManager;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly IUserViewManager _userViewManager;
 
         private string task_name = "New Media Notification";
 
@@ -59,7 +61,8 @@ namespace playback_reporting
             IServerApplicationHost appHost,
             INotificationManager notificationManager,
             IUserManager userManager,
-            ILibraryManager libraryManager)
+            ILibraryManager libraryManager,
+            IUserViewManager userViewManager)
         {
             _logger = logger.GetLogger("NewMediaReportNotification - TaskNotifictionReport");
             _activity = activity;
@@ -68,6 +71,7 @@ namespace playback_reporting
             _notificationManager = notificationManager;
             _userManager = userManager;
             _libraryManager = libraryManager;
+            _userViewManager = userViewManager;
 
             _appHost = appHost;
             if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
@@ -97,41 +101,63 @@ namespace playback_reporting
                 return;
             }
 
-            string message = "New media added in the last 24 hours\r\n";
+            string message = "New media added in the last 24 hours\r\n\r\n";
 
-            InternalItemsQuery query = new InternalItemsQuery();
-            query.IncludeItemTypes = new string[] {"Movie", "Episode"};
-            var sort = new (string, SortOrder)[1] { ("DateCreated", SortOrder.Descending) };
-            query.OrderBy = sort;
-
-            BaseItem[] results = _libraryManager.GetItemList(query, false);
-            DateTime cutoff = DateTime.Now.AddDays(-1);
+            UserViewQuery view_query = new UserViewQuery();
+            view_query.IncludeExternalContent = false;
+            view_query.IncludeHidden = false;
+            Folder[] views = _userViewManager.GetUserViews(view_query);
             int added_count = 0;
-            foreach(BaseItem item in results)
+
+            foreach (Folder folder in views)
             {
-                if (item.DateCreated.DateTime < cutoff)
-                {
-                    break;
-                }
-                added_count++;
+                InternalItemsQuery query = new InternalItemsQuery();
+                query.IncludeItemTypes = new string[] {"Movie", "Episode"};
+                query.Parent = folder;
+                query.Recursive = true;
+                var sort = new (string, SortOrder)[1] { ("DateCreated", SortOrder.Descending) };
+                query.OrderBy = sort;
 
-                string name = item.Name;
-                string type = item.GetType().Name;
-                string date_added = item.DateCreated.DateTime.ToString();
+                BaseItem[] results = _libraryManager.GetItemList(query, false);
+                DateTime cutoff = DateTime.Now.AddDays(-1);
+                int view_added_count = 0;
+                string view_message_data = folder.Name + "\r\n";
 
-                if (typeof(Episode).Equals(item.GetType()))
+                foreach(BaseItem item in results)
                 {
-                    Episode epp = item as Episode;
-                    string series = epp.SeriesName;
-                    string epp_number = string.Format("{0:D2}x{1:D2}", epp.ParentIndexNumber, epp.IndexNumber);
+                    if (item.DateCreated.DateTime < cutoff)
+                    {
+                        break;
+                    }
+                    view_added_count++;
+                   
+                    string name = item.Name;
+                    string type = item.GetType().Name;
+                    string date_added = item.DateCreated.DateTime.ToString();
 
-                    message += " - (" + type + ") " + series + " - " + epp_number + " - " + name + "\r\n";
+                    if (typeof(Episode).Equals(item.GetType()))
+                    {
+                        Episode epp = item as Episode;
+                        string series = epp.SeriesName;
+                        string epp_number = string.Format("{0:D2}x{1:D2}", epp.ParentIndexNumber, epp.IndexNumber);
+
+                        view_message_data += " - (" + type + ") " + series + " - " + epp_number + " - " + name + "\r\n";
+                    }
+                    else
+                    {
+                        view_message_data += " - (" + type + ") " + name + "\r\n";
+                    }
                 }
-                else
+
+                if (view_added_count > 0)
                 {
-                    message += " - (" + type + ") " + name + "\r\n";
+                    message += view_message_data + "\r\n";
                 }
+
+                added_count += view_added_count;
             }
+
+            _logger.Info("Added Item Notification Message : ItemCount : " + added_count + "\r\n" + message + "\r\n");
 
             if (added_count > 0)
             {
