@@ -115,6 +115,9 @@ namespace playback_reporting
                 query.IncludeItemTypes = new string[] {"Movie", "Episode"};
                 query.Parent = folder;
                 query.Recursive = true;
+                query.IsVirtualItem = false;
+                //query.HasAired = true;
+                query.IsMissing = false;
                 var sort = new (string, SortOrder)[1] { ("DateCreated", SortOrder.Descending) };
                 query.OrderBy = sort;
 
