@@ -44,7 +44,7 @@ namespace playback_reporting
 
         private readonly object syncLock = new object();
         private Dictionary<string, PlaybackInfo> playback_trackers = null;
-        private IActivityRepository _repository;
+        private ActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
             ILibraryManager libraryManager,
@@ -80,10 +80,9 @@ namespace playback_reporting
                 _logger.Info("ERROR : Plugin not compatible with this server version");
                 return;
             }
-
-            var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            repo.Initialize();
-            _repository = repo;
+            
+            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            _repository.Initialize();
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
             _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;

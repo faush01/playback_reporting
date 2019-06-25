@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
+using System.Threading;
 
 namespace playback_reporting.Data
 {
@@ -33,6 +34,8 @@ namespace playback_reporting.Data
         private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
         private ResourcesCounters resource_counters = null;
+
+        static protected ReaderWriterLockSlim WriteLock2;
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
@@ -59,7 +62,7 @@ namespace playback_reporting.Data
 
         private void InitializeInternal()
         {
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
                 {
@@ -135,7 +138,7 @@ namespace playback_reporting.Data
             //Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
 
             Dictionary<string, KeyValuePair<DateTime, int>> actions = new Dictionary<string, KeyValuePair<DateTime, int>>();
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -262,7 +265,7 @@ namespace playback_reporting.Data
             string message = "";
             bool columns_done = false;
             int change_count = 0;
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -317,7 +320,7 @@ namespace playback_reporting.Data
             string sql_query = "delete from PlaybackActivity " +
                                "where UserId not in ('" + string.Join("', '", known_user_ids) + "') ";
 
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
                 {
@@ -341,7 +344,7 @@ namespace playback_reporting.Data
             {
                 sql = "delete from UserList where UserId = @id";
             }
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -360,7 +363,7 @@ namespace playback_reporting.Data
         public List<string> GetUserList()
         {
             List<string> user_id_list = new List<string>();
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -382,7 +385,7 @@ namespace playback_reporting.Data
         public List<string> GetTypeFilterList()
         {
             List<string> filter_Type_list = new List<string>();
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -404,7 +407,7 @@ namespace playback_reporting.Data
         {
             int count = 0;
             _logger.Info("Loading Data");
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -494,7 +497,7 @@ namespace playback_reporting.Data
             StringWriter sw = new StringWriter();
 
             string sql_raw = "SELECT * FROM PlaybackActivity ORDER BY DateCreated";
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -527,7 +530,7 @@ namespace playback_reporting.Data
 
             _logger.Info("DeleteOldData : " + sql);
 
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
                 {
@@ -546,7 +549,7 @@ namespace playback_reporting.Data
                 "values " +
                 "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration)";
 
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
                 {
@@ -574,7 +577,7 @@ namespace playback_reporting.Data
         public void UpdatePlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration, PauseDuration = @PauseDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
-            using (WriteLock.Write())
+            using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
                 {
@@ -610,7 +613,7 @@ namespace playback_reporting.Data
                                "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -669,7 +672,7 @@ namespace playback_reporting.Data
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -720,7 +723,7 @@ namespace playback_reporting.Data
             sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "AND ItemType IN (" + string.Join(",", filters) + ")";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -788,7 +791,7 @@ namespace playback_reporting.Data
             sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY " + type;
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -845,7 +848,7 @@ namespace playback_reporting.Data
                 "GROUP BY CAST((PlayDuration - PauseDuration) / 300 as int) " +
                 "ORDER BY CAST((PlayDuration - PauseDuration) / 300 as int) ASC";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -884,7 +887,7 @@ namespace playback_reporting.Data
             sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY name";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -929,7 +932,7 @@ namespace playback_reporting.Data
             sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY name";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -976,7 +979,7 @@ namespace playback_reporting.Data
             sql += "INNER JOIN PlaybackActivity AS y ON x.latest_date = y.DateCreated AND x.UserId = y.UserId ";
             sql += "ORDER BY x.latest_date DESC";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
@@ -1032,7 +1035,7 @@ namespace playback_reporting.Data
             sql += "GROUP BY PlayDate, ItemName, ItemType ";
             sql += "ORDER BY PlayDate DESC, PlayTime DESC";
 
-            using (WriteLock.Read())
+            using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
                 {
