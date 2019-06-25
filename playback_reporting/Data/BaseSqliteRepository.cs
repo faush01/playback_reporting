@@ -27,18 +27,47 @@ using System.Text;
 
 namespace playback_reporting.Data
 {
+    public sealed class BaseSqliteLock
+    {
+        private static readonly BaseSqliteLock instance = new BaseSqliteLock();
+        private readonly ReaderWriterLockSlim lock_item = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
+        static BaseSqliteLock()
+        {
+        }
+
+        private BaseSqliteLock()
+        {
+        }
+
+        public static BaseSqliteLock Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+
+        public ReaderWriterLockSlim getLockItem()
+        {
+            return lock_item;
+        }
+    }
+
     public abstract class BaseSqliteRepository : IDisposable
     {
         protected string DbFilePath { get; set; }
-        protected ReaderWriterLockSlim WriteLock;
+        protected BaseSqliteLock lock_manager;
 
         protected ILogger Logger { get; private set; }
 
         protected BaseSqliteRepository(ILogger logger)
         {
             Logger = logger;
+            lock_manager = BaseSqliteLock.Instance;
 
-            WriteLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+            Logger.Debug("BaseSqliteRepository Instance : " + this.GetHashCode());
+            Logger.Debug("BaseSqliteLock Instance : " + lock_manager.GetHashCode());
         }
 
         protected TransactionMode TransactionMode
@@ -70,7 +99,7 @@ namespace playback_reporting.Data
                 return _connection.Clone(false);
             }
 
-            lock (WriteLock)
+            lock (lock_manager.getLockItem())
             {
                 if (!_versionLogged)
                 {
@@ -353,7 +382,7 @@ namespace playback_reporting.Data
             {
                 lock (_disposeLock)
                 {
-                    using (WriteLock.Write())
+                    using (lock_manager.getLockItem().Write())
                     {
                         if (_connection != null)
                         {

@@ -223,7 +223,7 @@ namespace playback_reporting.Api
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
 
-        private IActivityRepository Repository;
+        private ActivityRepository repository;
 
         public UserActivityAPI(ILogManager logger,
             IFileSystem fileSystem,
@@ -242,16 +242,15 @@ namespace playback_reporting.Api
             _sessionManager = sessionManager;
 
             _logger.Info("UserActivityAPI Loaded");
-            var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            //repo.Initialize();
-            Repository = repo;
+            ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            repository = repo;
         }
 
         public IRequest Request { get; set; }
 
         public object Get(TypeFilterList request)
         {
-            List<string> filter_list = Repository.GetTypeFilterList();
+            List<string> filter_list = repository.GetTypeFilterList();
             return filter_list;
         }
 
@@ -268,7 +267,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetUserReport(request.days, end_date);
+            List<Dictionary<string, object>> report = repository.GetUserReport(request.days, end_date);
 
             foreach(var user_info in report)
             {
@@ -365,11 +364,11 @@ namespace playback_reporting.Api
                 {
                     user_id_list.Add(emby_user.Id.ToString("N"));
                 }
-                Repository.RemoveUnknownUsers(user_id_list);
+                repository.RemoveUnknownUsers(user_id_list);
             }
             else
             {
-                Repository.ManageUserList(action, id);
+                repository.ManageUserList(action, id);
             }
 
             return true;
@@ -377,7 +376,7 @@ namespace playback_reporting.Api
 
         public object Get(GetUserList request)
         {
-            List<string> user_id_list = Repository.GetUserList();
+            List<string> user_id_list = repository.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
 
@@ -400,7 +399,7 @@ namespace playback_reporting.Api
             {
                 filter_tokens = report.Filter.Split(',');
             }
-            List<Dictionary<string, string>> results = Repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
+            List<Dictionary<string, string>> results = repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
 
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
@@ -462,7 +461,7 @@ namespace playback_reporting.Api
                 {
                     load_data = sr.ReadToEnd();
                 }
-                count = Repository.ImportRawData(load_data);
+                count = repository.ImportRawData(load_data);
             }
             catch (Exception e)
             {
@@ -498,7 +497,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
             
-            Dictionary<String, Dictionary<string, int>> results = Repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
+            Dictionary<String, Dictionary<string, int>> results = repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
 
             // add empty user for labels
             results.Add("labels_user", new Dictionary<string, int>());
@@ -587,7 +586,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<string, int> report = Repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
+            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
 
             for (int day = 0; day < 7; day++)
             {
@@ -617,7 +616,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
+            List<Dictionary<string, object>> report = repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
 
             if (request.BreakdownType == "UserId")
             {
@@ -660,7 +659,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<int, int> report = Repository.GetDurationHistogram(request.days, end_date, filter_tokens);
+            SortedDictionary<int, int> report = repository.GetDurationHistogram(request.days, end_date, filter_tokens);
 
             // find max
             int max = -1;
@@ -696,7 +695,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetTvShowReport(request.days, end_date);
+            List<Dictionary<string, object>> report = repository.GetTvShowReport(request.days, end_date);
             return report;
         }
 
@@ -713,7 +712,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetMoviesReport(request.days, end_date);
+            List<Dictionary<string, object>> report = repository.GetMoviesReport(request.days, end_date);
             return report;
         }
 
@@ -725,7 +724,7 @@ namespace playback_reporting.Api
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
-            string message = Repository.RunCustomQuery(request.CustomQueryString, colums, result);
+            string message = repository.RunCustomQuery(request.CustomQueryString, colums, result);
 
             int index_of_user_col = colums.IndexOf("UserId");
             if (request.ReplaceUserId && index_of_user_col > -1)
@@ -781,7 +780,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = Repository.GetUserPlayListReport(request.days, end_date, request.user_id, null);
+            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, null);
 
             /*
             Dictionary<string, object> row_data = new Dictionary<string, object>();
@@ -838,8 +837,8 @@ namespace playback_reporting.Api
 
         public object Get(GetResourceUsageInfo request)
         {
-            List<Dictionary<string, object>> counters = Repository.GetResourceCounters(request.hours);
-            List<KeyValuePair<string, int>> play_counts = Repository.GetPlayActivityCounts(request.hours);
+            List<Dictionary<string, object>> counters = repository.GetResourceCounters(request.hours);
+            List<KeyValuePair<string, int>> play_counts = repository.GetPlayActivityCounts(request.hours);
 
             Dictionary<string, object> results = new Dictionary<string, object>();
             results.Add("counters", counters);
@@ -850,7 +849,7 @@ namespace playback_reporting.Api
 
         public object Get(GetProcessList request)
         {
-            List<Dictionary<string, object>> report = Repository.GetProcessList();
+            List<Dictionary<string, object>> report = repository.GetProcessList();
 
             //System.Threading.Thread.Sleep(5000);
             //throw new Exception("Test Error");

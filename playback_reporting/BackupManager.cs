@@ -28,7 +28,6 @@ namespace playback_reporting
     class BackupManager
     {
 
-        private IActivityRepository repository;
         private readonly IServerConfigurationManager _config;
         private readonly ILogger _logger;
         private readonly IFileSystem _fileSystem;
@@ -38,10 +37,7 @@ namespace playback_reporting
             _config = config;
             _fileSystem = fileSystem;
             _logger = logger;
-
-            repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
         }
-
 
         public string SaveBackup()
         {
@@ -59,6 +55,7 @@ namespace playback_reporting
                 return "Backup path does not exist or is not a directory";
             }
 
+            ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             string raw_data = repository.ExportRawData();
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";

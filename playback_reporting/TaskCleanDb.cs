@@ -44,8 +44,6 @@ namespace playback_reporting
         public string Description => "Runs the report history trim task";
         public string Category => "Playback Reporting";
 
-        private playback_reporting.Data.IActivityRepository Repository;
-
         public TaskCleanDb(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem, IServerApplicationHost appHost)
         {
             _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
@@ -60,11 +58,6 @@ namespace playback_reporting
                 _logger.Info("ERROR : Plugin not compatible with this server version");
                 return;
             }
-
-            _logger.Info("TaskCleanDb Loaded");
-            var repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            //repo.Initialize();
-            Repository = repo;
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
@@ -72,8 +65,8 @@ namespace playback_reporting
             var trigger = new TaskTriggerInfo
             {
                 Type = TaskTriggerInfo.TriggerDaily,
-                TimeOfDayTicks = TimeSpan.FromHours(0).Ticks
-            }; //12am
+                TimeOfDayTicks = TimeSpan.FromMinutes(5).Ticks
+            }; //12:05am
             return new[] { trigger };
         }
 
@@ -103,12 +96,14 @@ namespace playback_reporting
                 else if(max_data_age == 0)
                 {
                     _logger.Info("Removing all data");
-                    Repository.DeleteOldData(null);
+                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+                    repo.DeleteOldData(null);
                 }
                 else
                 {
                     DateTime del_defore = DateTime.Now.AddMonths(max_data_age * -1);
-                    Repository.DeleteOldData(del_defore);
+                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+                    repo.DeleteOldData(del_defore);
                 }
             }, cancellationToken);
         }

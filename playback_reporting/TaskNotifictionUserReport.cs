@@ -78,8 +78,8 @@ namespace playback_reporting
             var trigger = new TaskTriggerInfo
             {
                 Type = TaskTriggerInfo.TriggerDaily,
-                TimeOfDayTicks = TimeSpan.FromHours(0).Ticks
-            }; //12am daily
+                TimeOfDayTicks = TimeSpan.FromMinutes(20).Ticks
+            }; //12:20am daily
             return new[] { trigger };
         }
 
@@ -97,7 +97,7 @@ namespace playback_reporting
                 user_map.Add(user.Id.ToString("N"), user.Name);
             }
 
-            Data.IActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
 
             string sql = "";
             sql += "SELECT UserId, ItemType, ItemName, SUM(PlayDuration - PauseDuration) AS PlayTime ";
