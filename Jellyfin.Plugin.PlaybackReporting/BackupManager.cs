@@ -44,7 +44,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
 
         public string SaveBackup()
         {
-            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            var config = _config.GetReportPlaybackOptions();
 
             if (string.IsNullOrEmpty(config.BackupPath))
             {

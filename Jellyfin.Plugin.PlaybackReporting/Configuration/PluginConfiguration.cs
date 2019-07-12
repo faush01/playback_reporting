@@ -14,13 +14,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-namespace Jellyfin.Plugin.PlaybackReporting
+using MediaBrowser.Model.Plugins;
+
+namespace Jellyfin.Plugin.PlaybackReporting.Configuration
 {
-    public class ReportPlaybackOptions
+    public class PluginConfiguration: BasePluginConfiguration
     {
-        public int MaxDataAge { set; get; } = 3;
-        public string BackupPath { set; get; }
-        public int MaxBackupFiles { set; get; } = 5;
 
     }
 }
