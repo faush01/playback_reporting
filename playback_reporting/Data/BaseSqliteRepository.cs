@@ -321,7 +321,7 @@ namespace playback_reporting.Data
                 });
             }
 
-            db.ExecuteAll(GetBytes(string.Join(";", queries.ToArray())));
+            db.ExecuteAll(string.Join(";", queries.ToArray()));
         }
 
         protected virtual bool EnableTempStoreMemory
