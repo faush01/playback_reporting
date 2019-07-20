@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -111,7 +111,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("playback_report_settings"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("playback_report_settings"), getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
             set_backup_path.addEventListener("click", setBackupPathPicker);

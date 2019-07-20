@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
 
@@ -36,7 +36,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("custom_query"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("custom_query"), getTabs);
 
             var run_custom_query = view.querySelector('#run_custom_query');
             run_custom_query.addEventListener("click", runQuery);

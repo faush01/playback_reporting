@@ -116,8 +116,7 @@ namespace playback_reporting
                 query.Parent = folder;
                 query.Recursive = true;
                 query.IsVirtualItem = false;
-                //query.HasAired = true;
-                query.IsMissing = false;
+                query.HasAired = true;
                 var sort = new (string, SortOrder)[1] { ("DateCreated", SortOrder.Descending) };
                 query.OrderBy = sort;
 

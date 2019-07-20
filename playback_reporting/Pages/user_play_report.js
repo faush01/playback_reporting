@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -49,7 +49,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("user_report"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("user_report"), getTabs);
 
             var user_name = "";
             var user_name_index = window.location.href.indexOf("user=");

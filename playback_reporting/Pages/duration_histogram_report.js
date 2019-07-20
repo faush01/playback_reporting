@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
     var my_bar_chart = null;
@@ -118,7 +118,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("duration_histogram_report"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("duration_histogram_report"), getTabs);
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright(C) 2018
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -31,7 +31,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("user_report"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("user_report"), getTabs);
 
             var start_picker = view.querySelector('#start_date');
             var start_date = new Date();
@@ -77,13 +77,13 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
-                        var user_image = "css/images/logindefault.png";
+                        var user_image = "<i class='md-icon' style='font-size:3em;'></i>";                   
                         if (user_info.has_image) {
-                            user_image = "Users/" + user_info.user_id + "/Images/Primary?width=50";
-                            user_image = ApiClient.getUrl(user_image);
-                        }                      
-
-                        row_html += "<td><img src='" + user_image + "' style='width:50px;height:50px;border-radius:10px;'></td>";
+                            var user_img = "Users/" + user_info.user_id + "/Images/Primary?width=50";
+                            user_img = ApiClient.getUrl(user_img);
+                            user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
+                        }
+                        row_html += "<td valign='middle'>" + user_image + "</td>";
 
                         var report_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
                         var name_link = "<a is='emby-linkbutton' href='" + report_url + "'>" + user_info.user_name + "</a>";

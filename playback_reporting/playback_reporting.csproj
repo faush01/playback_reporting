@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;</TargetFrameworks>
-    <AssemblyVersion>1.5.1.0</AssemblyVersion>
-    <FileVersion>1.5.1.0</FileVersion>
-    <Version>1.5.1.0</Version>
+    <AssemblyVersion>1.5.2.0</AssemblyVersion>
+    <FileVersion>1.5.2.0</FileVersion>
+    <Version>1.5.2.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\activity_report.html" />
@@ -56,8 +56,8 @@
     <EmbeddedResource Include="thumb.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="mediabrowser.server.core" Version="4.2.0.6-beta4" />
-    <PackageReference Include="SQLitePCL.pretty.core" Version="1.2.1" />
+    <PackageReference Include="mediabrowser.server.core" Version="4.2.0.30-beta" />
+    <PackageReference Include="SQLitePCL.pretty.core" Version="1.2.2" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

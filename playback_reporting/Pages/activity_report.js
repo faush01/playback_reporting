@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright(C) 2018
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (libraryMenu) {
+define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
     ApiClient.getActivity = function (url_to_get) {
@@ -45,7 +45,7 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            libraryMenu.setTabs('playback_reporting', getTabIndex("activity_report"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("activity_report"), getTabs);
 
             var style = document.createElement('style');
             style.innerHTML =
@@ -88,12 +88,13 @@ define(['libraryMenu', Dashboard.getConfigurationResourceUrl('helper_function.js
                         row_html += "<td>" + activity_info.device_name + "</td>";
                         row_html += "<td>" + activity_info.client_name + " (" + activity_info.app_version + ")</td>";
 
-                        var user_image = "css/images/logindefault.png";
+                        var user_image = "<i class='md-icon' style='font-size:3em;'></i>";
                         if (activity_info.has_image) {
-                            user_image = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
-                            user_image = ApiClient.getUrl(user_image);
+                            var user_img = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
+                            user_img = ApiClient.getUrl(user_img);
+                            user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
                         } 
-                        row_html += "<td><img src='" + user_image + "' style='width:50px;height:50px;border-radius:10px;'></td>";
+                        row_html += "<td valign='middle'>" + user_image + "</td>";
 
                         /*
                         var test_table = "<table>";
