@@ -364,7 +364,7 @@ namespace playback_reporting
                         if (process_list.ContainsKey(process_key) == false)
                         {
                             proc_details = new ProcessDetails(proc);
-                            _logger.Debug("Adding Process:{0}", proc_details);
+                            //_logger.Debug("Adding Process:{0}", proc_details);
                             process_list.Add(process_key, proc_details);
                         }
                         else
@@ -381,7 +381,7 @@ namespace playback_reporting
                             }
                             catch(Exception e)
                             {
-                                _logger.Debug("Adding Exception Thrown Error for MemoryException");
+                                //_logger.Debug("Adding Exception Thrown Error for MemoryException");
                                 proc_details.ExceptionTypes.Add(ExceptionType.MemoryException);
                                 if (string.IsNullOrEmpty(proc_details.ErrorMessage))
                                 {
@@ -399,7 +399,7 @@ namespace playback_reporting
                             }
                             catch (Exception e)
                             {
-                                _logger.Debug("Adding Exception Thrown Error for TimeException");
+                                //_logger.Debug("Adding Exception Thrown Error for TimeException");
                                 proc_details.ExceptionTypes.Add(ExceptionType.TimeException);
                                 if (string.IsNullOrEmpty(proc_details.ErrorMessage))
                                 {
@@ -441,7 +441,7 @@ namespace playback_reporting
                         }
                         else
                         {
-                            _logger.Debug("Removing Process:{0}", proc_details);
+                            //_logger.Debug("Removing Process:{0}", proc_details);
                             process_list.Remove(key);
                         }
                     }
