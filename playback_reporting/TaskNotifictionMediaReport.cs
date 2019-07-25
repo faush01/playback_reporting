@@ -72,12 +72,12 @@ namespace playback_reporting
             _userManager = userManager;
             _libraryManager = libraryManager;
             _userViewManager = userViewManager;
-
             _appHost = appHost;
+
             if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
             {
-                task_name = task_name + " (disabled)";
                 _logger.Info("ERROR : Plugin not compatible with this server version");
+                throw new NotImplementedException("This task is not available on this version of Emby");
             }
 
             _logger.Info("NewMediaReportNotification Loaded");

@@ -49,13 +49,12 @@ namespace playback_reporting
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
-
             _appHost = appHost;
+
             if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
             {
-                task_name = task_name + " (disabled)";
                 _logger.Info("ERROR : Plugin not compatible with this server version");
-                return;
+                throw new NotImplementedException("This task is not available on this version of Emby");
             }
 
             _logger.Info("TaskCleanDb Loaded");

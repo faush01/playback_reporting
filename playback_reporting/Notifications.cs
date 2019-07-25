@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Notifications;
 using System;
@@ -25,8 +26,20 @@ namespace playback_reporting
 {
     public class MyNotifications : INotificationTypeFactory
     {
+        private readonly IServerApplicationHost _appHost;
+
+        public MyNotifications(IServerApplicationHost appHost)
+        {
+            _appHost = appHost;
+        }
+
         public IEnumerable<NotificationTypeInfo> GetNotificationTypes()
         {
+            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
+            {
+                return new List<NotificationTypeInfo>();
+            }
+
             var knownTypes = new List<NotificationTypeInfo>
             {
                 new NotificationTypeInfo
