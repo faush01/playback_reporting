@@ -111,31 +111,36 @@ namespace playback_reporting
 
             foreach (Folder folder in views)
             {
+                _logger.Info("Checking for new items in  : " + folder.ToString());
+
                 InternalItemsQuery query = new InternalItemsQuery();
                 query.IncludeItemTypes = new string[] {"Movie", "Episode"};
                 query.Parent = folder;
                 query.Recursive = true;
                 query.IsVirtualItem = false;
-                query.HasAired = true;
                 var sort = new (string, SortOrder)[1] { ("DateCreated", SortOrder.Descending) };
                 query.OrderBy = sort;
 
                 BaseItem[] results = _libraryManager.GetItemList(query, false);
                 DateTime cutoff = DateTime.Now.AddDays(-1);
+                _logger.Info("Cutoff DateTime for new items : " + cutoff.ToString("yyyy-MM-dd HH:mm:ss zzz"));
                 int view_added_count = 0;
                 string view_message_data = folder.Name + "\r\n";
 
                 foreach(BaseItem item in results)
                 {
+                    string id = item.InternalId.ToString();
+                    string name = item.Name;
+                    string type = item.GetType().Name;
+                    _logger.Info("Recently added item : (" + id + ") - (" + item.DateCreated.DateTime.ToString("yyyy-MM-dd HH:mm:ss zzz") + ")");
+
                     if (item.DateCreated.DateTime < cutoff)
                     {
                         break;
                     }
                     view_added_count++;
-                   
-                    string name = item.Name;
-                    string type = item.GetType().Name;
-                    string date_added = item.DateCreated.DateTime.ToString();
+
+                    _logger.Info("Adding Item : (" + id + ")");
 
                     if (typeof(Episode).Equals(item.GetType()))
                     {
