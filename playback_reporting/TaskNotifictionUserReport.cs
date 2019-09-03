@@ -102,7 +102,7 @@ namespace playback_reporting
             string sql = "";
             sql += "SELECT UserId, ItemType, ItemName, SUM(PlayDuration - PauseDuration) AS PlayTime ";
             sql += "FROM PlaybackActivity ";
-            sql += "WHERE DateCreated > datetime('now', '-1 day') ";
+            sql += "WHERE DateCreated > datetime('now', '-1 day', 'localtime') ";
             sql += "GROUP BY UserId, ItemType, ItemName";
 
             List<string> cols = new List<string>();
