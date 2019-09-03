@@ -173,6 +173,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
     public class GetBreakdownReport : IReturn<Object>
     {
+        [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string user_id { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -197,6 +199,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
     public class GetTvShowsReport : IReturn<Object>
     {
+        [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string user_id { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -207,6 +211,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/MoviesReport", "GET", Summary = "Gets Movies counts")]
     public class GetMoviesReport : IReturn<Object>
     {
+        [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string user_id { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -616,7 +622,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetBreakdownReport(request.days, end_date, request.BreakdownType);
+            List<Dictionary<string, object>> report = repository.GetBreakdownReport(request.user_id, request.days, end_date, request.BreakdownType);
 
             if (request.BreakdownType == "UserId")
             {
@@ -695,7 +701,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetTvShowReport(request.days, end_date);
+            List<Dictionary<string, object>> report = repository.GetTvShowReport(request.user_id, request.days, end_date);
             return report;
         }
 
@@ -712,7 +718,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetMoviesReport(request.days, end_date);
+            List<Dictionary<string, object>> report = repository.GetMoviesReport(request.user_id, request.days, end_date);
             return report;
         }
 

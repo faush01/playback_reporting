@@ -35,10 +35,10 @@ namespace playback_reporting.Data
         List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] filter);
         Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type);
         SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date, string[] types);
-        List<Dictionary<string, object>> GetBreakdownReport(int days, DateTime end_date, string type);
+        List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type);
         SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date, string[] types);
-        List<Dictionary<string, object>> GetTvShowReport(int days, DateTime end_date);
-        List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date);
+        List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date);
+        List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date);
         List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);
         string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results);
         List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types);

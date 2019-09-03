@@ -248,6 +248,12 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
+                var user_name = "";
+                var user_name_index = window.location.href.indexOf("user=");
+                if (user_name_index > -1) {
+                    user_name = window.location.href.substring(user_name_index + 5);
+                }
+
                 var start_picker = view.querySelector('#start_date');
                 var start_date = new Date();
                 start_date.setDate(start_date.getDate() - 28);
@@ -267,7 +273,32 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var add_other_items = view.querySelector('#add_other_items');
                 add_other_items.addEventListener("change", process_click);
 
-                process_click();
+                var user_list_selector = view.querySelector('#user_list');
+                user_list_selector.addEventListener("change", process_click);
+
+                // add user list to selector
+                var url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
+                url = ApiClient.getUrl(url);
+
+                ApiClient.getUserActivity(url).then(function (user_list) {
+                    //alert("Loaded Data: " + JSON.stringify(user_list));
+                    var index = 0;
+                    var options_html = "<option value=''>All Users</option>";
+                    var item_details;
+                    for (index = 0; index < user_list.length; ++index) {
+                        item_details = user_list[index];
+                        if (user_name === item_details.name) {
+                            options_html += "<option value='" + item_details.id + "' selected>" + item_details.name + "</option>";
+                        }
+                        else {
+                            options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                        }
+
+                    }
+                    user_list_selector.innerHTML = options_html;
+
+                    process_click();
+                });
 
                 function process_click() {
                     var start = new Date(start_picker.value);
@@ -287,9 +318,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     var load_status = view.querySelector('#breakdown_report_status');
                     load_status.innerHTML = "Loading Data...";
                     var load_count = 0;
-                    
+
+                    var selected_user_id = user_list_selector.options[user_list_selector.selectedIndex].value;
+
                     // build user chart
-                    url = "user_usage_stats/UserId/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/UserId/BreakdownReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -298,7 +331,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
                     
                     // build ItemType chart
-                    url = "user_usage_stats/ItemType/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ItemType/BreakdownReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -307,7 +340,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build PlaybackMethod chart
-                    url = "user_usage_stats/PlaybackMethod/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/PlaybackMethod/BreakdownReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -316,7 +349,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build ClientName chart
-                    url = "user_usage_stats/ClientName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/ClientName/BreakdownReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -325,7 +358,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build DeviceName chart
-                    url = "user_usage_stats/DeviceName/BreakdownReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/DeviceName/BreakdownReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -334,7 +367,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build TvShows chart
-                    url = "user_usage_stats/TvShowsReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/TvShowsReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }
@@ -343,7 +376,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }, function (response) { load_count = -100; load_status.innerHTML = response.status + ":" + response.statusText; });
 
                     // build Movies chart
-                    url = "user_usage_stats/MoviesReport?days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                    url = "user_usage_stats/MoviesReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
                     ApiClient.getUserActivity(url).then(function (data) {
                         if (++load_count === 7) { load_status.innerHTML = "&nbsp;"; }

@@ -778,7 +778,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, object>> GetBreakdownReport(int days, DateTime end_date, string type)
+        public List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type)
         {
             // UserId ItemType PlaybackMethod ClientName DeviceName
 
@@ -791,6 +791,12 @@ namespace playback_reporting.Data
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
+
+            if (!string.IsNullOrEmpty(user_id))
+            {
+                sql += "AND UserId = @user_id ";
+            }
+
             sql += "GROUP BY " + type;
 
             using (lock_manager.getLockItem().Read())
@@ -801,6 +807,7 @@ namespace playback_reporting.Data
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
                         statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@user_id", user_id);
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -872,7 +879,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetTvShowReport(int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -887,6 +894,12 @@ namespace playback_reporting.Data
             sql += "WHERE ItemType = 'Episode' ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
+
+            if (!string.IsNullOrEmpty(user_id))
+            {
+                sql += "AND UserId = @user_id ";
+            }
+
             sql += "GROUP BY name";
 
             using (lock_manager.getLockItem().Read())
@@ -897,6 +910,7 @@ namespace playback_reporting.Data
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
                         statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@user_id", user_id);
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -917,7 +931,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetMoviesReport(int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -932,6 +946,12 @@ namespace playback_reporting.Data
             sql += "WHERE ItemType = 'Movie' ";
             sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
+
+            if (!string.IsNullOrEmpty(user_id))
+            {
+                sql += "AND UserId = @user_id ";
+            }
+
             sql += "GROUP BY name";
 
             using (lock_manager.getLockItem().Read())
@@ -942,6 +962,7 @@ namespace playback_reporting.Data
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
                         statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@user_id", user_id);
 
                         foreach (var row in statement.ExecuteQuery())
                         {

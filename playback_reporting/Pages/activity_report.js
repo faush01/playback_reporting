@@ -88,6 +88,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         row_html += "<td>" + activity_info.device_name + "</td>";
                         row_html += "<td>" + activity_info.client_name + " (" + activity_info.app_version + ")</td>";
 
+                        /*
                         var user_image = "<i class='md-icon' style='font-size:3em;'></i>";
                         if (activity_info.has_image) {
                             var user_img = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
@@ -95,6 +96,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
                         } 
                         row_html += "<td valign='middle'>" + user_image + "</td>";
+                        */
 
                         /*
                         var test_table = "<table>";

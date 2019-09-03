@@ -77,6 +77,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
+                        var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
+                        var summary_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + summary_url + "' title='Summary'>" +
+                            "<i class='md-icon largeIcon'>view_list</i></a>";
+                        var breakdown_url = Dashboard.getConfigurationPageUrl('breakdown_report') + "&user=" + encodeURI(user_info.user_name);
+                        var breakdown_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + breakdown_url + "' title='Breakdown'>" +
+                            "<i class='md-icon largeIcon'>pie_chart</i></a>";
+                        row_html += "<td valign='middle' align='left' width='10' nowrap>" + summary_link + breakdown_link + "</td>";
+                        
+                        /*
                         var user_image = "<i class='md-icon' style='font-size:3em;'></i>";                   
                         if (user_info.has_image) {
                             var user_img = "Users/" + user_info.user_id + "/Images/Primary?width=50";
@@ -84,11 +93,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
                         }
                         row_html += "<td valign='middle'>" + user_image + "</td>";
+                        */
 
-                        var report_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
-                        var name_link = "<a is='emby-linkbutton' href='" + report_url + "'>" + user_info.user_name + "</a>";
-                        row_html += "<td>" + name_link + "</td>";
-
+                        row_html += "<td>" + user_info.user_name + "</td>";
                         row_html += "<td>" + user_info.last_seen + "</td>";
                         row_html += "<td>" + user_info.item_name + "</td>";
                         row_html += "<td>" + user_info.client_name + "</td>";

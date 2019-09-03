@@ -49,7 +49,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         // init code here
         view.addEventListener('viewshow', function (e) {
 
-            mainTabsManager.setTabs(this, getTabIndex("user_report"), getTabs);
+            mainTabsManager.setTabs(this, getTabIndex("user_play_report"), getTabs);
 
             var user_name = "";
             var user_name_index = window.location.href.indexOf("user=");

@@ -25,12 +25,16 @@ function getTabs() {
             name: 'Resources'
         },
         {
+            href: Dashboard.getConfigurationPageUrl('user_playback_report'),
+            name: 'Playback'
+        },
+        {
             href: Dashboard.getConfigurationPageUrl('user_report'),
             name: 'Users'
         },
         {
-            href: Dashboard.getConfigurationPageUrl('user_playback_report'),
-            name: 'Playback'
+            href: Dashboard.getConfigurationPageUrl('user_play_report'),
+            name: 'Summary'
         },
         {
             href: Dashboard.getConfigurationPageUrl('breakdown_report'),
