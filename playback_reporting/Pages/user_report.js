@@ -80,10 +80,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
                         var summary_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + summary_url + "' title='Summary'>" +
                             "<i class='md-icon largeIcon'>view_list</i></a>";
+
                         var breakdown_url = Dashboard.getConfigurationPageUrl('breakdown_report') + "&user=" + encodeURI(user_info.user_name);
                         var breakdown_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + breakdown_url + "' title='Breakdown'>" +
                             "<i class='md-icon largeIcon'>pie_chart</i></a>";
-                        row_html += "<td valign='middle' align='left' width='10' nowrap>" + summary_link + breakdown_link + "</td>";
+                        
+                        var time_url = Dashboard.getConfigurationPageUrl('hourly_usage_report') + "&user=" + encodeURI(user_info.user_name);
+                        var time_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + time_url + "' title='Time'>" +
+                            "<i class='md-icon largeIcon'>access_time</i></a>";
+
+                        row_html += "<td valign='middle' align='left' width='10' nowrap>" + summary_link + breakdown_link + time_link + "</td>";
                         
                         /*
                         var user_image = "<i class='md-icon' style='font-size:3em;'></i>";                   

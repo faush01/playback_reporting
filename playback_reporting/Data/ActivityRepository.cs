@@ -707,7 +707,7 @@ namespace playback_reporting.Data
             return usage;
         }
 
-        public SortedDictionary<string, int> GetHourlyUsageReport(int days, DateTime end_date, string[] types)
+        public SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -725,6 +725,11 @@ namespace playback_reporting.Data
             sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "AND ItemType IN (" + string.Join(",", filters) + ")";
 
+            if (!string.IsNullOrEmpty(user_id))
+            {
+                sql += " AND UserId = @user_id";
+            }
+
             using (lock_manager.getLockItem().Read())
             {
                 using (var connection = CreateConnection(true))
@@ -733,6 +738,7 @@ namespace playback_reporting.Data
                     {
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
                         statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        statement.TryBind("@user_id", user_id);
 
                         foreach (var row in statement.ExecuteQuery())
                         {

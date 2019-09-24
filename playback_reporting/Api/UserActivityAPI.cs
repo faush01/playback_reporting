@@ -161,6 +161,8 @@ namespace playback_reporting.Api
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
     public class GetHourlyReport : IReturn<Object>
     {
+        [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string user_id { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -592,7 +594,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(request.days, end_date, filter_tokens);
+            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(request.user_id, request.days, end_date, filter_tokens);
 
             for (int day = 0; day < 7; day++)
             {

@@ -82,6 +82,7 @@ namespace playback_reporting.Tasks
             sql += "AND DateCreated > datetime('now', '-14 day', 'localtime') ";
             sql += "GROUP BY ItemId ";
             sql += "ORDER BY count DESC, av_age ASC";
+            sql += "LIMIT 20";
 
             List<string> cols = new List<string>();
             List<List<Object>> query_results = new List<List<object>>();

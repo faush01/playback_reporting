@@ -324,6 +324,12 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
 
+                var user_name = "";
+                var user_name_index = window.location.href.indexOf("user=");
+                if (user_name_index > -1) {
+                    user_name = window.location.href.substring(user_name_index + 5);
+                }
+
                 var filter_url = ApiClient.getUrl("user_usage_stats/type_filter_list");
                 console.log("loading types form : " + filter_url);
 
@@ -363,7 +369,32 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                     var span_days_text = view.querySelector('#span_days');
 
-                    process_click();
+                    var user_list_selector = view.querySelector('#user_list');
+                    user_list_selector.addEventListener("change", process_click);
+
+                    // add user list to selector
+                    var user_url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
+                    user_url = ApiClient.getUrl(user_url);
+
+                    ApiClient.getUserActivity(user_url).then(function (user_list) {
+                        //alert("Loaded Data: " + JSON.stringify(user_list));
+                        var index = 0;
+                        var options_html = "<option value=''>All Users</option>";
+                        var item_details;
+                        for (index = 0; index < user_list.length; ++index) {
+                            item_details = user_list[index];
+                            if (user_name === item_details.name) {
+                                options_html += "<option value='" + item_details.id + "' selected>" + item_details.name + "</option>";
+                            }
+                            else {
+                                options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                            }
+
+                        }
+                        user_list_selector.innerHTML = options_html;
+
+                        process_click();
+                    });
 
                     function process_click() {
                         var filter = [];
@@ -384,8 +415,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         var days = Date.daysBetween(start, end);
                         span_days_text.innerHTML = days;
+                        var selected_user_id = user_list_selector.options[user_list_selector.selectedIndex].value;
 
-                        var url = "user_usage_stats/HourlyReport?days=" + days + "&end_date=" + end_picker.value + "&filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
+                        var url = "user_usage_stats/HourlyReport?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&filter=" + filter.join(",") + "&stamp=" + new Date().getTime();
                         url = ApiClient.getUrl(url);
 
                         load_status.innerHTML = "Loading Data...";
