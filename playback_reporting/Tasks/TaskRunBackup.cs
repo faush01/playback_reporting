@@ -20,16 +20,14 @@ using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Tasks;
-using playback_reporting.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace playback_reporting
+namespace playback_reporting.Tasks
 {
-    class TaskCleanDb : IScheduledTask
+    class TaskRunBackup : IScheduledTask
     {
         private IActivityManager _activity;
         private ILogger _logger;
@@ -37,16 +35,17 @@ namespace playback_reporting
         private readonly IFileSystem _fileSystem;
         private readonly IServerApplicationHost _appHost;
 
-        private string task_name = "Trim Db";
+        private string task_name = "Run Backup";
 
         public string Name => task_name;
-        public string Key => "PlaybackHistoryTrimTask";
-        public string Description => "Runs the report history trim task";
+        public string Key => "PlaybackHistoryRunBackup";
+        public string Description => "Runs the report data backup";
         public string Category => "Playback Reporting";
 
-        public TaskCleanDb(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem, IServerApplicationHost appHost)
+
+        public TaskRunBackup(IActivityManager activity, ILogManager logger, IServerConfigurationManager config, IFileSystem fileSystem, IServerApplicationHost appHost)
         {
-            _logger = logger.GetLogger("PlaybackReporting - TaskCleanDb");
+            _logger = logger.GetLogger("PlaybackReporting - TaskRunBackup");
             _activity = activity;
             _config = config;
             _fileSystem = fileSystem;
@@ -57,15 +56,18 @@ namespace playback_reporting
                 _logger.Info("ERROR : Plugin not compatible with this server version");
                 throw new NotImplementedException("This task is not available on this version of Emby");
             }
+
+            _logger.Info("TaskCleanDb Loaded");
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
             var trigger = new TaskTriggerInfo
             {
-                Type = TaskTriggerInfo.TriggerDaily,
-                TimeOfDayTicks = TimeSpan.FromMinutes(5).Ticks
-            }; //12:05am
+                Type = TaskTriggerInfo.TriggerWeekly,
+                DayOfWeek = 0,
+                TimeOfDayTicks = TimeSpan.FromHours(3).Ticks
+            }; //3am on Sunday
             return new[] { trigger };
         }
 
@@ -79,31 +81,10 @@ namespace playback_reporting
 
             await System.Threading.Tasks.Task.Run(() =>
             {
-                _logger.Info("Playback Reporting Data Trim");
 
-                ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+                BackupManager backup = new BackupManager(_config, _logger, _fileSystem);
+                backup.SaveBackup();
 
-                int max_data_age = config.MaxDataAge;
-
-                _logger.Info("MaxDataAge : " + max_data_age);
-
-                if(max_data_age == -1)
-                {
-                    _logger.Info("Keep data forever, not doing any data cleanup");
-                    return;
-                }
-                else if(max_data_age == 0)
-                {
-                    _logger.Info("Removing all data");
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-                    repo.DeleteOldData(null);
-                }
-                else
-                {
-                    DateTime del_defore = DateTime.Now.AddMonths(max_data_age * -1);
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-                    repo.DeleteOldData(del_defore);
-                }
             }, cancellationToken);
         }
     }
