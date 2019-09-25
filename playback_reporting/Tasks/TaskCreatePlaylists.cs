@@ -81,7 +81,7 @@ namespace playback_reporting.Tasks
             sql += "WHERE ItemType = 'Movie' ";
             sql += "AND DateCreated > datetime('now', '-14 day', 'localtime') ";
             sql += "GROUP BY ItemId ";
-            sql += "ORDER BY count DESC, av_age ASC";
+            sql += "ORDER BY count DESC, av_age ASC ";
             sql += "LIMIT 20";
 
             List<string> cols = new List<string>();
