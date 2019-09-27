@@ -149,6 +149,8 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string user_id { get; set; }
+        [ApiMember(Name = "filter_name", Description = "Name Filter", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string filter_name { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
         public int days { get; set; }
         [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -788,7 +790,23 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, null);
+            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, request.filter_name, null);
+
+            foreach (var row in report)
+            {
+                string user_id = row["user"] as string;
+                Guid user_guid = new Guid(user_id);
+                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+
+                if (user != null)
+                {
+                    row["user"] = user.Name;
+                }
+                else
+                {
+                    row["user"] = "unknown";
+                }
+            }
 
             /*
             Dictionary<string, object> row_data = new Dictionary<string, object>();

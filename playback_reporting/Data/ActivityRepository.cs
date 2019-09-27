@@ -1047,7 +1047,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types)
+        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, string[] types)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -1057,11 +1057,23 @@ namespace playback_reporting.Data
             string sql = "SELECT ";
             sql += "strftime('%Y-%m-%d',DateCreated) AS PlayDate, ";
             sql += "MIN(strftime('%H-%M-%S', DateCreated)) AS PlayTime, ";
-            sql += "ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
+            sql += "UserId, ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
             sql += "FROM PlaybackActivity ";
-            sql += "WHERE UserId = @user_id ";
-            sql += "AND DateCreated >= @start_date AND DateCreated <= @end_date ";
-            sql += "GROUP BY PlayDate, ItemName, ItemType ";
+            
+            sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
+
+            if (!string.IsNullOrEmpty(user_id))
+            {
+                sql += "AND UserId = @user_id ";
+            }
+
+            if (!string.IsNullOrEmpty(filter_name))
+            {
+                filter_name = filter_name.Replace("*", "%");
+                sql += "AND ItemName like @filter_name ";
+            }
+
+            sql += "GROUP BY PlayDate, UserId, ItemName, ItemType ";
             sql += "ORDER BY PlayDate DESC, PlayTime DESC";
 
             using (lock_manager.getLockItem().Read())
@@ -1073,6 +1085,7 @@ namespace playback_reporting.Data
                         statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
                         statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
                         statement.TryBind("@user_id", user_id);
+                        statement.TryBind("@filter_name", filter_name);
 
                         foreach (var row in statement.ExecuteQuery())
                         {
@@ -1081,13 +1094,16 @@ namespace playback_reporting.Data
                             string play_date = row.GetString(0);
                             row_data.Add("date", play_date);
 
-                            string item_name = row.GetString(2);
+                            string user = row.GetString(2);
+                            row_data.Add("user", user);
+
+                            string item_name = row.GetString(3);
                             row_data.Add("name", item_name);
 
-                            string item_type = row.GetString(3);
+                            string item_type = row.GetString(4);
                             row_data.Add("type", item_type);
 
-                            string client_name = row.GetString(4);
+                            string client_name = row.GetString(5);
                             row_data.Add("duration", client_name);
 
                             report.Add(row_data);

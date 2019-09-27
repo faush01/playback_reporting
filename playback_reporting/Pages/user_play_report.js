@@ -74,6 +74,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var user_list_selector = view.querySelector('#user_list');
             user_list_selector.addEventListener("change", process_click);
 
+            var filter_name_input = view.querySelector('#filter_name');
+            filter_name_input.addEventListener("change", process_click);
+
             // add user list to selector
             var url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
             url = ApiClient.getUrl(url);
@@ -81,7 +84,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             ApiClient.getUserActivity(url).then(function (user_list) {
                 //alert("Loaded Data: " + JSON.stringify(user_list));
                 var index = 0;
-                var options_html = "<option value=''>Select User</option>";
+                var options_html = "<option value=''>All Users</option>";
                 var item_details;
                 for (index = 0; index < user_list.length; ++index) {
                     item_details = user_list[index];
@@ -103,10 +106,13 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 
                 var selected_user_id = user_list_selector.options[user_list_selector.selectedIndex].value;
                 
-                if (selected_user_id === "Select User") {
-                    view.querySelector('#user_playlist_results').innerHTML = "";
-                    return;
-                }
+                //if (selected_user_id === "Select User") {
+                //    view.querySelector('#user_playlist_results').innerHTML = "";
+                //    return;
+                //}
+
+                var filter_name = filter_name_input.value;
+                var encoded_filter_name = encodeURI(filter_name);
 
                 var start = new Date(start_picker.value);
                 var end = new Date(end_picker.value);
@@ -118,7 +124,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var days = Date.daysBetween(start, end);
                 span_days_text.innerHTML = days;
 
-                var url_to_get = "user_usage_stats/UserPlaylist?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&stamp=" + new Date().getTime();
+                var url_to_get = "user_usage_stats/UserPlaylist?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&filter_name=" + encoded_filter_name + "&stamp=" + new Date().getTime();
                 url_to_get = ApiClient.getUrl(url_to_get);
                 console.log("User Report Details Url: " + url_to_get);
 
@@ -141,7 +147,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         }
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
-                        row_html += "<td style='padding-left:30px'>" + item_details.type + "</td>";
+                        row_html += "<td style='padding-left:30px;padding-right:15px;'>" + item_details.user + "</td>";
+                        row_html += "<td style='padding-left:15px;padding-right:15px;'>" + item_details.type + "</td>";
                         row_html += "<td>" + item_details.name + "</td>";
                         row_html += "<td>" + seconds2time(item_details.duration) + "</td>";
                         row_html += "</tr>";

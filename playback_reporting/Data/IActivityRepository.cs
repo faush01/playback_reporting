@@ -41,7 +41,7 @@ namespace playback_reporting.Data
         List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date);
         List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);
         string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results);
-        List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string[] types);
+        List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, string[] types);
         void AddResourceCounter(Dictionary<string, object> counters);
         List<Dictionary<string, object>> GetResourceCounters(int hours);
         List<Dictionary<string, object>> GetProcessList();
