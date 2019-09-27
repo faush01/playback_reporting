@@ -1047,7 +1047,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, string[] types)
+        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, bool aggregate_data, string[] types)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -1055,9 +1055,19 @@ namespace playback_reporting.Data
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             string sql = "SELECT ";
-            sql += "strftime('%Y-%m-%d',DateCreated) AS PlayDate, ";
-            sql += "MIN(strftime('%H-%M-%S', DateCreated)) AS PlayTime, ";
-            sql += "UserId, ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
+            sql += "strftime('%Y-%m-%d', DateCreated) AS PlayDate, ";
+
+            if (aggregate_data)
+            {
+                sql += "MIN(strftime('%H:%M:%S', DateCreated)) AS PlayTime, ";
+                sql += "UserId, ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
+            }
+            else
+            {
+                sql += "strftime('%H:%M:%S', DateCreated) AS PlayTime, ";
+                sql += "UserId, ItemName, ItemType, PlayDuration - PauseDuration AS Duration ";
+            }
+
             sql += "FROM PlaybackActivity ";
             
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
@@ -1073,8 +1083,15 @@ namespace playback_reporting.Data
                 sql += "AND ItemName like @filter_name ";
             }
 
-            sql += "GROUP BY PlayDate, UserId, ItemName, ItemType ";
-            sql += "ORDER BY PlayDate DESC, PlayTime DESC";
+            if (aggregate_data)
+            {
+                sql += "GROUP BY PlayDate, UserId, ItemName, ItemType ";
+                sql += "ORDER BY PlayDate DESC, PlayTime DESC";
+            }
+            else
+            {
+                sql += "ORDER BY PlayDate DESC, PlayTime DESC";
+            }
 
             using (lock_manager.getLockItem().Read())
             {
@@ -1093,6 +1110,9 @@ namespace playback_reporting.Data
 
                             string play_date = row.GetString(0);
                             row_data.Add("date", play_date);
+
+                            string play_time = row.GetString(1);
+                            row_data.Add("time", play_time);
 
                             string user = row.GetString(2);
                             row_data.Add("user", user);

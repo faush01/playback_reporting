@@ -149,6 +149,8 @@ namespace playback_reporting.Api
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string user_id { get; set; }
+        [ApiMember(Name = "aggregate_data", Description = "Aggregate the data to total duration per user per item", IsRequired = true, DataType = "bool", ParameterType = "query", Verb = "GET")]
+        public bool aggregate_data { get; set; }
         [ApiMember(Name = "filter_name", Description = "Name Filter", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
         public string filter_name { get; set; }
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -790,7 +792,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, request.filter_name, null);
+            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, request.filter_name, request.aggregate_data, null);
 
             foreach (var row in report)
             {

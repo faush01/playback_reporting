@@ -74,6 +74,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var user_list_selector = view.querySelector('#user_list');
             user_list_selector.addEventListener("change", process_click);
 
+            var aggregate_data = view.querySelector('#aggregate');
+            aggregate_data.addEventListener("change", process_click);
+
             var filter_name_input = view.querySelector('#filter_name');
             filter_name_input.addEventListener("change", process_click);
 
@@ -114,6 +117,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var filter_name = filter_name_input.value;
                 var encoded_filter_name = encodeURI(filter_name);
 
+                var aggregate = aggregate_data.checked;
+
                 var start = new Date(start_picker.value);
                 var end = new Date(end_picker.value);
                 if (end > new Date()) {
@@ -124,7 +129,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var days = Date.daysBetween(start, end);
                 span_days_text.innerHTML = days;
 
-                var url_to_get = "user_usage_stats/UserPlaylist?user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&filter_name=" + encoded_filter_name + "&stamp=" + new Date().getTime();
+                var url_to_get = "user_usage_stats/UserPlaylist?aggregate_data=" + aggregate + "&user_id=" + selected_user_id + "&days=" + days + "&end_date=" + end_picker.value + "&filter_name=" + encoded_filter_name + "&stamp=" + new Date().getTime();
                 url_to_get = ApiClient.getUrl(url_to_get);
                 console.log("User Report Details Url: " + url_to_get);
 
@@ -148,6 +153,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
                         row_html += "<td style='padding-left:30px;padding-right:15px;'>" + item_details.user + "</td>";
+                        if (!aggregate) {
+                            row_html += "<td style='padding-left:15px;padding-right:15px;'>" + item_details.time + "</td>";
+                        }
                         row_html += "<td style='padding-left:15px;padding-right:15px;'>" + item_details.type + "</td>";
                         row_html += "<td>" + item_details.name + "</td>";
                         row_html += "<td>" + seconds2time(item_details.duration) + "</td>";
