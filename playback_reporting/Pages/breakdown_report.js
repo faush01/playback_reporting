@@ -152,7 +152,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     for (var i = 0; i < item.data.length; i++) {
                         legendHtml.push('<tr>');
                         legendHtml.push('<td style="width: 20px"><div style="width: 20px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
-                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + chart.data.labels[i] + '</td>');
+                        var label_data = chart.data.labels[i];
+                        if (group_type === "Movies" || group_type === "TvShows") {
+                            var filter_name = chart.data.labels[i];
+                            if (group_type === "TvShows") {
+                                filter_name += " - *";
+                            }
+                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encodeURI(filter_name);
+                            label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;'>" + chart.data.labels[i] + "</a>";
+                        }
+                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
                         legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + item.data[i] + '</td>');
                         legendHtml.push('</tr>');
                     }
@@ -197,7 +206,17 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     for (var i = 0; i < item.data.length; i++) {
                         legendHtml.push('<tr>');
                         legendHtml.push('<td style="width: 20px"><div style="width: 20px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
-                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + chart.data.labels[i] + '</td>');
+                        var label_data = chart.data.labels[i];
+                        if (group_type === "Movies" || group_type === "TvShows") {
+                            var filter_name = chart.data.labels[i];
+                            if (group_type === "TvShows") {
+                                filter_name += " - *";
+                            }
+                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encodeURI(filter_name);
+                            label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;'>" + chart.data.labels[i] + "</a>";
+                        }
+
+                        legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
                         legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + seconds2time(item.data[i]) + '</td>');
                         legendHtml.push('</tr>');
                     }

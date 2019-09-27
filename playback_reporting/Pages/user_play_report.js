@@ -51,12 +51,27 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             mainTabsManager.setTabs(this, getTabIndex("user_play_report"), getTabs);
 
-            var user_name = "";
-            var user_name_index = window.location.href.indexOf("user=");
-            if (user_name_index > -1) {
-                user_name = window.location.href.substring(user_name_index + 5);
+            var parameters = {};
+            var queryString = window.location.href.split('?')[1];
+            if (queryString) {
+                var params = queryString.split('&');
+                for (var i = 0; i < params.length; i++) {
+                    var parts = params[i].split('=');
+                    var paramName = parts[0];
+                    var paramValue = typeof (parts[1]) === 'undefined' ? true : parts[1];
+                    if (!parameters[paramName]) {
+                        parameters[paramName] = decodeURI(paramValue);
+                    }
+                }
             }
-            //alert(user_name);
+
+            //alert(parameters["user"]);
+            //alert(parameters["filter_name"]);
+
+            var user_name = "";
+            if (parameters["user"]) {
+                user_name = parameters["user"];
+            }
 
             var start_picker = view.querySelector('#start_date');
             var start_date = new Date();
@@ -78,6 +93,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             aggregate_data.addEventListener("change", process_click);
 
             var filter_name_input = view.querySelector('#filter_name');
+            if (parameters["filter_name"]) {
+                filter_name_input.value = parameters["filter_name"];
+            }
             filter_name_input.addEventListener("change", process_click);
 
             // add user list to selector
