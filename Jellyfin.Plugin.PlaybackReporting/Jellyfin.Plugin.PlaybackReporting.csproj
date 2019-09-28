@@ -41,7 +41,7 @@
     <EmbeddedResource Include="thumb.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.*" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.4.0-pre1" />
     <PackageReference Include="SQLitePCL.pretty.netstandard" Version="1.0.0" />
     <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>

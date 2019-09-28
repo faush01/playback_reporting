@@ -343,9 +343,10 @@ namespace Jellyfin.Plugin.PlaybackReporting
             {
                 Audio audio_item = item as Audio;
                 string artist = "Not Known";
-                if (audio_item?.AlbumArtists != null && audio_item.AlbumArtists.Length > 0)
+                IReadOnlyList<string> albumArtists = audio_item?.AlbumArtists;
+                if (albumArtists != null && albumArtists.Count > 0)
                 {
-                    artist = string.Join(", ", audio_item.AlbumArtists);
+                    artist = string.Join(", ", albumArtists);
                 }
                 string album = "Not Known";
                 if(string.IsNullOrEmpty(audio_item?.Album) == false)
