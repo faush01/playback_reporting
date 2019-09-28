@@ -48,6 +48,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
         var backup_path_label = view.querySelector('#backup_path_label');
         backup_path_label.innerHTML = config.BackupPath;
+
+        var movie_playlist_name = view.querySelector('#movie_playlist_name');
+        movie_playlist_name.value = config.RecentMoviesPlaylistName;
     }
 
     function saveBackup(view) {
@@ -127,6 +130,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             var backup_files_to_keep = view.querySelector('#files_to_keep');
             backup_files_to_keep.addEventListener("change", files_to_keep_changed);
+
+            var movie_playlist_name = view.querySelector('#movie_playlist_name');
+            movie_playlist_name.addEventListener("change", function() {
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                    config.RecentMoviesPlaylistName = movie_playlist_name.value;
+                    console.log("New Config Settings : " + JSON.stringify(config));
+                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                });
+            });
 
             function files_to_keep_changed() {
                 var max_files = backup_files_to_keep.value;

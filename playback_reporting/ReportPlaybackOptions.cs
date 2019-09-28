@@ -27,6 +27,7 @@ namespace playback_reporting
         public int MaxBackupFiles { set; get; } = 5;
         public DateTime LastNewMediaCheck { set; get; } = DateTime.Now.AddDays(-1);
         public DateTime LastUserActivityCheck { set; get; } = DateTime.Now.AddDays(-1);
+        public string RecentMoviesPlaylistName { set; get; } = "Most Active Movies (last 14 days)";
 
     }
 }

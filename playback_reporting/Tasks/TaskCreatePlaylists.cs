@@ -88,6 +88,7 @@ namespace playback_reporting.Tasks
 
             // query the user playback info for the most active movies
             ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
             string sql = "";
             sql += "SELECT ItemId, ";
@@ -112,7 +113,7 @@ namespace playback_reporting.Tasks
             }
 
             // create a playlist with the most active movies
-            string playlist_name = "Most Active Movies (last 14 days)";
+            string playlist_name = config.RecentMoviesPlaylistName;
             InternalItemsQuery query = new InternalItemsQuery();
             query.IncludeItemTypes = new string[] { "Playlist" };
             query.Name = playlist_name;
