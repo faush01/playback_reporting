@@ -26,6 +26,7 @@ using MediaBrowser.Model.Tasks;
 using playback_reporting.Data;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -98,18 +99,35 @@ namespace playback_reporting.Tasks
             }
 
             ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+
+            DateTime last_checked = config.LastUserActivityCheck;
+            string date_from = last_checked.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture);
 
             string sql = "";
             sql += "SELECT UserId, ItemType, ItemName, SUM(PlayDuration - PauseDuration) AS PlayTime ";
             sql += "FROM PlaybackActivity ";
-            sql += "WHERE DateCreated > datetime('now', '-1 day', 'localtime') ";
+            sql += "WHERE DateCreated > '" + date_from + "' "; // datetime('now', '-1 day', 'localtime') ";
             sql += "GROUP BY UserId, ItemType, ItemName";
+
+            _logger.Info("Activity Query : " + sql);
 
             List<string> cols = new List<string>();
             List<List<Object>> results = new List<List<object>>();
             repository.RunCustomQuery(sql, cols, results);
 
-            string message = "User activity in the last 24 hours\r\n";
+            TimeSpan since_last = DateTime.Now - last_checked;
+            _logger.Info("Cutoff DateTime for new items - date: " + date_from + " ago: " + since_last);
+
+            string since_last_string = string.Format("{0}{1}{2}",
+                since_last.Duration().Days > 0 ? string.Format("{0:0} day{1} ", since_last.Days, since_last.Days == 1 ? String.Empty : "s") : string.Empty,
+                since_last.Duration().Hours > 0 ? string.Format("{0:0} hour{1} ", since_last.Hours, since_last.Hours == 1 ? String.Empty : "s") : string.Empty,
+                since_last.Duration().Minutes > 0 ? string.Format("{0:0} minute{1} ", since_last.Minutes, since_last.Minutes == 1 ? String.Empty : "s") : string.Empty);
+            if (string.IsNullOrEmpty(since_last_string))
+            {
+                since_last_string = "0 minutes";
+            }
+            string message = "User activity since last check " + since_last_string + "ago.\r\n";
 
             int item_count = 0;
             string last_user = "";
@@ -148,6 +166,8 @@ namespace playback_reporting.Tasks
                 message += " - (" + item_type + ") " + item_name + " (" + play_time_string + ")\r\n";
             }
 
+            _logger.Info("User activity Message : ItemCount : " + item_count + "\r\n" + message + "\r\n");
+
             if (item_count > 0)
             {
                 var notification = new NotificationRequest
@@ -159,6 +179,9 @@ namespace playback_reporting.Tasks
                 };
                 await _notificationManager.SendNotification(notification, CancellationToken.None).ConfigureAwait(false);
             }
+
+            config.LastUserActivityCheck = DateTime.Now;
+            _config.SaveReportPlaybackOptions(config);
         }
     }
 }

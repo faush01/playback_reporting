@@ -25,6 +25,8 @@ namespace playback_reporting
         public int MaxDataAge { set; get; } = 3;
         public string BackupPath { set; get; }
         public int MaxBackupFiles { set; get; } = 5;
+        public DateTime LastNewMediaCheck { set; get; } = DateTime.Now.AddDays(-1);
+        public DateTime LastUserActivityCheck { set; get; } = DateTime.Now.AddDays(-1);
 
     }
 }

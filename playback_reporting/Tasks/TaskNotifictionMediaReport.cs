@@ -101,13 +101,29 @@ namespace playback_reporting.Tasks
                 return;
             }
 
-            string message = "New media added in the last 24 hours\r\n\r\n";
-
             UserViewQuery view_query = new UserViewQuery();
             view_query.IncludeExternalContent = false;
             view_query.IncludeHidden = false;
             Folder[] views = _userViewManager.GetUserViews(view_query);
             int added_count = 0;
+
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+
+            DateTime cutoff = config.LastNewMediaCheck;
+            string last_check = cutoff.ToString("yyyy/MM/dd HH:mm:ss");
+
+            TimeSpan since_last = DateTime.Now - cutoff;
+            _logger.Info("Cutoff DateTime for new items - date: " + last_check + " ago: " + since_last);
+
+            string since_last_string = string.Format("{0}{1}{2}",
+                since_last.Duration().Days > 0 ? string.Format("{0:0} day{1} ", since_last.Days, since_last.Days == 1 ? String.Empty : "s") : string.Empty,
+                since_last.Duration().Hours > 0 ? string.Format("{0:0} hour{1} ", since_last.Hours, since_last.Hours == 1 ? String.Empty : "s") : string.Empty,
+                since_last.Duration().Minutes > 0 ? string.Format("{0:0} minute{1} ", since_last.Minutes, since_last.Minutes == 1 ? String.Empty : "s") : string.Empty);
+            if (string.IsNullOrEmpty(since_last_string))
+            {
+                since_last_string = "0 minutes";
+            }
+            string message = "New media added since last check " + since_last_string + "ago.\r\n\r\n";
 
             foreach (Folder folder in views)
             {
@@ -122,8 +138,7 @@ namespace playback_reporting.Tasks
                 query.OrderBy = sort;
 
                 BaseItem[] results = _libraryManager.GetItemList(query, false);
-                DateTime cutoff = DateTime.Now.AddDays(-1);
-                _logger.Info("Cutoff DateTime for new items : " + cutoff.ToString("yyyy-MM-dd HH:mm:ss zzz"));
+
                 int view_added_count = 0;
                 string view_message_data = folder.Name + "\r\n";
 
@@ -177,6 +192,9 @@ namespace playback_reporting.Tasks
                 };
                 await _notificationManager.SendNotification(notification, CancellationToken.None).ConfigureAwait(false);
             }
+
+            config.LastNewMediaCheck = DateTime.Now;
+            _config.SaveReportPlaybackOptions(config);
         }
     }
 }
