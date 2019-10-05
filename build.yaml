@@ -1,8 +1,8 @@
 ---
 name: "jellyfin-plugin-playbackreporting"
 guid: "5c534381-91a3-43cb-907a-35aa02eb9d2c"
-version: "3" # Please increment with each pull request
-jellyfin_version: "10.3.0" # The earliest binary-compatible version
+version: "4" # Please increment with each pull request
+jellyfin_version: "10.4.0" # The earliest binary-compatible version
 owner: "jellyfin"
 nicename: "Playback Reporting"
 description: "Collect and show user play stats"
