@@ -386,8 +386,6 @@ namespace Jellyfin.Plugin.PlaybackReporting.Api
             }
             _logger.LogInformation("Header : {Headers}", headers);
 
-            _logger.LogInformation("Files Length : {NumberOfFiles}", Request.Files.Length);
-
             _logger.LogInformation("ContentType : {ContentType}", Request.ContentType);
 
             Stream input_data = request.RequestStream;
