@@ -69,7 +69,7 @@ namespace Jellyfin.Plugin.PlaybackReporting
             {
                 _logger.LogInformation("Playback Reporting Data Trim");
 
-                ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+                var config = _config.GetReportPlaybackOptions();
 
                 int max_data_age = config.MaxDataAge;
 

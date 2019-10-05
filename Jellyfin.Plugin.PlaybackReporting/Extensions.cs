@@ -21,13 +21,14 @@ namespace Jellyfin.Plugin.PlaybackReporting
 {
     public static class ConfigurationExtension
     {
+        public const string PlaybackReportingOptionsKey = "playback_reporting";
         public static ReportPlaybackOptions GetReportPlaybackOptions(this IConfigurationManager manager)
         {
-            return manager.GetConfiguration<ReportPlaybackOptions>("playback_reporting");
+            return manager.GetConfiguration<ReportPlaybackOptions>(PlaybackReportingOptionsKey);
         }
         public static void SaveReportPlaybackOptions(this IConfigurationManager manager, ReportPlaybackOptions options)
         {
-            manager.SaveConfiguration("playback_reporting", options);
+            manager.SaveConfiguration(PlaybackReportingOptionsKey, options);
         }
     }
 
