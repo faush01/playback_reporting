@@ -25,6 +25,8 @@ namespace playback_reporting
     {
         public static bool IsVersionValid(Version app_version, PackageVersionClass server_update_level)
         {
+            return true;
+            /*
             if (server_update_level == PackageVersionClass.Release)
             {
                 return true;
@@ -33,6 +35,7 @@ namespace playback_reporting
             {
                 return false;
             }
+            */
         }
     }
 }
