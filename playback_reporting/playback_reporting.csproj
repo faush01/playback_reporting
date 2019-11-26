@@ -61,6 +61,6 @@
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;C:\Install\Emby\embyserver\programdata\plugins\&quot; /y" />
+    <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins\&quot; /y" />
   </Target>
 </Project>

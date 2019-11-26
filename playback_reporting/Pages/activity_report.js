@@ -126,7 +126,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             row_html += "<td>" + current + " / " + duration + " (" + complete_percentage + "%)</td>";
 
                             var play_method_details = "";
-                            if (activity_info.PlayState.PlayMethod === "Transcode") {
+                            if (activity_info.PlayState.PlayMethod === "Transcode" && activity_info.TranscodingInfo !== undefined) {
                                 play_method_details += "<table>";
                                 play_method_details += "<tr><td nowrap align='left'>Video Direct</td><td nowrap align='left'>" + activity_info.TranscodingInfo.IsVideoDirect + "</td></tr>";
                                 play_method_details += "<tr><td nowrap align='left'>Video Codec</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoCodec + "</td></tr>";
