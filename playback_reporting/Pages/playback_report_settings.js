@@ -37,6 +37,53 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     }
 
+    function remove_playlist_item(view, name) {
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+            var fount_at = -1;
+            for (var x = 0; x < config.ActivityPlaylists.length; x++) {
+                var playlist_item = config.ActivityPlaylists[x];
+                if (name === playlist_item.Name) {
+                    fount_at = x;
+                    break;
+                }
+            }
+
+            if (fount_at !== -1) {
+                config.ActivityPlaylists.splice(fount_at, 1);
+            }
+
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+
+            loadPage(view, config);
+        });
+    }
+
+    function edit_playlist_item(view, name) {
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+            var fount_at = -1;
+            for (var x = 0; x < config.ActivityPlaylists.length; x++) {
+                var playlist_item = config.ActivityPlaylists[x];
+                if (name === playlist_item.Name) {
+                    fount_at = x;
+                    break;
+                }
+            }
+
+            if (fount_at !== -1) {
+                var item = config.ActivityPlaylists[fount_at];
+                var activity_playlist_name = view.querySelector('#activity_playlist_name');
+                var activity_playlist_type = view.querySelector('#activity_playlist_type');
+                var activity_playlist_days = view.querySelector('#activity_playlist_days');
+                var activity_playlist_size = view.querySelector('#activity_playlist_size');
+
+                activity_playlist_name.value = item.Name;
+                activity_playlist_type.value = item.Type;
+                activity_playlist_days.value = item.Days;
+                activity_playlist_size.value = item.Size;
+            }
+        });
+    }
+
     function loadPage(view, config) {
 
         console.log("Settings Page Loaded With Config : " + JSON.stringify(config));
@@ -49,8 +96,61 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         var backup_path_label = view.querySelector('#backup_path_label');
         backup_path_label.innerHTML = config.BackupPath;
 
-        var movie_playlist_name = view.querySelector('#movie_playlist_name');
-        movie_playlist_name.value = config.RecentMoviesPlaylistName;
+        var activity_playlist_list = view.querySelector('#activity_playlist_list');
+        while (activity_playlist_list.firstChild) {
+            activity_playlist_list.removeChild(activity_playlist_list.firstChild);
+        }
+        config.ActivityPlaylists.forEach(function (playlist_item, index) {
+
+            var tr = document.createElement("tr");
+            tr.className = "detailTableBodyRow detailTableBodyRow-shaded";
+
+            var td = document.createElement("td");
+            td.appendChild(document.createTextNode(playlist_item.Name));
+            td.style.cssText = "padding-left: 20px; padding-right: 20px;";
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(playlist_item.Type));
+            td.style.cssText = "padding-left: 20px; padding-right: 20px;";
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(playlist_item.Days));
+            td.style.cssText = "padding-left: 20px; padding-right: 20px;";
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode(playlist_item.Size));
+            td.style.cssText = "padding-left: 20px; padding-right: 20px;";
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            td.style.cssText = "padding-left: 20px; padding-right: 20px;";
+            var btn = document.createElement("BUTTON");
+            var i = document.createElement("i");
+            i.className = "md-icon";
+            var t = document.createTextNode("remove");
+            i.appendChild(t);
+            btn.appendChild(i);
+            btn.setAttribute("title", "Remove");
+            btn.addEventListener("click", function () { remove_playlist_item(view, playlist_item.Name); });
+            td.appendChild(btn);
+
+            btn = document.createElement("BUTTON");
+            i = document.createElement("i");
+            i.className = "md-icon";
+            t = document.createTextNode("edit");
+            i.appendChild(t);
+            btn.appendChild(i);
+            btn.setAttribute("title", "Edit");
+            btn.addEventListener("click", function () { edit_playlist_item(view, playlist_item.Name); });
+            td.appendChild(btn);
+            tr.appendChild(td);
+
+            activity_playlist_list.appendChild(tr);
+        });
+
     }
 
     function saveBackup(view) {
@@ -131,14 +231,51 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var backup_files_to_keep = view.querySelector('#files_to_keep');
             backup_files_to_keep.addEventListener("change", files_to_keep_changed);
 
-            var movie_playlist_name = view.querySelector('#movie_playlist_name');
-            movie_playlist_name.addEventListener("change", function() {
+            //playback activity lists
+            var activity_playlist_add = view.querySelector('#activity_playlist_add');
+            var activity_playlist_name = view.querySelector('#activity_playlist_name');
+            var activity_playlist_type = view.querySelector('#activity_playlist_type');
+            var activity_playlist_days = view.querySelector('#activity_playlist_days');
+            var activity_playlist_size = view.querySelector('#activity_playlist_size');
+
+            activity_playlist_add.addEventListener("click", function () {
                 ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
-                    config.RecentMoviesPlaylistName = movie_playlist_name.value;
+
+                    var new_playlist_name = activity_playlist_name.value.trim();
+                    var newPlaylist_type = activity_playlist_type.options[activity_playlist_type.selectedIndex].value;
+                    var new_playlist_days = parseInt(activity_playlist_days.value) || 0;
+                    var new_playlist_size = parseInt(activity_playlist_size.value) || 0;
+
+                    if (new_playlist_name === "" || new_playlist_days === 0 || new_playlist_size === 0) {
+                        return;
+                    }
+
+                    var fount_at = -1;
+                    for (var x = 0; x < config.ActivityPlaylists.length; x++) {
+                        var playlist_item = config.ActivityPlaylists[x];
+                        if (new_playlist_name === playlist_item.Name) {
+                            fount_at = x;
+                            break;
+                        }
+                    }
+
+                    if (fount_at !== -1) {
+                        config.ActivityPlaylists[fount_at] = { Name: new_playlist_name, Type: newPlaylist_type, Days: new_playlist_days, Size: new_playlist_size };
+                    }
+                    else {
+                        config.ActivityPlaylists.push({ Name: new_playlist_name, Type: newPlaylist_type, Days: new_playlist_days, Size: new_playlist_size });
+                    }
+
+                    activity_playlist_name.value = "";
+                    activity_playlist_type.value = "Movie";
+                    activity_playlist_days.value = 0;
+                    activity_playlist_size.value = 0;
+
                     console.log("New Config Settings : " + JSON.stringify(config));
                     ApiClient.updateNamedConfiguration('playback_reporting', config);
+                    loadPage(view, config);
                 });
-            });
+            });            
 
             function files_to_keep_changed() {
                 var max_files = backup_files_to_keep.value;

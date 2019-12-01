@@ -90,50 +90,68 @@ namespace playback_reporting.Tasks
             ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
-            string sql = "";
-            sql += "SELECT ItemId, ";
-            sql += "COUNT(DISTINCT(UserId)) as count, ";
-            sql += "AVG(CAST(strftime('%Y%m%d%H%M', 'now', 'localtime') AS int) - CAST(strftime('%Y%m%d%H%M', DateCreated) AS int)) as av_age ";
-            sql += "FROM PlaybackActivity ";
-            sql += "WHERE ItemType = 'Movie' ";
-            sql += "AND DateCreated > datetime('now', '-14 day', 'localtime') ";
-            sql += "GROUP BY ItemId ";
-            sql += "ORDER BY count DESC, av_age ASC ";
-            sql += "LIMIT 20";
-
-            List<string> cols = new List<string>();
-            List<List<Object>> query_results = new List<List<object>>();
-            repository.RunCustomQuery(sql, cols, query_results);
-
-            List<long> items = new List<long>();
-            foreach (List<Object> row in query_results)
+            foreach(var activity_playlist in config.ActivityPlaylists)
             {
-                long item_id = long.Parse((string)row[0]);
-                items.Add(item_id);
+                string list_name = activity_playlist.Name;
+                string list_type = activity_playlist.Type;
+                int list_days = activity_playlist.Days;
+                int list_size = activity_playlist.Size;
+
+                _logger.Info("Activity Playlist - Name:" + list_name + " Type:" + list_type + " Days:" + list_days);
+
+                string sql = "";
+                sql += "SELECT ItemId, ";
+                sql += "COUNT(DISTINCT(UserId)) as count, ";
+                sql += "AVG(CAST(strftime('%Y%m%d%H%M', 'now', 'localtime') AS int) - CAST(strftime('%Y%m%d%H%M', DateCreated) AS int)) as av_age ";
+                sql += "FROM PlaybackActivity ";
+                sql += "WHERE ItemType = '" + list_type + "' ";
+                sql += "AND DateCreated > datetime('now', '-" + list_days + " day', 'localtime') ";
+                sql += "GROUP BY ItemId ";
+                sql += "ORDER BY count DESC, av_age ASC ";
+                sql += "LIMIT " + list_size;
+
+                List<string> cols = new List<string>();
+                List<List<Object>> query_results = new List<List<object>>();
+                repository.RunCustomQuery(sql, cols, query_results);
+
+                List<long> items = new List<long>();
+                foreach (List<Object> row in query_results)
+                {
+                    long item_id = long.Parse((string)row[0]);
+                    items.Add(item_id);
+                }
+
+                // create a playlist with the most active movies
+                string playlist_name = list_name;
+                InternalItemsQuery query = new InternalItemsQuery();
+                query.IncludeItemTypes = new string[] { "Playlist" };
+                query.Name = playlist_name;
+
+                BaseItem[] results = _libraryManager.GetItemList(query, false);
+                foreach (BaseItem item in results)
+                {
+                    _logger.Info("Deleting Existing Movie Playlist : " + item.InternalId);
+                    DeleteOptions delete_options = new DeleteOptions();
+                    delete_options.DeleteFileLocation = true;
+                    _libraryManager.DeleteItem(item, delete_options);
+                }
+
+                _logger.Info("Creating Movie Playlist");
+                PlaylistCreationRequest create_options = new PlaylistCreationRequest();
+                create_options.Name = playlist_name;
+
+                if (list_type == "Movie")
+                {
+                    create_options.MediaType = "Movie";
+                }
+                else
+                {
+                    create_options.MediaType = "Episode";
+                }
+
+                create_options.ItemIdList = items.ToArray();
+                await _playlistman.CreatePlaylist(create_options).ConfigureAwait(false);
             }
-
-            // create a playlist with the most active movies
-            string playlist_name = config.RecentMoviesPlaylistName;
-            InternalItemsQuery query = new InternalItemsQuery();
-            query.IncludeItemTypes = new string[] { "Playlist" };
-            query.Name = playlist_name;
-
-            BaseItem[] results = _libraryManager.GetItemList(query, false);
-            foreach (BaseItem item in results)
-            {
-                _logger.Info("Deleting Existing Movie Playlist : " + item.InternalId);
-                DeleteOptions delete_options = new DeleteOptions();
-                delete_options.DeleteFileLocation = true;
-                _libraryManager.DeleteItem(item, delete_options);
-            }
-
-            _logger.Info("Creating Movie Playlist");
-            PlaylistCreationRequest create_options = new PlaylistCreationRequest();
-            create_options.Name = playlist_name;
-            create_options.MediaType = "Movie";
-            create_options.ItemIdList = items.ToArray();
-            await _playlistman.CreatePlaylist(create_options).ConfigureAwait(false);
-
         }
     }
 }

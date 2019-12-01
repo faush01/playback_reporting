@@ -5,10 +5,32 @@
 		<div class="content-primary">
 			<h2>Playback Report Settings</h2>
 			<h3>
-				<strong>Playlist Options</strong>
+				<strong>Activity Playlists</strong>
 			</h3>
 			<p>
-				Most active movie playlist name <input type="text" style="width:350px;" id="movie_playlist_name" />
+				<table id="activity_playlist_table">
+					<thead>
+						<tr style="text-align: left;">
+							<th class="detailTableHeaderCell" data-priority="2">Name</th>
+							<th class="detailTableHeaderCell" data-priority="1">Type</th>
+							<th class="detailTableHeaderCell" data-priority="3">Days</th>
+							<th class="detailTableHeaderCell" data-priority="3">Size</th>
+							<th class="detailTableHeaderCell" data-priority="3">&nbsp;</th>
+						</tr>
+					</thead>
+					<tbody class="resultBody" id="activity_playlist_list"></tbody>
+				</table>
+			</p>
+			<p>
+				New Activity Playlist :
+				<input type="text" id="activity_playlist_name" value="" />
+				<select id="activity_playlist_type">
+					<option value="Movie" selected>Movies</option>
+					<option value="Episode">Episodes</option>
+				</select>
+				<input type="number" id="activity_playlist_days" min="0" max="1000" value="0" />
+				<input type="number" id="activity_playlist_size" min="0" max="1000" value="0" />
+				<button id="activity_playlist_add">Add</button>
 			</p>
 			<h3>
 				<strong>Data Retention</strong>
