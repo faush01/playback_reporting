@@ -268,8 +268,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                     activity_playlist_name.value = "";
                     activity_playlist_type.value = "Movie";
-                    activity_playlist_days.value = 0;
-                    activity_playlist_size.value = 0;
+                    activity_playlist_days.value = "";
+                    activity_playlist_size.value = "";
 
                     console.log("New Config Settings : " + JSON.stringify(config));
                     ApiClient.updateNamedConfiguration('playback_reporting', config);
