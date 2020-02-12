@@ -95,7 +95,12 @@ namespace playback_reporting.Tasks
             Dictionary<string, string> user_map = new Dictionary<string, string>();
             foreach (var user in _userManager.Users)
             {
-                user_map.Add(user.Id.ToString("N"), user.Name);
+                string user_id = user.Id.ToString("N");
+                string user_name = user.Name;
+                if (!string.IsNullOrEmpty(user_id) && !string.IsNullOrEmpty(user_name))
+                {
+                    user_map.Add(user.Id.ToString("N"), user.Name);
+                }
             }
 
             ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
@@ -154,8 +159,8 @@ namespace playback_reporting.Tasks
 
                 if (last_user != user_id)
                 {
-                    string user_name = user_id;
-                    if (user_map.ContainsKey(user_id))
+                    string user_name = "Unknown:" + user_id;
+                    if (!string.IsNullOrEmpty(user_id) && user_map.ContainsKey(user_id))
                     {
                         user_name = user_map[user_id];
                     }
