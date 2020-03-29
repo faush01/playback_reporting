@@ -185,8 +185,15 @@ namespace playback_reporting.Data
                 {
                     count--;
                 }
-                _logger.Info("Play Count : " + key + " | " + data.Value + " | " + data.Key.ToString("yyyy-MM-dd HH:mm:ss") + " | " + count);
-                results.Add(new KeyValuePair<string, int>(data.Key.ToString("yyyy-MM-dd HH:mm:ss"), count));
+
+                DateTime data_timestamp = data.Key;
+                if (data_timestamp < start_date_sql)
+                {
+                    data_timestamp = start_date_sql;
+                }
+
+                _logger.Info("Play Count : " + key + " | " + data.Value + " | " + data_timestamp.ToString("yyyy-MM-dd HH:mm:ss") + " | " + count);
+                results.Add(new KeyValuePair<string, int>(data_timestamp.ToString("yyyy-MM-dd HH:mm:ss"), count));
             }
 
             return results;

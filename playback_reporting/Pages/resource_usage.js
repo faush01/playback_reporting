@@ -30,6 +30,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
     var color_list = ["#d98880", "#c39bd3", "#7fb3d545"];
 
+    function get_new_date_string(start_date, offset) {
+
+        var base_start_date = new Date(start_date.getTime() - (offset * 60 * 1000));
+        var base_time_stamp = base_start_date.getFullYear() + "-" + ("0" + (base_start_date.getMonth() + 1)).slice(-2) + "-" + ("0" + base_start_date.getDate()).slice(-2);
+        base_time_stamp += " " + ("0" + base_start_date.getHours()).slice(-2) + ":" + ("0" + base_start_date.getMinutes()).slice(-2) + ":00";
+        console.log("base_time_stamp: " + base_time_stamp);
+        return base_time_stamp;
+    }
+
     function draw_graph(view, local_chart, resource_data) {
 
         console.log("draw_graph called");
@@ -64,11 +73,25 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         var counter_data = resource_data.counters;
         var server_load_data = [];
         var server_mem_data = [];
+
+        // add point zero //yyyy-MM-dd HH:mm:ss
+        var hours_selection = view.querySelector('#requested_number_hours');
+        var hours_value = hours_selection.options[hours_selection.selectedIndex].value;
+
+        var base_time_stamp = get_new_date_string(new Date(), hours_value * 60);
+
+        server_load_data.push({ x: base_time_stamp, y: 0 });
+        server_mem_data.push({ x: base_time_stamp, y: 0 });
+
         for (var index = 0; index < counter_data.length; ++index) {
             var resource_counter = counter_data[index];
 
-            server_load_data.push({ x: resource_counter.date, y: resource_counter.cpu });
+            if (index === 0) {
+                server_load_data.push({ x: resource_counter.date, y: 0 });
+                server_mem_data.push({ x: resource_counter.date, y: 0 });
+            }
 
+            server_load_data.push({ x: resource_counter.date, y: resource_counter.cpu });
             var mem_value = Math.round(resource_counter.mem / (1024 * 1024));
             server_mem_data.push({ x: resource_counter.date, y: mem_value });
         }
@@ -99,6 +122,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     fill: false,
                     pointRadius: 2,
                     data: server_load_data,
+                    lineTension: 0,
                     yAxisID: "y-axis-1"
                 },
                 {
@@ -108,6 +132,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     fill: false,
                     pointRadius: 2,
                     data: server_mem_data,
+                    lineTension: 0,
                     yAxisID: "y-axis-2"
                 },
                 {
@@ -234,16 +259,32 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
         process_list_data.forEach(function (item_details, index) {
             table_rows += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
-            table_rows += "<td style='padding-right: 20px'>" + item_details.id + "</td>";
-            table_rows += "<td style='padding-right: 20px'>" + item_details.name + "</td>";
-            table_rows += "<td style='padding-right: 20px'>" + item_details.cpu + "</td>";
-            table_rows += "<td style='padding-right: 20px'>" + formatBytes(item_details.mem, 2) + "</td>";
+            table_rows += "<td style='padding-left:20px;padding-right:30px'>" + item_details.id + "</td>";
+            table_rows += "<td style='padding-left:20px;padding-right:30px'>" + item_details.name + "</td>";
+
+            if (item_details.error && item_details.error.startsWith("Cpu:")) {
+                table_rows += "<td style='padding-left:20px;padding-right:30px'>&nbsp;</td>";
+            }
+            else {
+                table_rows += "<td style='padding-left:20px;padding-right:30px'>" + item_details.cpu + "</td>";
+            }
+
+            if (item_details.error && item_details.error.startsWith("Mem:")) {
+                table_rows += "<td style='padding-left:20px;padding-right:30px'>&nbsp;</td>";
+            }
+            else {
+                table_rows += "<td style='padding-left:20px;padding-right:30px'>" + formatBytes(item_details.mem, 2) + "</td>";
+            }
+
+            /*
             if (item_details.error) {
                 table_rows += "<td style='padding-right: 20px'>" + item_details.error + "</td>";
             }
             else {
                 table_rows += "<td style='padding-right: 20px'>&nbsp;</td>";
             }
+            */
+
             table_rows += "</tr>";
 
             cpu_total += item_details.cpu;

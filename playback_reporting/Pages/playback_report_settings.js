@@ -93,6 +93,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         var backup_files_to_keep = view.querySelector('#files_to_keep');
         backup_files_to_keep.value = config.MaxBackupFiles;
 
+        var monitor_only_emby = view.querySelector('#monitor_only_emby');
+        monitor_only_emby.checked = config.OnlyMonitorEmbyProcesses;
+
         var backup_path_label = view.querySelector('#backup_path_label');
         backup_path_label.innerHTML = config.BackupPath;
 
@@ -231,6 +234,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var backup_files_to_keep = view.querySelector('#files_to_keep');
             backup_files_to_keep.addEventListener("change", files_to_keep_changed);
 
+            var monitor_only_emby = view.querySelector('#monitor_only_emby');
+            monitor_only_emby.addEventListener("change", monitor_only_emby_changed);
+
             //playback activity lists
             var activity_playlist_add = view.querySelector('#activity_playlist_add');
             var activity_playlist_name = view.querySelector('#activity_playlist_name');
@@ -275,7 +281,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     ApiClient.updateNamedConfiguration('playback_reporting', config);
                     loadPage(view, config);
                 });
-            });            
+            });
+
+            function monitor_only_emby_changed() {
+                var monitor_scope = monitor_only_emby.checked;
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                    config.OnlyMonitorEmbyProcesses = monitor_scope;
+                    console.log("New Config Settings : " + JSON.stringify(config));
+                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                });
+            }
 
             function files_to_keep_changed() {
                 var max_files = backup_files_to_keep.value;

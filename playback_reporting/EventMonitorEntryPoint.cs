@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using MediaBrowser.Model.Dto;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
 
 namespace playback_reporting
 {
@@ -351,15 +352,42 @@ namespace playback_reporting
             ResourcesCounters resource_counters = ResourcesCounters.Instance;
             Dictionary<string, ProcessDetails> process_list = resource_counters.GetProcessList();
 
+            var current_process = Process.GetCurrentProcess();
+            string current_process_filename = current_process.MainModule.FileName;
+            _logger.Info("current_process_filename:{0}", current_process_filename);
+            string parent_process_path = Path.GetDirectoryName(current_process_filename);
+            _logger.Info("parent_process_path:{0}", parent_process_path);
+
             while (true)
             {
                 try
                 {
+                    ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+
                     foreach (var proc in Process.GetProcesses())
                     {
                         DateTime now = DateTime.Now;
                         string process_key = proc.Id + "-" + proc.ProcessName;
                         ProcessDetails proc_details = null;
+
+                        string proc_path = null;
+                        try
+                        {
+                            proc_path = Path.GetDirectoryName(proc.MainModule.FileName);
+                            if (parent_process_path != proc_path)
+                            {
+                                proc_path = null;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            proc_path = null;
+                        }
+
+                        if (config.OnlyMonitorEmbyProcesses && proc_path == null)
+                        {
+                            continue;
+                        }
 
                         if (process_list.ContainsKey(process_key) == false)
                         {
@@ -423,8 +451,7 @@ namespace playback_reporting
                         proc_details.Updated = true;
                         proc_details.LastSampleTime = now;
                         proc_details.TotalMilliseconds_last = proc_total_ms;
-
-                     }
+                    }
 
                     // calculate totals
                     double total_cpu = 0;

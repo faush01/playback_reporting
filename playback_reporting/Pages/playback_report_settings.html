@@ -4,95 +4,113 @@
 	<div data-role="content">
 		<div class="content-primary">
 			<h2>Playback Report Settings</h2>
-			<h3>
-				<strong>Activity playlists</strong>
-			</h3>
-			<p>
-				<table id="activity_playlist_table">
-					<thead>
-						<tr style="text-align: left;">
-							<th class="detailTableHeaderCell" data-priority="2">Name</th>
-							<th class="detailTableHeaderCell" data-priority="1">Type</th>
-							<th class="detailTableHeaderCell" data-priority="3">Days</th>
-							<th class="detailTableHeaderCell" data-priority="3">Size</th>
-							<th class="detailTableHeaderCell" data-priority="3">&nbsp;</th>
-						</tr>
-					</thead>
-					<tbody class="resultBody" id="activity_playlist_list"></tbody>
-				</table>
-			</p>
-			<p>
-				New activity playlist :
-				<input type="text" id="activity_playlist_name" placeholder="Playlist Name" title="Playlist Name" />
-				<select id="activity_playlist_type" title="Playlist item type">
-					<option value="Movie" selected>Movies</option>
-					<option value="Episode">Episodes</option>
-				</select>
-				<input type="number" id="activity_playlist_days" min="0" max="1000" placeholder="# of Days" title="Number of Days" />
-				<input type="number" id="activity_playlist_size" min="0" max="1000" placeholder="# of Items" title="Number of Items" />
-				<button id="activity_playlist_add">Add</button>
-			</p>
-			<h3>
-				<strong>Data retention</strong>
-			</h3>
-			<p>
-				Keep data for X time, this is used in the scheduled task to trim your data and keep only data within the requested time period.
-			</p>
-			Keep data for
-			<select id="max_data_age_select">
-				<option value="0">Clear All</option>
-				<option value="1">1 Month</option>
-				<option value="2">2 Months</option>
-				<option value="3">3 Months</option>
-				<option value="6">6 Months</option>
-				<option value="12">1 Year</option>
-				<option value="24">2 Years</option>
-				<option value="36">3 Years</option>
-				<option value="-1">Forever</option>
-			</select>
-			<h3>
-				<strong>Cleanup deleted users</strong>
-			</h3>
-			<p>
-				When you remove users from your system playback activity for old deleted users becomes assigned to unknown, you can remove this data to clean up your reports.
-			</p>
-			<p>
-				<button id="remove_unknown_button">Cleanup deleted users</button> 
-			</p>
-			<h3>
-				<strong>Backup</strong>
-			</h3>
-			<p>
-				You can back up all your playback activity to a TSV file, this can then later be re imported if you need to rebuild your server.<br />
-				When you load backup data it adds to your data, this allows you to have multiple backup files and import each one as needed.<br />
-				The saved backup data is in TSV format so can be loaded into other tools like Excel to build highly customised reports.
-			</p>
-			<p>
-				<button id="set_backup_path">Set Backup Path</button> Backup Path : <span id="backup_path_label"></span><br />
-			</p>
-			<p>
-				Backup files to keep
-				<select id="files_to_keep">
-					<option value="1">1</option>
-					<option value="5">5</option>
-					<option value="10">10</option>
-					<option value="15">15</option>
-					<option value="20">20</option>
-				</select>
-			</p>
-			<p>
-				<button id="backup_data_now">Save Backup Data</button>
-				<button id="load_backup_data">Load Backup Data</button>
-			</p>
 
-			<h3>
-				<strong>Ignored user list</strong>
-			</h3>
-			<p>
-				Users can be set to ignored so you can have test users and admins that are not included in any of the reports.
-			</p>
-			<select id="user_list_for_add"></select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
-			<ul id="user_list_items"></ul>
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Activity playlists</legend>
+				<p>
+					<table id="activity_playlist_table">
+						<thead>
+							<tr style="text-align: left;">
+								<th class="detailTableHeaderCell" data-priority="2">Name</th>
+								<th class="detailTableHeaderCell" data-priority="1">Type</th>
+								<th class="detailTableHeaderCell" data-priority="3">Days</th>
+								<th class="detailTableHeaderCell" data-priority="3">Size</th>
+								<th class="detailTableHeaderCell" data-priority="3">&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody class="resultBody" id="activity_playlist_list"></tbody>
+					</table>
+				</p>
+				<p>
+					New activity playlist :
+					<input type="text" id="activity_playlist_name" placeholder="Playlist Name" title="Playlist Name" />
+					<select id="activity_playlist_type" title="Playlist item type">
+						<option value="Movie" selected>Movies</option>
+						<option value="Episode">Episodes</option>
+					</select>
+					<input type="number" id="activity_playlist_days" min="0" max="1000" placeholder="# of Days" title="Number of Days" />
+					<input type="number" id="activity_playlist_size" min="0" max="1000" placeholder="# of Items" title="Number of Items" />
+					<button id="activity_playlist_add">Add</button>
+				</p>
+			</fieldset>
+
+			<br />
+
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Data retention</legend>
+				<p>
+					Keep data for X time, this is used in the scheduled task to trim your data and keep only data within the requested time period.
+				</p>
+				Keep data for
+				<select id="max_data_age_select">
+					<option value="0">Clear All</option>
+					<option value="1">1 Month</option>
+					<option value="2">2 Months</option>
+					<option value="3">3 Months</option>
+					<option value="6">6 Months</option>
+					<option value="12">1 Year</option>
+					<option value="24">2 Years</option>
+					<option value="36">3 Years</option>
+					<option value="-1">Forever</option>
+				</select>
+				<h3>
+					<strong>Cleanup deleted users</strong>
+				</h3>
+				<p>
+					When you remove users from your system playback activity for old deleted users becomes assigned to unknown, you can remove this data to clean up your reports.
+				</p>
+				<p>
+					<button id="remove_unknown_button">Cleanup deleted users</button>
+				</p>
+			</fieldset>
+
+			<br />
+
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Backup</legend>
+				<p>
+					You can back up all your playback activity to a TSV file, this can then later be re imported if you need to rebuild your server.<br />
+					When you load backup data it adds to your data, this allows you to have multiple backup files and import each one as needed.<br />
+					The saved backup data is in TSV format so can be loaded into other tools like Excel to build highly customised reports.
+				</p>
+				<p>
+					<button id="set_backup_path">Set Backup Path</button> Backup Path : <span id="backup_path_label"></span><br />
+				</p>
+				<p>
+					Backup files to keep
+					<select id="files_to_keep">
+						<option value="1">1</option>
+						<option value="5">5</option>
+						<option value="10">10</option>
+						<option value="15">15</option>
+						<option value="20">20</option>
+					</select>
+				</p>
+				<p>
+					<button id="backup_data_now">Save Backup Data</button>
+					<button id="load_backup_data">Load Backup Data</button>
+				</p>
+			</fieldset>
+
+			<br />
+
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Ignored user list</legend>
+				<p>
+					Users can be set to ignored so you can have test users and admins that are not included in any of the reports.
+				</p>
+				<select id="user_list_for_add"></select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
+				<ul id="user_list_items"></ul>
+			</fieldset>
+
+			<br />
+
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Resource monitoring</legend>
+				Monitor only Emby processes <input type="checkbox" id="monitor_only_emby" />
+			</fieldset>
+
+			<br />
 
 		</div>
 	</div>
