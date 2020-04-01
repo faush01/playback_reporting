@@ -76,21 +76,20 @@ namespace playback_reporting
         {
             _logger.Info("EventMonitorEntryPoint Running");
 
+            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            _repository.Initialize();
+
             if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
             {
                 _logger.Info("ERROR : Plugin not compatible with this server version");
                 return;
             }
-            
-            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            _repository.Initialize();
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
             _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
 
             // start playback monitor
             System.Threading.Tasks.Task.Run(() => PlaybackMonitoringTask());
-
             System.Threading.Tasks.Task.Run(() => ResourceMonitoringTask());
         }
 
