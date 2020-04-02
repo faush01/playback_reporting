@@ -51,10 +51,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             style.innerHTML =
                 '.tooltip {position: relative;display: inline-block;border-bottom: 1px dotted black;} ' +
                 '.tooltip .tooltiptext {visibility: hidden; background-color: black; color: #fff; border-radius: 6px; padding: 5px 0; position: absolute;z-index: 1;} ' +
-                '.tooltip:hover .tooltiptext {visibility: visible;}';
+                '.tooltip:hover .tooltiptext {visibility: visible;} ' +
+                '.info_cell {white-space: nowrap; padding-left:45px; padding-right:20px; font-size:smaller;}' +
+                '.info_cell_heading {white-space: nowrap; padding-left:20px; padding-right:20px;font-size:smaller;}';
             var ref = document.querySelector('script');
             ref.parentNode.insertBefore(style, ref);
-
 
             process_click();
 
@@ -123,55 +124,93 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             complete_percentage = Math.round(complete_percentage);
                             var duration = displayTime(activity_info.NowPlayingItem.RunTimeTicks);
                             var current = displayTime(activity_info.PlayState.PositionTicks);
-                            row_html += "<td>" + current + " / " + duration + " (" + complete_percentage + "%)</td>";
+                            row_html += "<td>" + complete_percentage + "% (" + current + " / " + duration + ")</td>";
 
                             var play_method_details = "";
-                            if (activity_info.PlayState.PlayMethod === "Transcode" && activity_info.TranscodingInfo !== undefined) {
-                                play_method_details += "<table>";
-                                play_method_details += "<tr><td nowrap align='left'>Video Direct</td><td nowrap align='left'>" + activity_info.TranscodingInfo.IsVideoDirect + "</td></tr>";
-                                play_method_details += "<tr><td nowrap align='left'>Video Codec</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoCodec + "</td></tr>";
-                                play_method_details += "<tr><td nowrap align='left'>Video Size</td><td nowrap align='left'>" + activity_info.TranscodingInfo.Width + "x" + activity_info.TranscodingInfo.Height + "</td></tr>";
-                                
+
+                            play_method_details += "<table cellpadding='0' cellspacing='0'>";
+
+                            if (activity_info.NowPlayingItem.MediaStreams && activity_info.NowPlayingItem.MediaStreams.length > 0) {
+                                for (var media_index = 0; media_index < activity_info.NowPlayingItem.MediaStreams.length; media_index++) {
+                                    var media = activity_info.NowPlayingItem.MediaStreams[media_index];
+                                    if (media.Type === "Video") {
+                                        play_method_details += "<tr><td class='info_cell_heading'>Original Video</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Codec: " + media.Codec + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Size: " + media.Width + "x" + media.Height + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Framerate: " + media.RealFrameRate + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Aspect Ratio: " + media.AspectRatio + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Bitrate: " + media.BitRate + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Interlaced: " + media.IsInterlaced + "</td></tr>";
+                                    }
+                                    if (media.Type === "Audio") {
+                                        play_method_details += "<tr><td class='info_cell_heading'>Original Audio</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Codec: " + media.Codec + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Language: " + media.DisplayLanguage + "</td></tr>";
+                                        play_method_details += "<tr><td class='info_cell'>Channels: " + media.Channels + "</td></tr>";
+                                    }
+                                }
+                            }
+
+                            if (activity_info.TranscodingInfo) {
+
+                                play_method_details += "<tr><td class='info_cell_heading'>Transcoded Video</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Direct: " + activity_info.TranscodingInfo.IsVideoDirect + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Codec: " + activity_info.TranscodingInfo.VideoCodec + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Size: " + activity_info.TranscodingInfo.Width + "x" + activity_info.TranscodingInfo.Height + "</td></tr>";
+
                                 if (activity_info.TranscodingInfo.VideoEncoderIsHardware) {
-                                    play_method_details += "<tr><td nowrap align='left'>Video Encoder</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoEncoderHwAccel + "</td></tr>";
-                                    play_method_details += "<tr><td nowrap align='left'>Encoder Media</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoEncoderMediaType + "</td></tr>";
+                                    var video_encoder_info = activity_info.TranscodingInfo.VideoEncoderHwAccel + " - " + activity_info.TranscodingInfo.VideoEncoderMediaType;
+                                    play_method_details += "<tr><td class='info_cell'>Encoder: " + video_encoder_info + "</td></tr>";
                                 }
                                 else if (activity_info.TranscodingInfo.IsVideoDirect === false) {
-                                    play_method_details += "<tr><td nowrap align='left'>Video Encoder</td><td nowrap align='left'>Software</td></tr>";
+                                    play_method_details += "<tr><td class='info_cell'>Encoder: Software</td></tr>";
                                 }
 
-                                if (activity_info.TranscodingInfo.VideoDecoderIsHardware ) {
-                                    play_method_details += "<tr><td nowrap align='left'>Video Decoder</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoDecoderHwAccel + "</td></tr>";
-                                    play_method_details += "<tr><td nowrap align='left'>Decoder Media</td><td nowrap align='left'>" + activity_info.TranscodingInfo.VideoDecoderMediaType + "</td></tr>";
-
-
+                                if (activity_info.TranscodingInfo.VideoDecoderIsHardware) {
+                                    var audio_encoder_info = activity_info.TranscodingInfo.VideoDecoderHwAccel + " - " + activity_info.TranscodingInfo.VideoDecoderMediaType;
+                                    play_method_details += "<tr><td class='info_cell'>Decoder: " + audio_encoder_info + "</td></tr>";
                                 }
                                 else if (activity_info.TranscodingInfo.IsVideoDirect === false) {
-                                    play_method_details += "<tr><td nowrap align='left'>Video Decoder</td><td nowrap align='left'>Software</td></tr>";
+                                    play_method_details += "<tr><td class='info_cell'>Decoder: Software</td></tr>";
                                 }
 
-                                play_method_details += "<tr><td nowrap align='left'>Audio Direct</td><td nowrap align='left'>" + activity_info.TranscodingInfo.IsAudioDirect + "</td></tr>";
-                                play_method_details += "<tr><td nowrap align='left'>Audio Codec</td><td nowrap align='left'>" + activity_info.TranscodingInfo.AudioCodec + "</td></tr>";
-                                play_method_details += "<tr><td nowrap align='left'>Audio Channels</td><td nowrap align='left'>" + activity_info.TranscodingInfo.AudioChannels + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell_heading'>Transcoded Audio</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Direct: " + activity_info.TranscodingInfo.IsAudioDirect + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Codec: " + activity_info.TranscodingInfo.AudioCodec + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Channels: " + activity_info.TranscodingInfo.AudioChannels + "</td></tr>";
 
-                                play_method_details += "<tr><td nowrap align='left'>Container</td><td nowrap align='left'>" + activity_info.TranscodingInfo.Container + "</td></tr>";
-                                play_method_details += "<tr><td nowrap align='left'>Bitrate</td><td nowrap align='left'>" + activity_info.TranscodingInfo.Bitrate + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell_heading'>Transcode Info</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Container: " + activity_info.TranscodingInfo.Container + "</td></tr>";
+                                play_method_details += "<tr><td class='info_cell'>Bitrate: " + activity_info.TranscodingInfo.Bitrate + "</td></tr>";
 
                                 if (activity_info.TranscodingInfo.Framerate) {
-                                    play_method_details += "<tr><td nowrap align='left'>Transcode FPS</td><td nowrap align='left'>" + activity_info.TranscodingInfo.Framerate + "</td></tr>";
+                                    play_method_details += "<tr><td class='info_cell'>Speed: " + activity_info.TranscodingInfo.Framerate + " fps</td></tr>";
                                 }
 
                                 if (activity_info.TranscodingInfo.TranscodingPositionTicks) {
-                                    play_method_details += "<tr><td nowrap align='left'>Transcode State</td><td nowrap align='left'>" +
-                                        displayTime(activity_info.TranscodingInfo.TranscodingPositionTicks) + "</td></tr>";
+
+                                    var trans_complete_percentage = (activity_info.TranscodingInfo.TranscodingPositionTicks / activity_info.NowPlayingItem.RunTimeTicks) * 100;
+                                    trans_complete_percentage = Math.round(trans_complete_percentage);
+                                    var trans_duration = displayTime(activity_info.NowPlayingItem.RunTimeTicks);
+                                    var trans_current = displayTime(activity_info.TranscodingInfo.TranscodingPositionTicks);
+
+                                    play_method_details += "<tr><td class='info_cell'>Position: " +
+                                        trans_complete_percentage + "% (" + trans_current + " / " + trans_duration + ")</td></tr>";
                                 }
                                 else {
-                                    play_method_details += "<tr><td nowrap align='left'>Transcode State</td><td nowrap align='left'>Finished</td></tr>";
+                                    play_method_details += "<tr><td class='info_cell'>Position: Finished</td></tr>";
                                 }
 
-                                play_method_details += "</table>";
+                                if (activity_info.TranscodingInfo.TranscodeReasons && activity_info.TranscodingInfo.TranscodeReasons.length > 0) {
+
+                                    play_method_details += "<tr><td class='info_cell_heading'>Transcode Reasons</td></tr>";
+                                    for (var reason_index = 0; reason_index < activity_info.TranscodingInfo.TranscodeReasons.length; reason_index++) {
+                                        play_method_details += "<tr><td class='info_cell'>" + activity_info.TranscodingInfo.TranscodeReasons[reason_index] + "</td></tr>";
+                                    }
+                                }
                             }
 
+                            play_method_details += "</table>";
                             row_html += "<td><div class='tooltip'>" + activity_info.PlayState.PlayMethod + "<span class='tooltiptext'>" + play_method_details + "</span></div></td>";
                         }
                         else {
