@@ -43,7 +43,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     };
 
-    function draw_graph(view, local_chart, usage_data) {
+    function draw_graph(view, local_chart, usage_data, user_list) {
 
         console.log("draw_graph called");
 
@@ -52,12 +52,20 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             return;
         }
 
-        //if (!usage_data || usage_data.length == 0) {
-        //    Dashboard.alert({ message: "You have no usage data yet, try playing back some media and then check again.", title: "No playback data!" });
-        //    return;
-        //}
+        //console.log("usage_data: " + JSON.stringify(usage_data));
+        //console.log("user_list: " + JSON.stringify(user_list));
 
-        console.log("usage_data: " + JSON.stringify(usage_data));
+        // sort all user and assign colours
+        var full_user_list = [];
+        for (var i = 0; i < user_list.length; i++) {
+            full_user_list.push(user_list[i].name);
+        }
+        full_user_list.sort();
+        var user_colour_map = {};
+        for (var x = 0; x < full_user_list.length; x++) {
+            user_colour_map[full_user_list[x]] = color_list[x % full_user_list.length];
+        }
+        //console.log("user_colour_map: " + JSON.stringify(user_colour_map));
 
         // get labels from the first user
         var text_labels = [];
@@ -94,7 +102,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 }
                 var chart_data = {
                     label: user_usage.user_name,
-                    backgroundColor: color_list[user_count++ % color_list.length],
+                    backgroundColor: user_colour_map[user_usage.user_name],//color_list[user_count++ % color_list.length],
                     data: point_data
                 };
                 user_usage_datasets.push(chart_data);
@@ -456,23 +464,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     var days = Date.daysBetween(start_date, end_date);
                     span_days_text.innerHTML = days;
 
-                    var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=time&stamp=" + new Date().getTime();
-                    url = ApiClient.getUrl(url);
-
-                    ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
-                        if (config.ColourPalette.length === 0) {
-                            color_list = getDefautColours();
-                        }
-                        else {
-                            color_list = config.ColourPalette;
-                        }
-                    
-                        ApiClient.getUserActivity(url).then(function (usage_data) {
-                            load_status.innerHTML = "&nbsp;";
-                            //alert("Loaded Data: " + JSON.stringify(usage_data));
-                            draw_graph(view, d3, usage_data);
-                        }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
-                    });
+                    process_click();
 
                     function process_click() {
                         var table_body = view.querySelector('#user_usage_report_results');
@@ -501,13 +493,26 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         var filtered_url = "user_usage_stats/PlayActivity?filter=" + filter.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=" + data_t + "&stamp=" + new Date().getTime();
                         filtered_url = ApiClient.getUrl(filtered_url);
+                        var user_url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
+                        user_url = ApiClient.getUrl(user_url);
 
                         load_status.innerHTML = "Loading Data...";
 
-                        ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
-                            load_status.innerHTML = "&nbsp;";
-                            draw_graph(view, d3, usage_data);
-                        }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
+                        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                            if (config.ColourPalette.length === 0) {
+                                color_list = getDefautColours();
+                            }
+                            else {
+                                color_list = config.ColourPalette;
+                            }
+
+                            ApiClient.getUserActivity(user_url).then(function (user_list) {
+                                ApiClient.getUserActivity(filtered_url).then(function (usage_data) {
+                                    load_status.innerHTML = "&nbsp;";
+                                    draw_graph(view, d3, usage_data, user_list);
+                                }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
+                            });
+                        });
                     }
 
                 }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
