@@ -18,6 +18,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     'use strict';
 
     var chart_instance_map = {};
+    var color_list = [];
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -83,14 +84,13 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             chart_data_values_time.push(other_count);
         }
 
-        var colours_pallet = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
         var all_colours = [];
         var colour_max = max_items;
         if (max_items) {
             colour_max += 1;
         }
-        while (all_colours.length < colour_max) {
-            all_colours = all_colours.concat(colours_pallet);
+        while (all_colours.length < colour_max && color_list.length !== 0) {
+            all_colours = all_colours.concat(color_list);
         }
 
         //console.log(chart_data_labels_count);
@@ -300,23 +300,33 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 url = ApiClient.getUrl(url);
 
                 ApiClient.getUserActivity(url).then(function (user_list) {
-                    //alert("Loaded Data: " + JSON.stringify(user_list));
-                    var index = 0;
-                    var options_html = "<option value=''>All Users</option>";
-                    var item_details;
-                    for (index = 0; index < user_list.length; ++index) {
-                        item_details = user_list[index];
-                        if (user_name === item_details.name) {
-                            options_html += "<option value='" + item_details.id + "' selected>" + item_details.name + "</option>";
+
+                    ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                        if (config.ColourPalette.length === 0) {
+                            color_list = getDefautColours();
                         }
                         else {
-                            options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                            color_list = config.ColourPalette;
                         }
 
-                    }
-                    user_list_selector.innerHTML = options_html;
+                        //alert("Loaded Data: " + JSON.stringify(user_list));
+                        var index = 0;
+                        var options_html = "<option value=''>All Users</option>";
+                        var item_details;
+                        for (index = 0; index < user_list.length; ++index) {
+                            item_details = user_list[index];
+                            if (user_name === item_details.name) {
+                                options_html += "<option value='" + item_details.id + "' selected>" + item_details.name + "</option>";
+                            }
+                            else {
+                                options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
+                            }
 
-                    process_click();
+                        }
+                        user_list_selector.innerHTML = options_html;
+
+                        process_click();
+                    });
                 });
 
                 function process_click() {

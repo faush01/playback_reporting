@@ -18,6 +18,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     'use strict';
 
     var resource_chart = null;
+    var color_list = [];
 
     ApiClient.getServerData = function (url_to_get) {
         console.log("getServerData Url = " + url_to_get);
@@ -27,8 +28,6 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             dataType: "json"
         });
     };
-
-    var color_list = ["#d98880", "#c39bd3", "#7fb3d545"];
 
     function get_new_date_string(start_date, offset) {
 
@@ -109,6 +108,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             lastr_count = play_counter.Value;
         }
 
+        var all_colours = [];
+        while (all_colours.length < 3 && color_list.length !== 0) {
+            all_colours = all_colours.concat(color_list);
+        }
 
         var timeFormat = 'YYYY/MM/DD HH:mm:ss';
 
@@ -117,8 +120,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             data: {
                 datasets: [{
                     label: 'CPU Load',
-                    backgroundColor: color_list[0],
-                    borderColor: color_list[0],
+                    backgroundColor: all_colours[0],
+                    borderColor: all_colours[0],
                     fill: false,
                     pointRadius: 2,
                     data: server_load_data,
@@ -127,8 +130,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 {
                     label: 'MEM Used (MB)',
-                    backgroundColor: color_list[1],
-                    borderColor: color_list[1],
+                    backgroundColor: all_colours[1],
+                    borderColor: all_colours[1],
                     fill: false,
                     pointRadius: 2,
                     data: server_mem_data,
@@ -137,8 +140,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 {
                     label: 'Playback Count',
-                    backgroundColor: color_list[2],
-                    borderColor: color_list[2],
+                    backgroundColor: all_colours[2] + "45",
+                    borderColor: all_colours[2] + "45",
                     fill: true,
                     pointRadius: 1,
                     data: play_counts,
@@ -315,8 +318,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 var chart_refresh_button = view.querySelector('#resource_chart_refresh');
                 chart_refresh_button.addEventListener("click", process_click);
-                
-                process_click();
+
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                    if (config.ColourPalette.length === 0) {
+                        color_list = getDefautColours();
+                    }
+                    else {
+                        color_list = config.ColourPalette;
+                    }
+                    process_click();
+                });
 
                 function process_click() {
 
@@ -335,14 +346,14 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             });
 
             var refresh_button = view.querySelector('#process_list_refresh');
-            refresh_button.addEventListener("click", reresh_process_table);
+            refresh_button.addEventListener("click", refesh_process_table);
 
             var sort_type = view.querySelector('#process_list_sort_order');
-            sort_type.addEventListener("change", reresh_process_table);
+            sort_type.addEventListener("change", refesh_process_table);
 
-            reresh_process_table();
+            refesh_process_table();
 
-            function reresh_process_table() {
+            function refesh_process_table() {
                 var process_list_url = "user_usage_stats/process_list?stamp=" + new Date().getTime();
                 process_list_url = ApiClient.getUrl(process_list_url);
 

@@ -14,6 +14,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+function getDefautColours() {
+    return ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
+}
+
 function getTabs() {
     var tabs = [
         {

@@ -19,6 +19,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
     var my_bar_chart = null;
     var filter_names = [];
+    var color_list = [];
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -42,8 +43,6 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     };
 
-    var color_list = ["#d98880", "#c39bd3", "#7fb3d5", "#76d7c4", "#7dcea0", "#f7dc6f", "#f0b27a", "#d7dbdd", "#85c1e9", "#f1948a"];
-
     function draw_graph(view, local_chart, usage_data) {
 
         console.log("draw_graph called");
@@ -58,7 +57,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         //    return;
         //}
 
-        //console.log("usage_data: " + JSON.stringify(usage_data));
+        console.log("usage_data: " + JSON.stringify(usage_data));
 
         // get labels from the first user
         var text_labels = [];
@@ -95,7 +94,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 }
                 var chart_data = {
                     label: user_usage.user_name,
-                    backgroundColor: color_list[user_count++ % 10],
+                    backgroundColor: color_list[user_count++ % color_list.length],
                     data: point_data
                 };
                 user_usage_datasets.push(chart_data);
@@ -460,11 +459,20 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     var url = "user_usage_stats/PlayActivity?filter=" + filter_names.join(",") + "&days=" + days + "&end_date=" + end_picker.value + "&data_type=time&stamp=" + new Date().getTime();
                     url = ApiClient.getUrl(url);
 
-                    ApiClient.getUserActivity(url).then(function (usage_data) {
-                        load_status.innerHTML = "&nbsp;";
-                        //alert("Loaded Data: " + JSON.stringify(usage_data));
-                        draw_graph(view, d3, usage_data);
-                    }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
+                    ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                        if (config.ColourPalette.length === 0) {
+                            color_list = getDefautColours();
+                        }
+                        else {
+                            color_list = config.ColourPalette;
+                        }
+                    
+                        ApiClient.getUserActivity(url).then(function (usage_data) {
+                            load_status.innerHTML = "&nbsp;";
+                            //alert("Loaded Data: " + JSON.stringify(usage_data));
+                            draw_graph(view, d3, usage_data);
+                        }, function (response) { load_status.innerHTML = response.status + ":" + response.statusText; });
+                    });
 
                     function process_click() {
                         var table_body = view.querySelector('#user_usage_report_results');

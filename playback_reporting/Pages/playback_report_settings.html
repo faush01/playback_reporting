@@ -112,6 +112,35 @@
 
 			<br />
 
+			<fieldset>
+				<legend style="font-weight:bold;font-size:large;">Colour palette</legend>
+
+				Colour list<br />
+				<div id="colour_blocks"></div>
+				<br />
+				<table>
+					<tr>
+						<td>
+							<input type="range" min="0" max="255" value="128" id="colour_slider_red">
+							<br />
+							<input type="range" min="0" max="255" value="128" id="colour_slider_green">
+							<br />
+							<input type="range" min="0" max="255" value="128" id="colour_slider_blue">
+						</td>
+						<td style="padding-left: 20px;">
+							<span id="colour_test_block" style="text-align:center; width:75px; height:50px; display:inline-block; background:#808080;"></span>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							<input type="text" id="new_colour_text" /> <button id="add_colour_button">Add</button>
+						</td>
+					</tr>
+				</table>
+			</fieldset>
+
+			<br />
+
 		</div>
 	</div>
 </div>

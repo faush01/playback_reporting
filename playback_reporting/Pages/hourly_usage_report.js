@@ -21,6 +21,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     var hourly_bar_chart = null;
     var weekly_bar_chart = null;
     var filter_names = [];
+    var color_list = [];
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -39,6 +40,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     function draw_graph(view, local_chart, usage_data) {
 
         var days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        var all_colours = [];
+        while (all_colours.length < 3 && color_list.length !== 0) {
+            all_colours = all_colours.concat(color_list);
+        }
 
         //console.log(usage_data);
         var chart_labels = [];
@@ -87,7 +93,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#d98880',
+                backgroundColor: all_colours[0],//'#d98880',
                 data: daily_chart_point_data
             }]
         };
@@ -110,7 +116,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#d98880',
+                backgroundColor: all_colours[1],//'#d98880',
                 data: hourly_chart_point_data
             }]
         };
@@ -123,7 +129,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             datasets: [{
                 label: 'Time',
                 type: "bar",
-                backgroundColor: '#d98880',
+                backgroundColor: all_colours[2],//'#d98880',
                 data: chart_data // [10,20,30,40,50,60,70]
             }/*,
             {
@@ -392,8 +398,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         }
                         user_list_selector.innerHTML = options_html;
-
-                        process_click();
+                        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                            if (config.ColourPalette.length === 0) {
+                                color_list = getDefautColours();
+                            }
+                            else {
+                                color_list = config.ColourPalette;
+                            }
+                            process_click();
+                        });
                     });
 
                     function process_click() {

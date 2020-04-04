@@ -19,6 +19,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
     var my_bar_chart = null;
     var filter_names = [];
+    var color_list = [];
 
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
@@ -53,7 +54,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             datasets: [{
                 label: 'Count',
                 type: "bar",
-                backgroundColor: '#d98880',
+                backgroundColor: color_list[0],//'#d98880',
                 data: chart_data // [10,20,30,40,50,60,70]
             }/*,
             {
@@ -161,7 +162,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                     var span_days_text = view.querySelector('#span_days');
 
-                    process_click();
+                    ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                        if (config.ColourPalette.length === 0) {
+                            color_list = getDefautColours();
+                        }
+                        else {
+                            color_list = config.ColourPalette;
+                        }
+                        process_click();
+                    });
 
                     function process_click() {
                         var filter = [];

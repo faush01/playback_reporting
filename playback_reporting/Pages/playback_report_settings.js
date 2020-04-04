@@ -17,6 +17,8 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
+    var original_colour = "";
+
     ApiClient.getUserActivity = function (url_to_get) {
         console.log("getUserActivity Url = " + url_to_get);
         return this.ajax({
@@ -212,11 +214,148 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     }
 
+    function remove_colour_item(view, colour_hash) {
+        if (!confirm("Are you sure you want to remove this item? " + colour_hash)) {
+            return;
+        }
+
+        var add_colour_button = view.querySelector('#add_colour_button');
+        new_colour_text.value = colour_hash;
+        original_colour = "";
+        add_colour_button.innerHTML = "Add";
+
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+            var index = config.ColourPalette.indexOf(colour_hash);
+            while (index > -1) {
+                console.log("Found item to remove : " + index);
+                if (index > -1) {
+                    config.ColourPalette.splice(index, 1);
+                }
+                index = config.ColourPalette.indexOf(colour_hash);
+            }
+
+            console.log("New Config Settings : " + JSON.stringify(config));
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+            setColourPalette(view, config);
+        });
+
+    }
+
+    function move_colour_item(view, colour_hash, change) {
+
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+
+            const index = config.ColourPalette.indexOf(colour_hash);
+            console.log("Found item to remove : " + index);
+            if (index > -1) {
+
+                if (change < 0 && index === 0) {
+                    return;
+                }
+                else if (change > 0 && index === config.ColourPalette.length - 1) {
+                    return;
+                }
+
+                const temp_colour = config.ColourPalette[index + change];
+                config.ColourPalette[index + change] = config.ColourPalette[index];
+                config.ColourPalette[index] = temp_colour;
+            }
+
+            console.log("New Config Settings : " + JSON.stringify(config));
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+            setColourPalette(view, config);
+        });
+
+    }
+
+    function edit_colour_item(view, colour_hash) {
+
+        var new_colour_text = view.querySelector('#new_colour_text');
+        var add_colour_button = view.querySelector('#add_colour_button');
+
+        new_colour_text.value = colour_hash;
+
+        if (original_colour === "" || original_colour !== colour_hash) {
+            original_colour = colour_hash;
+            add_colour_button.innerHTML = "Update";
+        }
+        else {
+            original_colour = "";
+            add_colour_button.innerHTML = "Add";
+        }
+
+        var event = new Event('input', {
+            bubbles: true,
+            cancelable: true
+        });
+        new_colour_text.dispatchEvent(event);
+    }
+
+    function setColourPalette(view, config) {
+
+        console.log("setColourPalette");
+        var colour_blocks = view.querySelector('#colour_blocks');
+
+        while (colour_blocks.firstChild) {
+            colour_blocks.removeChild(colour_blocks.firstChild);
+        }
+
+        var colour_list = config.ColourPalette;
+        if (colour_list.length === 0) {
+            colour_list = getDefautColours();
+            config.ColourPalette = colour_list;
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+        }
+
+        console.log("setColourPalette : " + JSON.stringify(colour_list));
+
+        colour_list.forEach(function (colour_info, index) {
+            var colour_span = document.createElement("SPAN");
+            //colour_span.innerText = colour_info;
+            colour_span.style = "text-align:center; width:75px; height:50px; display:inline-block; background:" + colour_info + ";";
+
+
+            var del_txt = document.createElement("SPAN");
+            del_txt.innerText = " - ";
+            del_txt.style = "cursor: pointer;";
+            del_txt.addEventListener("click", function () { remove_colour_item(view, colour_info); });
+
+            var left_txt = document.createElement("SPAN");
+            left_txt.innerText = " < ";
+            left_txt.style = "cursor: pointer;";
+            left_txt.addEventListener("click", function () { move_colour_item(view, colour_info, -1); });
+
+            var right_txt = document.createElement("SPAN");
+            right_txt.innerText = " > ";
+            right_txt.style = "cursor: pointer;";
+            right_txt.addEventListener("click", function () { move_colour_item(view, colour_info, 1); });
+
+            var br = document.createElement("br");
+            var colour_txt = document.createElement("SPAN");
+            colour_txt.innerText = colour_info;
+            colour_txt.style = "cursor: pointer;";
+            colour_txt.addEventListener("click", function () { edit_colour_item(view, colour_info); });
+
+            colour_span.appendChild(left_txt);
+            colour_span.appendChild(del_txt);
+            colour_span.appendChild(right_txt);
+            colour_span.appendChild(br);
+            colour_span.appendChild(colour_txt);
+
+
+            //colour_span.addEventListener("click", function () { remove_item(view, colour_info); });
+
+            colour_blocks.appendChild(colour_span);
+
+        });
+    }
+
     return function (view, params) {
 
         // init code here
         view.addEventListener('viewshow', function (e) {
 
+            original_colour = "";
             mainTabsManager.setTabs(this, getTabIndex("playback_report_settings"), getTabs);
 
             var set_backup_path = view.querySelector('#set_backup_path');
@@ -236,6 +375,19 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             var monitor_only_emby = view.querySelector('#monitor_only_emby');
             monitor_only_emby.addEventListener("change", monitor_only_emby_changed);
+
+            var new_colour_text = view.querySelector('#new_colour_text');
+            new_colour_text.addEventListener("input", colour_text_changed);
+            var colour_test_block = view.querySelector('#colour_test_block');
+            var add_colour_button = view.querySelector('#add_colour_button');
+            add_colour_button.addEventListener("click", add_new_colour);
+
+            var colour_slider_red = view.querySelector('#colour_slider_red');
+            colour_slider_red.addEventListener("input", colour_slider_changed);
+            var colour_slider_green = view.querySelector('#colour_slider_green');
+            colour_slider_green.addEventListener("input", colour_slider_changed);
+            var colour_slider_blue = view.querySelector('#colour_slider_blue');
+            colour_slider_blue.addEventListener("input", colour_slider_changed);
 
             //playback activity lists
             var activity_playlist_add = view.querySelector('#activity_playlist_add');
@@ -282,6 +434,78 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     loadPage(view, config);
                 });
             });
+
+            function colour_text_changed() {
+
+                var colour_hash = new_colour_text.value;
+                //console.log("new_colour_text:" + colour_hash);
+
+                if (colour_hash === "" || !colour_hash.startsWith("#") || colour_hash.length !== 7) {
+                    return;
+                }
+
+                //console.log("new_colour_text: " + colour_hash.slice(1, 3) + " " + colour_hash.slice(3, 5) + " " + colour_hash.slice(5));
+
+                var red_value = parseInt(colour_hash.slice(1, 3), 16);
+                var green_value = parseInt(colour_hash.slice(3, 5), 16);
+                var blue_value = parseInt(colour_hash.slice(5), 16);
+
+                //console.log("new_colour_text: " + red_value + " " + green_value + " " + blue_value);
+
+                colour_slider_red.value = red_value;
+                colour_slider_green.value = green_value;
+                colour_slider_blue.value = blue_value;
+
+                colour_test_block.style.background = colour_hash;
+            }
+
+            function colour_slider_changed() {
+                var red_int = parseInt(colour_slider_red.value);
+                var green_int = parseInt(colour_slider_green.value);
+                var blue_int = parseInt(colour_slider_blue.value);
+
+                //console.log("colour_slider: " + red_int + " " + green_int + " " + blue_int);
+                //console.log("colour_slider: " + red_int.toString(16) + " " + green_int.toString(16) + " " + blue_int.toString(16));
+
+                var hex_red = ("0" + red_int.toString(16)).slice(-2);
+                var hex_green = ("0" + green_int.toString(16)).slice(-2);
+                var hex_blue = ("0" + blue_int.toString(16)).slice(-2);
+
+                var colour_hash = "#" + hex_red + hex_green + hex_blue;
+                colour_test_block.style.background = colour_hash;
+                new_colour_text.value = colour_hash;
+            }
+
+            function add_new_colour() {
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+
+                    const colour_hash = new_colour_text.value.toLowerCase().trim();
+                    if (colour_hash === "" || colour_hash.length !== 7 || !colour_hash.startsWith("#")) {
+                        return;
+                    }
+                    
+                    if (original_colour !== "") {
+                        const index = config.ColourPalette.indexOf(original_colour);
+                        if (index > -1) {
+                            config.ColourPalette[index] = colour_hash;
+                        }
+                        add_colour_button.innerHTML = "Add";
+                        original_colour = "";
+                    }
+                    else {
+                        const index = config.ColourPalette.indexOf(colour_hash);
+                        if (index > -1) {
+                            alert("Colour already in palette");
+                            return;
+                        }
+                        config.ColourPalette.push(colour_hash);
+                    }
+
+                    console.log("New Config Settings : " + JSON.stringify(config));
+                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                    setColourPalette(view, config);
+                });
+            }
 
             function monitor_only_emby_changed() {
                 var monitor_scope = monitor_only_emby.checked;
@@ -381,6 +605,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             });
 
             showUserList(view);
+
+            ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                setColourPalette(view, config);
+            });
 
         });
 

@@ -29,6 +29,7 @@ namespace playback_reporting
         public DateTime LastUserActivityCheck { set; get; } = DateTime.Now.AddDays(-1);
         public List<PlaylistDetails> ActivityPlaylists { set; get; } = new List<PlaylistDetails>();
         public bool OnlyMonitorEmbyProcesses { set; get; } = true;
+        public HashSet<string> ColourPalette { set; get; } = new HashSet<string>();
     }
 
     public class PlaylistDetails
