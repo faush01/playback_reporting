@@ -52,19 +52,22 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             return;
         }
 
-        //console.log("usage_data: " + JSON.stringify(usage_data));
-        //console.log("user_list: " + JSON.stringify(user_list));
-
         // sort all user and assign colours
         var full_user_list = [];
         for (var i = 0; i < user_list.length; i++) {
             full_user_list.push(user_list[i].name);
         }
+
         full_user_list.sort();
         var user_colour_map = {};
         for (var x = 0; x < full_user_list.length; x++) {
-            user_colour_map[full_user_list[x]] = color_list[x % full_user_list.length];
+            user_colour_map[full_user_list[x]] = color_list[x % color_list.length];
         }
+
+        //console.log("usage_data: " + JSON.stringify(usage_data));
+        //console.log("user_list: " + JSON.stringify(user_list));
+        //console.log("full_user_list: " + JSON.stringify(full_user_list));
+        //console.log("color_list: " + JSON.stringify(color_list));
         //console.log("user_colour_map: " + JSON.stringify(user_colour_map));
 
         // get labels from the first user
