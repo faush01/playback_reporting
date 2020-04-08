@@ -110,7 +110,7 @@ namespace playback_reporting.Tasks
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
             DateTime cutoff = config.LastNewMediaCheck;
-            string last_check = cutoff.ToString("yyyy/MM/dd HH:mm:ss");
+            string last_check = cutoff.ToString("yyyy/MM/dd HH:mm:ss zzz");
 
             TimeSpan since_last = DateTime.Now - cutoff;
             _logger.Info("Cutoff DateTime for new items - date: " + last_check + " ago: " + since_last);
@@ -127,7 +127,7 @@ namespace playback_reporting.Tasks
 
             foreach (Folder folder in views)
             {
-                _logger.Info("Checking for new items in  : " + folder.ToString());
+                _logger.Info("Checking for new items in : " + folder.ToString());
 
                 InternalItemsQuery query = new InternalItemsQuery();
                 query.IncludeItemTypes = new string[] {"Movie", "Episode"};
@@ -147,7 +147,7 @@ namespace playback_reporting.Tasks
                     string id = item.InternalId.ToString();
                     string name = item.Name;
                     string type = item.GetType().Name;
-                    _logger.Info("Recently added item : (" + id + ") - (" + item.DateCreated.DateTime.ToString("yyyy-MM-dd HH:mm:ss zzz") + ")");
+                    _logger.Info("Recently added item : (" + id + ":" + type + ":" + name + ") - (" + item.DateCreated.DateTime.ToString("yyyy-MM-dd HH:mm:ss zzz") + ")");
 
                     if (item.DateCreated.DateTime < cutoff)
                     {
@@ -167,7 +167,7 @@ namespace playback_reporting.Tasks
                     }
                     else
                     {
-                        view_message_data += " - (" + type + ") " + name + "\r\n";
+                        view_message_data += " - (" + type + ") " + name + " (" + item.ProductionYear + ")\r\n";
                     }
                 }
 
