@@ -147,9 +147,11 @@ namespace playback_reporting.Tasks
                     string id = item.InternalId.ToString();
                     string name = item.Name;
                     string type = item.GetType().Name;
-                    _logger.Info("Recently added item : (" + id + ":" + type + ":" + name + ") - (" + item.DateCreated.DateTime.ToString("yyyy-MM-dd HH:mm:ss zzz") + ")");
+                    DateTime item_date_added = item.DateCreated.ToLocalTime().DateTime;
+                    string item_timestamp = item_date_added.ToString("yyyy-MM-dd HH:mm:ss zzz");
+                    _logger.Info("Recently added item : (" + id + ":" + type + ":" + name + ") - (" + item_timestamp + ")");
 
-                    if (item.DateCreated.DateTime < cutoff)
+                    if (item_date_added < cutoff)
                     {
                         break;
                     }
