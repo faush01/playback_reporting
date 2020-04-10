@@ -30,12 +30,14 @@ using System.IO;
 using System.Linq;
 using System.Globalization;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Controller.Net;
 
 namespace playback_reporting.Api
 {
 
     // http://localhost:8096/emby/user_usage_stats/process_list
     [Route("/user_usage_stats/process_list", "GET", Summary = "Gets a list of process Info")]
+    [Authenticated]
     public class GetProcessList : IReturn<Object>
     {
 
@@ -43,6 +45,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/resource_usage
     [Route("/user_usage_stats/resource_usage", "GET", Summary = "Gets Resource Usage Info")]
+    [Authenticated]
     public class GetResourceUsageInfo : IReturn<Object>
     {
         [ApiMember(Name = "hours", Description = "Number of Hours", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -51,6 +54,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/session_list
     [Route("/user_usage_stats/session_list", "GET", Summary = "Gets Session Info")]
+    [Authenticated]
     public class GetSessionInfo : IReturn<Object>
     {
 
@@ -58,6 +62,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/user_activity
     [Route("/user_usage_stats/user_activity", "GET", Summary = "Gets a report of the available activity per hour")]
+    [Authenticated]
     public class GetUserReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -68,6 +73,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/user_usage_stats/user_manage/add/1234-4321-1234
     [Route("/user_usage_stats/user_manage/{Action}/{Id}", "GET", Summary = "Get users")]
+    [Authenticated]
     public class GetUserManage : IReturn<Object>
     {
         [ApiMember(Name = "Action", Description = "action to perform", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
@@ -78,18 +84,21 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/user_list
     [Route("/user_usage_stats/user_list", "GET", Summary = "Get users")]
+    [Authenticated]
     public class GetUserList : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/type_filter_list", "GET", Summary = "Gets types filter list items")]
+    [Authenticated]
     public class TypeFilterList : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/import_backup
     [Route("/user_usage_stats/import_backup", "POST", Summary = "Post a backup for importing")]
+    [Authenticated]
     public class ImportBackup : IRequiresRequestStream, IReturnVoid
     {
         public Stream RequestStream { get; set; }
@@ -97,6 +106,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/submit_custom_query
     [Route("/user_usage_stats/submit_custom_query", "POST", Summary = "Submit an SQL query")]
+    [Authenticated]
     public class CustomQuery : IReturn<Object>
     {
         public String CustomQueryString { get; set; }
@@ -105,6 +115,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
+    [Authenticated]
     public class LoadBackup : IReturn<Object>
     {
         [ApiMember(Name = "backupfile", Description = "File name of file to load", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -113,12 +124,14 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/save_backup
     [Route("/user_usage_stats/save_backup", "GET", Summary = "Saves a backup of the playback report data to the backup path")]
+    [Authenticated]
     public class SaveBackup : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/PlayActivity
     [Route("/user_usage_stats/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
+    [Authenticated]
     public class GetUsageStats : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -133,6 +146,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
     [Route("/user_usage_stats/{UserID}/{Date}/GetItems", "GET", Summary = "Gets activity for {USER} for {Date} formatted as yyyy-MM-dd")]
+    [Authenticated]
     public class GetUserReportData : IReturn<Object>
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
@@ -145,6 +159,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/UserPlaylist
     [Route("/user_usage_stats/UserPlaylist", "GET", Summary = "Gets a report of all played items for a user in a date period")]
+    [Authenticated]
     public class GetUserPlaylist : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -163,6 +178,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/HourlyReport
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
+    [Authenticated]
     public class GetHourlyReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -177,6 +193,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/ItemType/BreakdownReport
     [Route("/user_usage_stats/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
+    [Authenticated]
     public class GetBreakdownReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -191,6 +208,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/DurationHistogramReport
     [Route("/user_usage_stats/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
+    [Authenticated]
     public class GetDurationHistogramReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -203,6 +221,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/TvShowsReport
     [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
+    [Authenticated]
     public class GetTvShowsReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -215,6 +234,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/MoviesReport
     [Route("/user_usage_stats/MoviesReport", "GET", Summary = "Gets Movies counts")]
+    [Authenticated]
     public class GetMoviesReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
