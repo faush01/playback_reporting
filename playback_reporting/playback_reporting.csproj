@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;</TargetFrameworks>
-    <AssemblyVersion>1.6.10.9</AssemblyVersion>
-    <FileVersion>1.6.10.9</FileVersion>
-    <Version>1.6.10.9</Version>
+    <AssemblyVersion>1.6.10.10</AssemblyVersion>
+    <FileVersion>1.6.10.10</FileVersion>
+    <Version>1.6.10.10</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\activity_report.html" />
