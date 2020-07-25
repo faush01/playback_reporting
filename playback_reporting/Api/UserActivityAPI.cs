@@ -34,24 +34,6 @@ using MediaBrowser.Controller.Net;
 
 namespace playback_reporting.Api
 {
-
-    // http://localhost:8096/emby/user_usage_stats/process_list
-    [Route("/user_usage_stats/process_list", "GET", Summary = "Gets a list of process Info")]
-    [Authenticated]
-    public class GetProcessList : IReturn<Object>
-    {
-
-    }
-
-    // http://localhost:8096/emby/user_usage_stats/resource_usage
-    [Route("/user_usage_stats/resource_usage", "GET", Summary = "Gets Resource Usage Info")]
-    [Authenticated]
-    public class GetResourceUsageInfo : IReturn<Object>
-    {
-        [ApiMember(Name = "hours", Description = "Number of Hours", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        public int hours { get; set; }
-    }
-
     // http://localhost:8096/emby/user_usage_stats/session_list
     [Route("/user_usage_stats/session_list", "GET", Summary = "Gets Session Info")]
     [Authenticated]
@@ -879,28 +861,6 @@ namespace playback_reporting.Api
 
                 report.Add(data);
             }
-
-            return report;
-        }
-
-        public object Get(GetResourceUsageInfo request)
-        {
-            List<Dictionary<string, object>> counters = repository.GetResourceCounters(request.hours);
-            List<KeyValuePair<string, int>> play_counts = repository.GetPlayActivityCounts(request.hours);
-
-            Dictionary<string, object> results = new Dictionary<string, object>();
-            results.Add("counters", counters);
-            results.Add("play_counts", play_counts);
-
-            return results;
-        }
-
-        public object Get(GetProcessList request)
-        {
-            List<Dictionary<string, object>> report = repository.GetProcessList();
-
-            //System.Threading.Thread.Sleep(5000);
-            //throw new Exception("Test Error");
 
             return report;
         }

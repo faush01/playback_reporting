@@ -33,13 +33,11 @@ namespace playback_reporting.Data
     {
         private readonly ILogger _logger;
         protected IFileSystem FileSystem { get; private set; }
-        private ResourcesCounters resource_counters = null;
 
         static protected ReaderWriterLockSlim WriteLock2;
 
         public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
         {
-            resource_counters = ResourcesCounters.Instance;
             DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             FileSystem = fileSystem;
             _logger = logger;
@@ -197,77 +195,6 @@ namespace playback_reporting.Data
             }
 
             return results;
-        }
-
-        public List<Dictionary<string, object>> GetProcessList()
-        {
-            List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
-
-            var res_counters = resource_counters.GetProcessList();
-            foreach(ProcessDetails proc_details in res_counters.Values)
-            {
-                Dictionary<string, object> new_record = new Dictionary<string, object>();
-
-                new_record.Add("id", proc_details.Id);
-                new_record.Add("name", proc_details.Name);
-                new_record.Add("cpu", Math.Round((double)proc_details.CpuUsage, 1));
-                new_record.Add("mem", proc_details.Memory);
-                new_record.Add("error", proc_details.ErrorMessage);
-
-                results.Add(new_record);
-            }
-
-            return results;
-        }
-
-        public List<Dictionary<string, object>> GetResourceCounters(int hours)
-        {
-            List<Dictionary<string, object>> results = new List<Dictionary<string, object>>();
-
-            DateTime from_when = DateTime.Now.AddHours(-1 * hours);
-
-            var res_counters = resource_counters.GetCounters();
-            foreach (Dictionary<string, object> counter in res_counters)
-            {
-                Dictionary<string, object> new_record = new Dictionary<string, object>();
-
-                DateTime counter_time = (DateTime)counter["date"];
-                if (counter_time >= from_when)
-                {
-                    string date_string = counter_time.ToString("yyyy-MM-dd HH:mm:ss");
-                    new_record.Add("date", date_string);
-                    double cpu = Math.Round((double)counter["cpu"], 1);
-                    new_record.Add("cpu", cpu);
-                    long mem = (long)counter["mem"];
-                    new_record.Add("mem", mem);
-
-                    results.Add(new_record);
-                }
-            }
-
-            return results;
-        }
-
-        public void AddResourceCounter(Dictionary<string, object> counters)
-        {
-            var res_counters = resource_counters.GetCounters();
-            res_counters.AddLast(counters);
-            if (res_counters.Count > 1440)
-            {
-                res_counters.RemoveFirst();
-            }
-
-            /*
-            foreach(Dictionary<string, object> counter in res_counters)
-            {
-                string log_line = "";
-                foreach(KeyValuePair<string, object> line in counter)
-                {
-                    log_line += line.Key + ":" + line.Value + "  ";
-                }
-                _logger.Info("Counter Data : " + log_line);
-            }
-            */
         }
 
         public string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results)
@@ -693,6 +620,11 @@ namespace playback_reporting.Data
                         foreach (var row in statement.ExecuteQuery())
                         {
                             string user_id = row.GetString(0);
+                            if (string.IsNullOrEmpty(user_id))
+                            {
+                                user_id = "unknown";
+                            }
+
                             Dictionary<string, int> uu = null;
                             if (usage.ContainsKey(user_id))
                             {

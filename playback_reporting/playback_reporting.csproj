@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;</TargetFrameworks>
-    <AssemblyVersion>1.6.10.10</AssemblyVersion>
-    <FileVersion>1.6.10.10</FileVersion>
-    <Version>1.6.10.10</Version>
+    <AssemblyVersion>1.7.0.2</AssemblyVersion>
+    <FileVersion>1.7.0.2</FileVersion>
+    <Version>1.7.0.2</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\activity_report.html" />
@@ -20,8 +20,6 @@
     <None Remove="Pages\hourly_usage_report.js" />
     <None Remove="Pages\playback_report_settings.html" />
     <None Remove="Pages\playback_report_settings.js" />
-    <None Remove="Pages\resource_usage.html" />
-    <None Remove="Pages\resource_usage.js" />
     <None Remove="Pages\user_playback_report.html" />
     <None Remove="Pages\user_playback_report.js" />
     <None Remove="Pages\user_play_report.html" />
@@ -41,8 +39,6 @@
     <EmbeddedResource Include="Pages\hourly_usage_report.js" />
     <EmbeddedResource Include="Pages\playback_report_settings.html" />
     <EmbeddedResource Include="Pages\playback_report_settings.js" />
-    <EmbeddedResource Include="Pages\resource_usage.html" />
-    <EmbeddedResource Include="Pages\resource_usage.js" />
     <EmbeddedResource Include="Pages\user_playback_report.html" />
     <EmbeddedResource Include="Pages\user_playback_report.js" />
     <EmbeddedResource Include="Pages\custom_query.html" />
