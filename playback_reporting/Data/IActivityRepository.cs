@@ -36,7 +36,6 @@ namespace playback_reporting.Data
         Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type);
         SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types);
         List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type);
-        SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date, string[] types);
         List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date);
         List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date);
         List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);

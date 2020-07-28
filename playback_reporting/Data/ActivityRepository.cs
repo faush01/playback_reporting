@@ -773,57 +773,6 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public SortedDictionary<int, int> GetDurationHistogram(int days, DateTime end_date, string[] types)
-        {
-            /*
-            SELECT CAST(PlayDuration / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount 
-            FROM PlaybackActivity 
-            GROUP BY CAST(PlayDuration / 300 as int)
-            ORDER BY CAST(PlayDuration / 300 as int) ASC;
-            */
-
-            List<string> filters = new List<string>();
-            foreach (string filter in types)
-            {
-                filters.Add("'" + filter + "'");
-            }
-
-            SortedDictionary<int, int> report = new SortedDictionary<int, int>();
-
-            DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
-            Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
-
-            string sql =
-                "SELECT CAST((PlayDuration - PauseDuration) / 300 as int) AS FiveMinBlock, COUNT(1) ActionCount " +
-                "FROM PlaybackActivity " +
-                "WHERE DateCreated >= @start_date AND DateCreated <= @end_date " +
-                "AND UserId not IN (select UserId from UserList) " +
-                "AND ItemType IN (" + string.Join(",", filters) + ") " +
-                "GROUP BY CAST((PlayDuration - PauseDuration) / 300 as int) " +
-                "ORDER BY CAST((PlayDuration - PauseDuration) / 300 as int) ASC";
-
-            using (lock_manager.getLockItem().Read())
-            {
-                using (var connection = CreateConnection(true))
-                {
-                    using (var statement = connection.PrepareStatement(sql))
-                    {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-
-                        foreach (var row in statement.ExecuteQuery())
-                        {
-                            int block_num = row.GetInt(0);
-                            int count = row.GetInt(1);
-                            report.Add(block_num, count);
-                        }
-                    }
-                }
-            }
-
-            return report;
-        }
-
         public List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();

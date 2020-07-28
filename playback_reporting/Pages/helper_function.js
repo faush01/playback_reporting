@@ -45,10 +45,6 @@ function getTabs() {
             name: 'Time'
         },
         {
-            href: Dashboard.getConfigurationPageUrl('duration_histogram_report'),
-            name: 'Duration'
-        },
-        {
             href: Dashboard.getConfigurationPageUrl('custom_query'),
             name: 'Query'
         },

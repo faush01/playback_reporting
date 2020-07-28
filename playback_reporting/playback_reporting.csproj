@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;</TargetFrameworks>
-    <AssemblyVersion>1.7.0.2</AssemblyVersion>
-    <FileVersion>1.7.0.2</FileVersion>
-    <Version>1.7.0.2</Version>
+    <AssemblyVersion>1.7.0.3</AssemblyVersion>
+    <FileVersion>1.7.0.3</FileVersion>
+    <Version>1.7.0.3</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Pages\activity_report.html" />
@@ -13,8 +13,6 @@
     <None Remove="Pages\Chart.bundle.min.js" />
     <None Remove="Pages\custom_query.html" />
     <None Remove="Pages\custom_query.js" />
-    <None Remove="Pages\duration_histogram_report.html" />
-    <None Remove="Pages\duration_histogram_report.js" />
     <None Remove="Pages\helper_function.js" />
     <None Remove="Pages\hourly_usage_report.html" />
     <None Remove="Pages\hourly_usage_report.js" />
@@ -33,8 +31,6 @@
     <EmbeddedResource Include="Pages\breakdown_report.js" />
     <EmbeddedResource Include="Pages\Chart.bundle.min.js" />
     <EmbeddedResource Include="Pages\helper_function.js" />
-    <EmbeddedResource Include="Pages\duration_histogram_report.html" />
-    <EmbeddedResource Include="Pages\duration_histogram_report.js" />
     <EmbeddedResource Include="Pages\hourly_usage_report.html" />
     <EmbeddedResource Include="Pages\hourly_usage_report.js" />
     <EmbeddedResource Include="Pages\playback_report_settings.html" />

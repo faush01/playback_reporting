@@ -31,6 +31,7 @@ using System.Linq;
 using System.Globalization;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Controller.Net;
+using MediaBrowser.Model.Users;
 
 namespace playback_reporting.Api
 {
@@ -188,19 +189,6 @@ namespace playback_reporting.Api
         public string BreakdownType { get; set; }
     }
 
-    // http://localhost:8096/emby/user_usage_stats/DurationHistogramReport
-    [Route("/user_usage_stats/DurationHistogramReport", "GET", Summary = "Gets duration histogram")]
-    [Authenticated]
-    public class GetDurationHistogramReport : IReturn<Object>
-    {
-        [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
-        public int days { get; set; }
-        [ApiMember(Name = "end_date", Description = "End date of the report in yyyy-MM-dd format", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-        public string end_date { get; set; }
-        [ApiMember(Name = "filter", Description = "Comma separated list of media types to filter (movies,series)", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
-        public string filter { get; set; }
-    }
-
     // http://localhost:8096/emby/user_usage_stats/TvShowsReport
     [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
     [Authenticated]
@@ -236,6 +224,7 @@ namespace playback_reporting.Api
         private readonly IServerConfigurationManager _config;
         private readonly IUserManager _userManager;
         private readonly ILibraryManager _libraryManager;
+        private readonly IAuthorizationContext _ac;
 
         private ActivityRepository repository;
 
@@ -245,7 +234,8 @@ namespace playback_reporting.Api
             IJsonSerializer jsonSerializer,
             IUserManager userManager,
             ILibraryManager libraryManager,
-            ISessionManager sessionManager)
+            ISessionManager sessionManager,
+            IAuthorizationContext authContext)
         {
             _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
             _jsonSerializer = jsonSerializer;
@@ -254,6 +244,7 @@ namespace playback_reporting.Api
             _userManager = userManager;
             _libraryManager = libraryManager;
             _sessionManager = sessionManager;
+            _ac = authContext;
 
             _logger.Info("UserActivityAPI Loaded");
             ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
@@ -264,12 +255,26 @@ namespace playback_reporting.Api
 
         public object Get(TypeFilterList request)
         {
+            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<string>();
+            }
+
             List<string> filter_list = repository.GetTypeFilterList();
             return filter_list;
         }
 
         public object Get(GetUserReport request)
         {
+            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -368,6 +373,13 @@ namespace playback_reporting.Api
 
         public object Get(GetUserManage request)
         {
+            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return true;
+            }
+
             string action = request.Action;
             string id = request.Id;
 
@@ -390,6 +402,13 @@ namespace playback_reporting.Api
 
         public object Get(GetUserList request)
         {
+            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             List<string> user_id_list = repository.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
@@ -408,6 +427,13 @@ namespace playback_reporting.Api
 
         public object Get(GetUserReportData report)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             string[] filter_tokens = new string[0];
             if (report.Filter != null)
             {
@@ -439,6 +465,13 @@ namespace playback_reporting.Api
 
         public void Post(ImportBackup request)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return;
+            }
+
             string headers = "";
             foreach (var head in Request.Headers.Keys)
             {
@@ -461,6 +494,13 @@ namespace playback_reporting.Api
 
         public object Get(LoadBackup load_backup)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<string>() { "Not Authorized" };
+            }
+
             FileInfo fi = new FileInfo(load_backup.backupfile);
             if (fi.Exists == false)
             {
@@ -486,6 +526,13 @@ namespace playback_reporting.Api
         }
         public object Get(SaveBackup save_backup)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<string>() { "Not Authorized" };
+            }
+
             BackupManager bum = new BackupManager(_config, _logger, _fileSystem);
             string message = bum.SaveBackup();
 
@@ -494,6 +541,13 @@ namespace playback_reporting.Api
 
         public object Get(GetUsageStats activity)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             string[] filter_tokens = new string[0];
             if (activity.filter != null)
             {
@@ -583,6 +637,13 @@ namespace playback_reporting.Api
 
         public object Get(GetHourlyReport request)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new SortedDictionary<string, int>();
+            }
+
             string[] filter_tokens = new string[0];
             if (request.filter != null)
             {
@@ -619,6 +680,13 @@ namespace playback_reporting.Api
 
         public object Get(GetBreakdownReport request)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -654,50 +722,15 @@ namespace playback_reporting.Api
             return report;
         }
 
-        public object Get(GetDurationHistogramReport request)
-        {
-            string[] filter_tokens = new string[0];
-            if (request.filter != null)
-            {
-                filter_tokens = request.filter.Split(',');
-            }
-
-            DateTime end_date;
-            if (string.IsNullOrEmpty(request.end_date))
-            {
-                end_date = DateTime.Now;
-            }
-            else
-            {
-                _logger.Info("End_Date: " + request.end_date);
-                end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            }
-
-            SortedDictionary<int, int> report = repository.GetDurationHistogram(request.days, end_date, filter_tokens);
-
-            // find max
-            int max = -1;
-            foreach (int key in report.Keys)
-            {
-                if (key > max)
-                {
-                    max = key;
-                }
-            }
-
-            for(int x = 0; x < max; x++)
-            {
-                if(report.ContainsKey(x) == false)
-                {
-                    report.Add(x, 0);
-                }
-            }
-
-            return report;
-        }
-
         public object Get(GetTvShowsReport request)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -715,6 +748,13 @@ namespace playback_reporting.Api
 
         public object Get(GetMoviesReport request)
         {
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List <Dictionary<string, object>>();
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -735,6 +775,13 @@ namespace playback_reporting.Api
             _logger.Info("CustomQuery : " + request.CustomQueryString);
 
             Dictionary<string, object> responce = new Dictionary<string, object>();
+
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return responce;
+            }
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
@@ -783,6 +830,15 @@ namespace playback_reporting.Api
 
         public object Get(GetUserPlaylist request)
         {
+            
+
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return new List<Dictionary<string, object>>();
+            }
+
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -833,9 +889,14 @@ namespace playback_reporting.Api
 
         public object Get(GetSessionInfo request)
         {
-            //return _sessionManager.Sessions;
-
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
+
+            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
+            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
+            if (!policy.IsAdministrator)
+            {
+                return report;
+            }
 
             foreach (SessionInfo session in _sessionManager.Sessions)
             {

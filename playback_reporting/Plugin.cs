@@ -105,16 +105,6 @@ namespace playback_reporting
                 },
                 new PluginPageInfo
                 {
-                    Name = "duration_histogram_report",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.duration_histogram_report.html"
-                },
-                new PluginPageInfo
-                {
-                    Name = "duration_histogram_report.js",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.duration_histogram_report.js"
-                },
-                new PluginPageInfo
-                {
                     Name = "user_report",
                     EmbeddedResourcePath = GetType().Namespace + ".Pages.user_report.html"
                 },
