@@ -158,7 +158,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             if (group_type === "TvShows") {
                                 filter_name += " - *";
                             }
-                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encodeURI(filter_name);
+                            var encoded_uri = encodeURI(filter_name);
+                            encoded_uri = encoded_uri.replace("'", "%27");
+                            encoded_uri = encoded_uri.replace("\"", "%22");
+                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encoded_uri;
                             label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;'>" + chart.data.labels[i] + "</a>";
                         }
                         legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
@@ -212,7 +215,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             if (group_type === "TvShows") {
                                 filter_name += " - *";
                             }
-                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encodeURI(filter_name);
+                            var encoded_uri = encodeURI(filter_name);
+                            encoded_uri = encoded_uri.replace("'", "%27");
+                            encoded_uri = encoded_uri.replace("\"", "%22");
+                            var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encoded_uri;
                             label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;'>" + chart.data.labels[i] + "</a>";
                         }
 
