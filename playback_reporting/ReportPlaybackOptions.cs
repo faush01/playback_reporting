@@ -29,6 +29,7 @@ namespace playback_reporting
         public DateTime LastUserActivityCheck { set; get; } = DateTime.Now.AddDays(-1);
         public List<PlaylistDetails> ActivityPlaylists { set; get; } = new List<PlaylistDetails>();
         public HashSet<string> ColourPalette { set; get; } = new HashSet<string>();
+        public List<CustomQueryDetails> CustomQueries { set; get; } = new List<CustomQueryDetails>();
     }
 
     public class PlaylistDetails
@@ -37,5 +38,13 @@ namespace playback_reporting
         public string Type { set; get; }
         public int Days { set; get; }
         public int Size { set; get; }
+    }
+
+    public class CustomQueryDetails
+    {
+        public int Id { set; get; }
+        public string Name { set; get; }
+        public string Query { set; get; }
+        public bool ReplaceName { set; get; }
     }
 }

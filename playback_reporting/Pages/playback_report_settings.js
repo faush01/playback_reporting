@@ -402,17 +402,17 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         return;
                     }
 
-                    var fount_at = -1;
+                    var found_at = -1;
                     for (var x = 0; x < config.ActivityPlaylists.length; x++) {
                         var playlist_item = config.ActivityPlaylists[x];
                         if (new_playlist_name === playlist_item.Name) {
-                            fount_at = x;
+                            found_at = x;
                             break;
                         }
                     }
 
-                    if (fount_at !== -1) {
-                        config.ActivityPlaylists[fount_at] = { Name: new_playlist_name, Type: newPlaylist_type, Days: new_playlist_days, Size: new_playlist_size };
+                    if (found_at !== -1) {
+                        config.ActivityPlaylists[found_at] = { Name: new_playlist_name, Type: newPlaylist_type, Days: new_playlist_days, Size: new_playlist_size };
                     }
                     else {
                         config.ActivityPlaylists.push({ Name: new_playlist_name, Type: newPlaylist_type, Days: new_playlist_days, Size: new_playlist_size });

@@ -6,20 +6,31 @@
 		<div class="content-primary">
 			<h2>Custom Query</h2>
 
+			<input type="hidden" id="custom_query_id" />
+			<select id="custom_query_selector" style="width: 350px;">
+			</select>
 
-			<h3>SQL Query</h3>
+			<button id="custom_query_save">Save</button>
+			<button id="custom_query_delete">Delete</button>
+			<button id="run_custom_query">Run</button>
+
+			<br /><br />
+
+			<input id="custom_query_name" type="text" style="width: 300px;" />
+			<br />
 			<textarea id="custom_query_text" style="width: 100%; height:75px">
 SELECT ROWID, * 
 FROM PlaybackActivity 
 LIMIT 10
 			</textarea>
 			<br />
+			<input type='checkbox' id="replace_userid" checked> Replace UserId with UserName<br />
+
 <!--
 
 SELECT name FROM sqlite_master 
 INSERT INTO PlaybackActivity SELECT *, 0 FROM PlaybackActivity_20190524_150121
 DROP TABLE PlaybackActivity_20190524_150121
-
 
 SELECT date(DateCreated),
 		SUM(PlayDuration)
@@ -27,7 +38,6 @@ FROM PlaybackActivity
 WHERE ItemType = 'Movie'
 GROUP BY date(DateCreated)
 ORDER BY date(DateCreated) ASC
-
 
 SELECT
 ItemId,
@@ -38,15 +48,15 @@ PlayDuration
 FROM PlaybackActivity
 WHERE StartTime > datetime('now', '-1 day')
 
-
-
 -->
+			<!--
+			<h3>Chart</h3>
+			<div style="width: 95%">
+				<canvas id="custom_query_chart_canvas"></canvas>
+			</div>
+			-->
 
-
-			<input type='checkbox' id="replace_userid" checked> Replace UserId with UserName<br />
-			<button id="run_custom_query">Run</button>
-
-			<h3>Query Result</h3>
+			<h3>Results</h3>
 			<div id="query_result_message"> </div>
 
 			<div id="table_area_div" style="">

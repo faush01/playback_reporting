@@ -31,12 +31,164 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     };
 
+    function delete_custom_query(view) {
+
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+
+            var custom_query_id = parseInt(view.querySelector('#custom_query_id').value);
+
+            // find item
+            var index = 0;
+            var found_index = -1;
+            for (index = 0; index < config.CustomQueries.length; ++index) {
+                if (config.CustomQueries[index].Id === custom_query_id) {
+                    found_index = index;
+                    break;
+                }
+            }
+
+            if (found_index !== -1) {
+                config.CustomQueries.splice(found_index, 1);
+            }
+
+            console.log("New CustomQueries Settings : " + JSON.stringify(config.CustomQueries));
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+
+            load_query_list(view, config);
+        });
+
+    }
+
+    function save_custom_query(view) {
+
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+
+            var custom_query_id = parseInt(view.querySelector('#custom_query_id').value);
+            var custom_query_name = view.querySelector('#custom_query_name').value.trim();
+            var custom_query_text = view.querySelector('#custom_query_text').value.trim();
+            var replace_userid_bool = view.querySelector('#replace_userid').checked;
+
+            if (custom_query_name === "") {
+                alert("Name can not be empty");
+                return;
+            }
+
+            // find item
+            var index = 0;
+            var found_index = -1;
+            var max_id = -1;
+            for (index = 0; index < config.CustomQueries.length; ++index) {
+                if (config.CustomQueries[index].Id === custom_query_id) {
+                    found_index = index;
+                    break;
+                }
+                if (config.CustomQueries[index].Id > max_id) {
+                    max_id = config.CustomQueries[index].Id;
+                }
+            }
+
+            console.log("found_index : " + found_index);
+
+            if (found_index === -1) {
+                custom_query_id = (max_id + 1);
+            }
+            else {
+                custom_query_id = parseInt(custom_query_id);
+            }
+
+            var new_custom_query =
+            {
+                Id: custom_query_id,
+                Name: custom_query_name,
+                Query: custom_query_text,
+                ReplaceName: replace_userid_bool
+            };
+            console.log("new_custom_query : " + JSON.stringify(new_custom_query));
+
+            console.log("New CustomQueries Settings : " + JSON.stringify(config.CustomQueries));
+
+            if (found_index === -1) {
+                config.CustomQueries.push(new_custom_query);
+            }
+            else {
+                config.CustomQueries[found_index] = new_custom_query;
+            }
+
+            console.log("New CustomQueries Settings : " + JSON.stringify(config.CustomQueries));
+            ApiClient.updateNamedConfiguration('playback_reporting', config);
+
+            load_query_list(view, config);
+        });
+
+    }
+
+    function load_query_list(view, config) {
+
+        var current_selection = view.querySelector('#custom_query_name').value.trim();
+
+        var index = 0;
+        var query_list_options = "<option value='-1'>New Query</option>";
+        for (index = 0; index < config.CustomQueries.length; ++index) {
+            var custom_query_name = config.CustomQueries[index].Name;
+            var custom_query_id = config.CustomQueries[index].Id;
+            var selected = " ";
+            if (current_selection === custom_query_name) {
+                selected = " selected ";
+            }
+            query_list_options += "<option" + selected + "value='" + custom_query_id + "'>" + custom_query_name + "</option>";
+        }
+        var custom_query_selector = view.querySelector('#custom_query_selector');
+        custom_query_selector.innerHTML = query_list_options;
+    }
+
+    function on_custom_query_select(view) {
+        var custom_query_selector = view.querySelector('#custom_query_selector');
+        var custom_query_selected_id = parseInt(custom_query_selector.value);
+        // find query with id
+
+        ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+            var index = 0;
+            var custom_query_details = null;
+            for (index = 0; index < config.CustomQueries.length; ++index) {
+                if (config.CustomQueries[index].Id === custom_query_selected_id) {
+                    custom_query_details = config.CustomQueries[index];
+                    break;
+                }
+            }
+
+            var custom_query_id = view.querySelector('#custom_query_id');
+            var custom_query_name = view.querySelector('#custom_query_name');
+            var custom_query_text = view.querySelector('#custom_query_text');
+            var replace_userid_bool = view.querySelector('#replace_userid');
+
+            if (custom_query_details === null) {
+                custom_query_id.value = "-1";
+                custom_query_name.value = "";
+                custom_query_text.value = "";
+                replace_userid_bool.checked = false;
+            }
+            else {
+                custom_query_id.value = custom_query_details.Id;
+                custom_query_name.value = custom_query_details.Name;
+                custom_query_text.value = custom_query_details.Query;
+                replace_userid_bool.checked = custom_query_details.ReplaceName;
+            }
+        });
+
+    }
+
     return function (view, params) {
 
         // init code here
         view.addEventListener('viewshow', function (e) {
 
             mainTabsManager.setTabs(this, getTabIndex("custom_query"), getTabs);
+
+            var custom_query_save = view.querySelector('#custom_query_save');
+            custom_query_save.addEventListener("click", function () { save_custom_query(view); });
+
+            var custom_query_delete = view.querySelector('#custom_query_delete');
+            custom_query_delete.addEventListener("click", function () { delete_custom_query(view); });
 
             var run_custom_query = view.querySelector('#run_custom_query');
             run_custom_query.addEventListener("click", runQuery);
@@ -135,6 +287,13 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }
                 });
             }
+
+            ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                load_query_list(view, config);
+            });
+
+            var custom_query_selector = view.querySelector('#custom_query_selector');
+            custom_query_selector.addEventListener("change", function () { on_custom_query_select(view); });
 
         });
 
