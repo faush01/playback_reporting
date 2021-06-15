@@ -26,6 +26,15 @@ LIMIT 10
 			<br />
 			<input type='checkbox' id="replace_userid" checked> Replace UserId with UserName<br />
 
+			Chart Type 
+			<select id="custom_query_chart_type">
+				<option value="none" selected>None</option>
+				<option value="bar">Bar</option>
+				<option value="line">Line</option>
+				<option value="pie">Pie</option>
+			</select>
+			Label Column <input type="text" id="custom_query_chart_label_column" />
+			Data Column <input type="text" id="custom_query_chart_data_column" />
 <!--
 
 SELECT name FROM sqlite_master 
@@ -49,16 +58,17 @@ FROM PlaybackActivity
 WHERE StartTime > datetime('now', '-1 day')
 
 -->
-			<!--
-			<h3>Chart</h3>
-			<div style="width: 95%">
-				<canvas id="custom_query_chart_canvas"></canvas>
-			</div>
-			-->
-
-			<h3>Results</h3>
 			<div id="query_result_message"> </div>
+			<div id="custom_query_chart_message"> </div>
 
+			<div id="chart_div" style="display: none;">
+				<h3>Chart</h3>
+				<div style="position: relative; margin: auto; height: 300px; width: 90%;">
+					<canvas id="custom_query_chart_canvas"></canvas>
+				</div>
+			</div>
+			
+			<h3>Results</h3>
 			<div id="table_area_div" style="">
 				<table cellpadding="2" id="custom_query_table">
 					<tbody class="resultBody" id="custom_query_results"></tbody>

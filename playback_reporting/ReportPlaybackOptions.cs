@@ -46,5 +46,8 @@ namespace playback_reporting
         public string Name { set; get; }
         public string Query { set; get; }
         public bool ReplaceName { set; get; }
+        public int ChartType { set; get; }
+        public string ChartLabelColumn { set; get; }
+        public string ChartDataCloumn { set; get; }
     }
 }

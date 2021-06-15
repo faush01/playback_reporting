@@ -17,6 +17,8 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
     'use strict';
 
+    var custom_chart = null;
+    var color_list = [];
 
     ApiClient.sendCustomQuery = function (url_to_get, query_data) {
         var post_data = JSON.stringify(query_data);
@@ -67,6 +69,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var custom_query_name = view.querySelector('#custom_query_name').value.trim();
             var custom_query_text = view.querySelector('#custom_query_text').value.trim();
             var replace_userid_bool = view.querySelector('#replace_userid').checked;
+            var data_label_column = view.querySelector('#custom_query_chart_label_column').value.trim();
+            var data_data_column = view.querySelector('#custom_query_chart_data_column').value.trim();
+            var chart_type = view.querySelector('#custom_query_chart_type').selectedIndex;
 
             if (custom_query_name === "") {
                 alert("Name can not be empty");
@@ -101,7 +106,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 Id: custom_query_id,
                 Name: custom_query_name,
                 Query: custom_query_text,
-                ReplaceName: replace_userid_bool
+                ReplaceName: replace_userid_bool,
+                ChartType: chart_type,
+                ChartLabelColumn: data_label_column,
+                ChartDataCloumn: data_data_column
             };
             console.log("new_custom_query : " + JSON.stringify(new_custom_query));
 
@@ -160,21 +168,190 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var custom_query_name = view.querySelector('#custom_query_name');
             var custom_query_text = view.querySelector('#custom_query_text');
             var replace_userid_bool = view.querySelector('#replace_userid');
+            var data_label_column = view.querySelector('#custom_query_chart_label_column');
+            var data_data_column = view.querySelector('#custom_query_chart_data_column');
+            var chart_type = view.querySelector('#custom_query_chart_type');
 
             if (custom_query_details === null) {
                 custom_query_id.value = "-1";
                 custom_query_name.value = "";
                 custom_query_text.value = "";
                 replace_userid_bool.checked = false;
+                data_label_column.value = "";
+                data_data_column.value = "";
+                chart_type.options.selectedIndex = 0;
             }
             else {
                 custom_query_id.value = custom_query_details.Id;
                 custom_query_name.value = custom_query_details.Name;
                 custom_query_text.value = custom_query_details.Query;
                 replace_userid_bool.checked = custom_query_details.ReplaceName;
+                data_label_column.value = custom_query_details.ChartLabelColumn;
+                data_data_column.value = custom_query_details.ChartDataCloumn;
+                chart_type.options.selectedIndex = custom_query_details.ChartType;
             }
         });
 
+    }
+
+    function build_chart(view, query_results) {
+
+        var data_label_column = view.querySelector('#custom_query_chart_label_column').value.trim();
+        var data_data_column = view.querySelector('#custom_query_chart_data_column').value.trim();
+        var chart_type = view.querySelector('#custom_query_chart_type').value;
+
+        var chart_div = view.querySelector('#chart_div');
+        var chart_canvas = view.querySelector('#custom_query_chart_canvas');
+
+        var custom_query_chart_message = view.querySelector('#custom_query_chart_message');
+        custom_query_chart_message.innerHTML = "";
+
+        if (chart_type === "none") {
+            chart_div.style.display = "none";
+            return;
+        }
+        else {
+            chart_div.style.display = "block";
+        }
+
+        var dataset_labels = [];//['January', 'February', 'March', 'April', 'May', 'June', 'July'];
+        var dataset_data = [];//[10, 20, 30, 20, 10, 25, 50];
+
+        // find column indexes
+        var column_names = query_results["colums"];
+        var index = 0;
+        var label_index = -1;
+        var data_index = -1;
+        for (index = 0; index < column_names.length; index++) {
+            if (label_index === -1 && column_names[index] === data_label_column) {
+                label_index = index;
+            }
+            if (data_index === -1 && column_names[index] === data_data_column) {
+                data_index = index;
+            }
+        }
+
+        var chart_message = "";
+
+        if (label_index === -1) {
+            chart_message += "Could not find Label Column with name (" + data_label_column + ")<br>";
+        }
+        if (data_index === -1) {
+            chart_message += "Could not find Data Column with name (" + data_data_column + ")<br>";
+        }
+
+        if (chart_message) {
+            custom_query_chart_message.innerHTML = "<br/><h3>Chart Errors:</h3>" + chart_message;
+            chart_div.style.display = "none";
+            return;
+        }
+
+        // extract label and data
+        var result_data = query_results["results"];
+        for (index = 0; index < result_data.length; index++) {
+            var row_data = result_data[index];
+            dataset_labels.push(row_data[label_index]);
+            var data_value = parseFloat(row_data[data_index]);
+            if (isNaN(data_value)) {
+                chart_message = "Data is not a number (" + row_data[data_index] + ")";
+                break;
+            }
+            dataset_data.push(data_value);
+        }
+
+        console.log("dataset_labels : " + JSON.stringify(dataset_labels));
+        console.log("dataset_data : " + JSON.stringify(dataset_data));
+
+        if (chart_message) {
+            custom_query_chart_message.innerHTML = "<br/><h3>Chart Errors:</h3>" + chart_message;
+            chart_div.style.display = "none";
+            return;
+        }
+
+        require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
+
+            var ctx = chart_canvas.getContext('2d');
+
+            if (custom_chart) {
+                console.log("destroy() existing chart");
+                custom_chart.destroy();
+            }
+
+            if (color_list.length === 0) {
+                color_list.push("#AAAAAA");
+            }
+            var full_colour_list = [];
+            while (full_colour_list.length < dataset_data.length) {
+                full_colour_list = full_colour_list.concat(color_list);
+            }
+
+            var line_colour = "#AAAAAA";
+            var back_colour = full_colour_list;
+            
+            if (chart_type === "line") {
+                line_colour = "#AAAAAAFF";
+                back_colour = "#FFFFFF00";
+            }
+            else if (chart_type === "pie") {
+                line_colour = "#AAAAAA";
+                back_colour = full_colour_list;
+            }
+
+            var chart_data = {
+                labels: dataset_labels,
+                datasets: [
+                    {
+                        label: 'Dataset',
+                        borderColor: line_colour,
+                        backgroundColor: back_colour,
+                        data: dataset_data
+                    }
+                ]
+            };
+
+            // chart options
+            var chart_options = {
+                title: {
+                    display: false
+                },
+                responsive: true,
+                tooltips: {
+                    intersect: true
+                },
+                maintainAspectRatio: false
+            };
+
+            if (chart_type !== "pie") {
+                chart_options["scales"] = {
+                    xAxes: [{
+                        //stacked: true,
+                        ticks: {
+                            autoSkip: false,
+                            maxTicksLimit: 10000
+                        }
+                    }],
+                    yAxes: [{
+                        //stacked: true,
+                        ticks: {
+                            autoSkip: true,
+                            beginAtZero: true
+                        }
+                    }]
+                };
+
+                chart_options["legend"] = {
+                    display: false
+                };
+            }
+
+            // create chart
+            custom_chart = new Chart(ctx, {
+                type: chart_type,
+                data: chart_data,
+                options: chart_options
+            });
+
+        });
     }
 
     return function (view, params) {
@@ -215,6 +392,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 ApiClient.sendCustomQuery(url, query_data).then(function (result) {
                     //alert("Loaded Data: " + JSON.stringify(result));
+                    console.log("Query Results : " + JSON.stringify(result));
 
                     var message = result["message"];
 
@@ -256,7 +434,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         table_body.innerHTML = table_row_html;
 
                         table_area_div.setAttribute("style", "overflow:auto;");
-                        
+
+                        /*
                         let isDown = false;
                         let startX;
                         let scrollLeft;
@@ -283,12 +462,41 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             table_area_div.scrollLeft = scrollLeft - walk;
                             //console.log(walk);
                         });
-                        
+                        */
+
+                        build_chart(view, result);
                     }
                 });
             }
 
             ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                color_list = config.ColourPalette;
+
+                if (config.CustomQueries.length === 0) {
+
+                    var query_text = "SELECT date(DateCreated) AS Date, SUM(PlayDuration) AS PlayTime\n";
+                    query_text += "FROM PlaybackActivity\n";
+                    query_text += "WHERE ItemType = 'Movie'\n";
+                    query_text += "GROUP BY date(DateCreated)\n";
+                    query_text += "ORDER BY date(DateCreated) ASC";
+
+                    var new_custom_query =
+                    {
+                        Id: 1,
+                        Name: "Example Query",
+                        Query: query_text,
+                        ReplaceName: false,
+                        ChartType: 1,
+                        ChartLabelColumn: "Date",
+                        ChartDataCloumn: "PlayTime"
+                    };
+
+                    config.CustomQueries.push(new_custom_query);
+                }
+
+                //console.log("New CustomQueries Settings : " + JSON.stringify(config.CustomQueries));
+                ApiClient.updateNamedConfiguration('playback_reporting', config);
+
                 load_query_list(view, config);
             });
 
