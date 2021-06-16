@@ -293,8 +293,12 @@ namespace playback_reporting.Api
                 string user_id = (string)user_info["user_id"];
                 string user_name = "Not Known";
                 bool has_image = false;
-                Guid user_guid = new Guid(user_id);
-                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                MediaBrowser.Controller.Entities.User user = null;
+                if (!string.IsNullOrEmpty(user_id))
+                {
+                    Guid user_guid = new Guid(user_id);
+                    user = _userManager.GetUserById(user_guid);
+                }
 
                 if (user != null)
                 {
@@ -377,7 +381,7 @@ namespace playback_reporting.Api
             UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
             if (!policy.IsAdministrator)
             {
-                return true;
+                return -1;
             }
 
             string action = request.Action;
@@ -390,14 +394,14 @@ namespace playback_reporting.Api
                 {
                     user_id_list.Add(emby_user.Id.ToString("N"));
                 }
-                repository.RemoveUnknownUsers(user_id_list);
+                int removed_count = repository.RemoveUnknownUsers(user_id_list);
+                return removed_count;
             }
             else
             {
                 repository.ManageUserList(action, id);
+                return 1;
             }
-
-            return true;
         }
 
         public object Get(GetUserList request)
@@ -705,8 +709,12 @@ namespace playback_reporting.Api
                 foreach (var row in report)
                 {
                     string user_id = row["label"] as string;
-                    Guid user_guid = new Guid(user_id);
-                    MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                    MediaBrowser.Controller.Entities.User user = null;
+                    if (!string.IsNullOrEmpty(user_id))
+                    {
+                        Guid user_guid = new Guid(user_id);
+                        user = _userManager.GetUserById(user_guid);
+                    }
 
                     if (user != null)
                     {
@@ -855,8 +863,12 @@ namespace playback_reporting.Api
             foreach (var row in report)
             {
                 string user_id = row["user"] as string;
-                Guid user_guid = new Guid(user_id);
-                MediaBrowser.Controller.Entities.User user = _userManager.GetUserById(user_guid);
+                MediaBrowser.Controller.Entities.User user = null;
+                if (!string.IsNullOrEmpty(user_id))
+                {
+                    Guid user_guid = new Guid(user_id);
+                    user = _userManager.GetUserById(user_guid);
+                }
 
                 if (user != null)
                 {

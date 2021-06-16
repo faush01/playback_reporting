@@ -252,8 +252,9 @@ namespace playback_reporting.Data
         public int RemoveUnknownUsers(List<string> known_user_ids)
         {
             string sql_query = "delete from PlaybackActivity " +
-                               "where UserId not in ('" + string.Join("', '", known_user_ids) + "') ";
+                               "where UserId not in ('" + string.Join("', '", known_user_ids) + "') or UserId is null or UserId = ''";
 
+            int change_count = 0;
             using (lock_manager.getLockItem().Write())
             {
                 using (var connection = CreateConnection())
@@ -262,9 +263,10 @@ namespace playback_reporting.Data
                     {
                         db.Execute(sql_query);
                     }, TransactionMode);
+                    change_count = connection.TotalChanges;
                 }
             }
-            return 1;
+            return change_count;
         }
 
         public void ManageUserList(string action, string id)

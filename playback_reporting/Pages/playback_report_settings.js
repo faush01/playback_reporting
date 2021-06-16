@@ -553,7 +553,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var url = "user_usage_stats/user_manage/remove_unknown/none" + "?stamp=" + new Date().getTime();
                 url = ApiClient.getUrl(url);
                 ApiClient.getUserActivity(url).then(function (result) {
-                    alert("Unknown user activity removed.");
+                    alert("Activity with unknown users removed, " + result + " items removed.");
                 });
 
             });            
