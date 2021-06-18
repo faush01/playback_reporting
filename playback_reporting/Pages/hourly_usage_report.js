@@ -192,17 +192,17 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
+                    }
                 }
             }
         });
@@ -240,17 +240,17 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
+                    }
                 }
             }
         });
@@ -289,20 +289,20 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 responsive: true,
                 scaleShowValues: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false,
                         ticks: {
                             //autoSkip: false
                         }
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
+                    }
                 }
             }
         });

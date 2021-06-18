@@ -103,9 +103,14 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     var data_point = user_usage.user_usage[point_date];
                     point_data.push(data_point);
                 }
+                var user_bar_colour = user_colour_map[user_usage.user_name];
+                if (user_bar_colour === undefined) {
+                    user_bar_colour = "#FF0000";
+                }
+                //var user_bar_colour = color_list[user_count++ % color_list.length];
                 var chart_data = {
                     label: user_usage.user_name,
-                    backgroundColor: user_colour_map[user_usage.user_name],//color_list[user_count++ % color_list.length],
+                    backgroundColor: user_bar_colour,
                     data: point_data
                 };
                 user_usage_datasets.push(chart_data);
@@ -210,6 +215,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         text: chart_title
                     },
                     tooltip: {
+                        mode: 'point',
                         intersect: true,
                         callbacks: {
                             label: tooltip_labels
@@ -218,21 +224,21 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: true,
                         ticks: {
                             autoSkip: false,
                             maxTicksLimit: 10000
                         }
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: true,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
+                    }
                 },
                 onClick: function (e) {
                     var activePoint = my_bar_chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
