@@ -371,17 +371,28 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             td.appendChild(document.createTextNode(seconds2time(item_details.Duration)));
             tr.appendChild(td);
 
+            /*
             td = document.createElement("td");
             var btn = document.createElement("BUTTON");
             var i = document.createElement("i");
-            i.className = "md-icon";
+            i.className = "md-icon largeIcon";
             var t = document.createTextNode("remove");
             i.appendChild(t);
             btn.appendChild(i);
             btn.setAttribute("title", "Remove");
             btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
-
             td.appendChild(btn);
+            */
+
+            td = document.createElement("td");
+            var del_icon = document.createElement("i");
+            del_icon.className = "md-icon largeIcon";
+            del_icon.style = "cursor: pointer;font-size:150%;";
+            var icon_name = document.createTextNode("delete");
+            del_icon.appendChild(icon_name);
+            td.appendChild(del_icon);
+            del_icon.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
+
             tr.appendChild(td);
 
             table_body.appendChild(tr);
