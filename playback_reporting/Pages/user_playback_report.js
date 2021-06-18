@@ -174,15 +174,19 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             }
         }
 
-        function tooltip_labels(tooltipItem, data) {
-            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+        function tooltip_labels(tooltipItem) {
+
+            var data_index = tooltipItem.dataIndex;
+            var label = tooltipItem.dataset.label || '';
+
+            //var label = data.datasets[tooltipItem.datasetIndex].label || '';
 
             if (label) {
                 if (data_t) {
-                    label += ": " + seconds2time(tooltipItem.yLabel);
+                    label += ": " + seconds2time(tooltipItem.dataset.data[data_index]);
                 }
                 else {
-                    label += ": " + tooltipItem.yLabel;
+                    label += ": " + tooltipItem.dataset.data[data_index];
                 }
             }
             return label;
@@ -200,9 +204,17 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             type: 'bar',
             data: userUsageChartData,//barChartData,
             options: {
-                title: {
-                    display: true,
-                    text: chart_title
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chart_title
+                    },
+                    tooltip: {
+                        intersect: true,
+                        callbacks: {
+                            label: tooltip_labels
+                        }
+                    }
                 },
                 responsive: true,
                 scales: {
@@ -223,27 +235,25 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }]
                 },
                 onClick: function (e) {
-                    var activePoint = my_bar_chart.getElementAtEvent(e)[0];
+                    var activePoint = my_bar_chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
                     if (!activePoint) {
                         return;
                     }
-                    var data = activePoint._chart.data;
-                    var datasetIndex = activePoint._datasetIndex;
+                    
+                    var datasetIndex = activePoint[0].datasetIndex;
+                    var index = activePoint[0].index;
+                    var data = my_bar_chart.data;
+
                     var label = data.datasets[datasetIndex].label;
-                    var data_label = data.labels[activePoint._index];
-                    var value = data.datasets[datasetIndex].data[activePoint._index];
+                    var data_label = data.labels[index];
+                    var value = data.datasets[datasetIndex].data[index];
                     var user_id = data.user_id_list[datasetIndex];
+
                     console.log(label, user_id, data_label, value);
 
                     display_user_report(label, user_id, data_label, view);
                     //var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
                     //Dashboard.navigate(href);
-                },
-                tooltips: {
-                    intersect: true,
-                    callbacks: {
-                        label: tooltip_labels
-                    }
                 }
             }
         });
@@ -308,7 +318,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             return;
         }
 
-        console.log("Processing User Report: " + JSON.stringify(usage_data));
+        //console.log("Processing User Report: " + JSON.stringify(usage_data));
 
         var user_name_span = view.querySelector('#user_report_user_name');
         user_name_span.innerHTML = user_name;
@@ -417,12 +427,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     return function (view, params) {
 
         // init code here
-        // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
             mainTabsManager.setTabs(this, getTabIndex("user_playback_report"), getTabs);
 
-            require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
+            require([Dashboard.getConfigurationResourceUrl('chart.min.js')], function (d3) {
 
                 var load_status = view.querySelector('#user_stats_chart_status');
                 load_status.innerHTML = "Loading Data...";

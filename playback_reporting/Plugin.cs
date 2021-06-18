@@ -80,8 +80,8 @@ namespace playback_reporting
                 },
                 new PluginPageInfo
                 {
-                    Name = "Chart.bundle.min.js",
-                    EmbeddedResourcePath = GetType().Namespace + ".Pages.Chart.bundle.min.js"
+                    Name = "chart.min.js",
+                    EmbeddedResourcePath = GetType().Namespace + ".Pages.chart.min.js"
                 },
                 new PluginPageInfo
                 {

@@ -268,7 +268,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             return;
         }
 
-        require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
+        require([Dashboard.getConfigurationResourceUrl('chart.min.js')], function (d3) {
 
             var ctx = chart_canvas.getContext('2d');
 
@@ -311,13 +311,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             // chart options
             var chart_options = {
-                title: {
-                    display: false
+                plugins: {
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        intersect: true
+                    }
                 },
                 responsive: true,
-                tooltips: {
-                    intersect: true
-                },
                 maintainAspectRatio: false
             };
 
@@ -339,7 +341,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }]
                 };
 
-                chart_options["legend"] = {
+                chart_options["plugins"]["legend"] = {
                     display: false
                 };
             }
@@ -392,7 +394,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 ApiClient.sendCustomQuery(url, query_data).then(function (result) {
                     //alert("Loaded Data: " + JSON.stringify(result));
-                    console.log("Query Results : " + JSON.stringify(result));
+                    //console.log("Query Results : " + JSON.stringify(result));
 
                     var message = result["message"];
 
