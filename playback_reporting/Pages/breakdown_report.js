@@ -34,7 +34,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         return Math.round(number * factor) / factor;
     }
 
-    function generate_chart_legend(chart, group_type) {
+    function generate_chart_legend_count(chart, group_type) {
         var legendHtml = [];
         legendHtml.push('<table style="width:95%">');
         var item = chart.data.datasets[0];
@@ -56,6 +56,34 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
             legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + item.data[i] + '</td>');
             legendHtml.push('</tr>');
+        }
+        legendHtml.push('</table>');
+        return legendHtml.join("");
+    }
+
+    function generate_chart_legend_time(chart, group_type) {
+        var legendHtml = [];
+        legendHtml.push('<table style="width:95%">');
+        var item = chart.data.datasets[0];
+        for (var i = 0; i < item.data.length; i++) {
+            legendHtml.push('<tr>');
+            legendHtml.push('<td style="width: 20px"><div style="width: 20px; background-color:' + item.backgroundColor[i] + '">&nbsp;</div></td>');
+            var label_data = chart.data.labels[i];
+            if (group_type === "Movies" || group_type === "TvShows") {
+                var filter_name = chart.data.labels[i];
+                if (group_type === "TvShows") {
+                    filter_name += " - *";
+                }
+                var encoded_uri = encodeURI(filter_name);
+                encoded_uri = encoded_uri.replace("'", "%27");
+                encoded_uri = encoded_uri.replace("\"", "%22");
+                var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encoded_uri;
+                label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;'>" + chart.data.labels[i] + "</a>";
+            }
+            legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
+            legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + seconds2time(item.data[i]) + '</td>');
+            legendHtml.push('</tr>');
+
         }
         legendHtml.push('</table>');
         return legendHtml.join("");
@@ -146,7 +174,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         function tooltip_labels(tooltipItem) {
 
             var data_index = tooltipItem.dataIndex;
-            var label = tooltipItem.dataset.label || '';
+            var label = tooltipItem.label || '';
 
             if (label) {
                 label += ": " + seconds2time(tooltipItem.dataset.data[data_index]);
@@ -179,7 +207,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
         var chart_legend_count = view.querySelector('#' + group_type + '_breakdown_count_chart_legend');
         if (chart_legend_count !== null) {
-            var legend_data_count = generate_chart_legend(chart_instance_map[group_type + "_count"], group_type);
+            var legend_data_count = generate_chart_legend_count(chart_instance_map[group_type + "_count"], group_type);
             chart_legend_count.innerHTML = legend_data_count;
         }
 
@@ -213,7 +241,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
         var chart_legend_time = view.querySelector('#' + group_type + '_breakdown_time_chart_legend');
         if (chart_legend_time !== null) {
-            var legend_data_time = generate_chart_legend(chart_instance_map[group_type + "_count"], group_type);
+            var legend_data_time = generate_chart_legend_time(chart_instance_map[group_type + "_time"], group_type);
             chart_legend_time.innerHTML = legend_data_time;
         }
 
