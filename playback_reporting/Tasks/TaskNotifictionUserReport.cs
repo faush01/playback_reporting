@@ -171,7 +171,7 @@ namespace playback_reporting.Tasks
                 message += " - (" + item_type + ") " + item_name + " (" + play_time_string + ")\r\n";
             }
 
-            _logger.Info("User activity Message : ItemCount : " + item_count + "\r\n" + message + "\r\n");
+            _logger.Info("User activity Message : ItemCount : " + item_count);
 
             if (item_count > 0)
             {

@@ -181,7 +181,7 @@ namespace playback_reporting.Tasks
                 added_count += view_added_count;
             }
 
-            _logger.Info("Added Item Notification Message : ItemCount : " + added_count + "\r\n" + message + "\r\n");
+            _logger.Info("Added Item Notification Message : ItemCount : " + added_count);
 
             if (added_count > 0)
             {
