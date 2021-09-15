@@ -148,11 +148,12 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             }
         }
 
-        function tooltip_labels(tooltipItem, data) {
-            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+        function tooltip_labels(tooltipItem) {
+            var data_index = tooltipItem.dataIndex;
+            var label = tooltipItem.dataset.label || '';
 
             if (label) {
-                label += ": " + seconds2time(tooltipItem.yLabel);
+                label += ": " + seconds2time(tooltipItem.dataset.data[data_index]);
             }
 
             return label;
@@ -173,32 +174,34 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             type: 'bar',
             data: daily_chart_data,
             options: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: "Usage by Day"
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: "Usage by Day"
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: tooltip_labels
+                        }
+                    }
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: tooltip_labels
                     }
                 }
             }
@@ -219,32 +222,34 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             type: 'bar',
             data: hourly_chart_data,
             options: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: "Usage by Hour"
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: "Usage by Hour"
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: tooltip_labels
+                        }
+                    }
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: tooltip_labels
                     }
                 }
             }
@@ -265,36 +270,38 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             type: 'bar',
             data: weekly_chart_data,
             options: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: "Usage by Week"
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: "Usage by Week"
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: tooltip_labels
+                        }
+                    }
                 },
                 responsive: true,
                 scaleShowValues: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: false,
                         ticks: {
                             //autoSkip: false
                         }
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: false,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: tooltip_labels
                     }
                 }
             }
@@ -328,7 +335,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             mainTabsManager.setTabs(this, getTabIndex("hourly_usage_report"), getTabs);
 
-            require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
+            require([Dashboard.getConfigurationResourceUrl('chart.min.js')], function (d3) {
 
                 var user_name = "";
                 var user_name_index = window.location.href.indexOf("user=");

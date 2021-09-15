@@ -52,83 +52,118 @@
 			<div id="breakdown_report_status">Loading Data...</div>
 
             <table border="0">
-                <tr><td colspan="2"><h2>Breakdown by Movies</h2></td></tr>
+                <tr><td colspan="3"><h2>Breakdown by Movies</h2></td></tr>
                 <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="Movies_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="Movies_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="Movies_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="Movies_breakdown_time_chart_legend"></div>
-                    </td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px;">
+							<canvas id="Movies_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="Movies_breakdown_count_chart_legend" style="width:350px;"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="Movies_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="Movies_breakdown_time_chart_legend" style="width:350px;"></div>
+					</td>
                 </tr>
-                <tr><td colspan="2"><h2>Breakdown by TV Show</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="TvShows_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="TvShows_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="TvShows_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="TvShows_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
-                <tr><td colspan="2"><h2>Breakdown by Users</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="User_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="User_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="User_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="User_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
-                <tr><td colspan="2"><h2>Breakdown by Types</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="ItemType_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="ItemType_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="ItemType_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="ItemType_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
-                <tr><td colspan="2"><h2>Breakdown by Playback Method</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="PlayMethod_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="PlayMethod_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="PlayMethod_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="PlayMethod_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
-                <tr><td colspan="2"><h2>Breakdown by Client Name</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="ClientName_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="ClientName_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="ClientName_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="ClientName_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
-                <tr><td colspan="2"><h2>Breakdown by Device Name</h2></td></tr>
-                <tr>
-                    <td style="vertical-align:top;">
-                        <canvas id="DeviceName_breakdown_count_chart_canvas" width="450" height="300"></canvas>
-                        <div id="DeviceName_breakdown_count_chart_legend"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                        <canvas id="DeviceName_breakdown_time_chart_canvas" width="450" height="300"></canvas>
-                        <div id="DeviceName_breakdown_time_chart_legend"></div>
-                    </td>
-                </tr>
+                <tr><td colspan="3"><h2>Breakdown by TV Show</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="TvShows_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="TvShows_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="TvShows_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="TvShows_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+                <tr><td colspan="3"><h2>Breakdown by Users</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="User_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="User_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="User_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="User_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+                <tr><td colspan="3"><h2>Breakdown by Types</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="ItemType_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="ItemType_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="ItemType_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="ItemType_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+                <tr><td colspan="3"><h2>Breakdown by Playback Method</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="PlayMethod_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="PlayMethod_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="PlayMethod_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="PlayMethod_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+                <tr><td colspan="3"><h2>Breakdown by Client Name</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="ClientName_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="ClientName_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="ClientName_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="ClientName_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
+                <tr><td colspan="3"><h2>Breakdown by Device Name</h2></td></tr>
+				<tr>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="DeviceName_breakdown_count_chart_canvas"></canvas>
+						</div>
+						<div id="DeviceName_breakdown_count_chart_legend"></div>
+					</td>
+					<td style="width:100px;"></td>
+					<td style="vertical-align:top;">
+						<div class="chart-container" style="position: relative; height:350px; width:350px">
+							<canvas id="DeviceName_breakdown_time_chart_canvas"></canvas>
+						</div>
+						<div id="DeviceName_breakdown_time_chart_legend"></div>
+					</td>
+				</tr>
             </table>
 
 		</div>

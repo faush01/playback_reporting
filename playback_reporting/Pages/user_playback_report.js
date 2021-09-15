@@ -103,9 +103,14 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     var data_point = user_usage.user_usage[point_date];
                     point_data.push(data_point);
                 }
+                var user_bar_colour = user_colour_map[user_usage.user_name];
+                if (user_bar_colour === undefined) {
+                    user_bar_colour = "#FF0000";
+                }
+                //var user_bar_colour = color_list[user_count++ % color_list.length];
                 var chart_data = {
                     label: user_usage.user_name,
-                    backgroundColor: user_colour_map[user_usage.user_name],//color_list[user_count++ % color_list.length],
+                    backgroundColor: user_bar_colour,
                     data: point_data
                 };
                 user_usage_datasets.push(chart_data);
@@ -174,15 +179,19 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             }
         }
 
-        function tooltip_labels(tooltipItem, data) {
-            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+        function tooltip_labels(tooltipItem) {
+
+            var data_index = tooltipItem.dataIndex;
+            var label = tooltipItem.dataset.label || '';
+
+            //var label = data.datasets[tooltipItem.datasetIndex].label || '';
 
             if (label) {
                 if (data_t) {
-                    label += ": " + seconds2time(tooltipItem.yLabel);
+                    label += ": " + seconds2time(tooltipItem.dataset.data[data_index]);
                 }
                 else {
-                    label += ": " + tooltipItem.yLabel;
+                    label += ": " + tooltipItem.dataset.data[data_index];
                 }
             }
             return label;
@@ -200,50 +209,57 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             type: 'bar',
             data: userUsageChartData,//barChartData,
             options: {
-                title: {
-                    display: true,
-                    text: chart_title
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chart_title
+                    },
+                    tooltip: {
+                        mode: 'point',
+                        intersect: true,
+                        callbacks: {
+                            label: tooltip_labels
+                        }
+                    }
                 },
                 responsive: true,
                 scales: {
-                    xAxes: [{
+                    x: {
                         stacked: true,
                         ticks: {
                             autoSkip: false,
                             maxTicksLimit: 10000
                         }
-                    }],
-                    yAxes: [{
+                    },
+                    y: {
                         stacked: true,
                         ticks: {
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
                         }
-                    }]
+                    }
                 },
                 onClick: function (e) {
-                    var activePoint = my_bar_chart.getElementAtEvent(e)[0];
+                    var activePoint = my_bar_chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
                     if (!activePoint) {
                         return;
                     }
-                    var data = activePoint._chart.data;
-                    var datasetIndex = activePoint._datasetIndex;
+                    
+                    var datasetIndex = activePoint[0].datasetIndex;
+                    var index = activePoint[0].index;
+                    var data = my_bar_chart.data;
+
                     var label = data.datasets[datasetIndex].label;
-                    var data_label = data.labels[activePoint._index];
-                    var value = data.datasets[datasetIndex].data[activePoint._index];
+                    var data_label = data.labels[index];
+                    var value = data.datasets[datasetIndex].data[index];
                     var user_id = data.user_id_list[datasetIndex];
+
                     console.log(label, user_id, data_label, value);
 
                     display_user_report(label, user_id, data_label, view);
                     //var href = Dashboard.getConfigurationPageUrl("UserUsageReport") + "&user=" + user_id + "&date=" + data_label;
                     //Dashboard.navigate(href);
-                },
-                tooltips: {
-                    intersect: true,
-                    callbacks: {
-                        label: tooltip_labels
-                    }
                 }
             }
         });
@@ -308,7 +324,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             return;
         }
 
-        console.log("Processing User Report: " + JSON.stringify(usage_data));
+        //console.log("Processing User Report: " + JSON.stringify(usage_data));
 
         var user_name_span = view.querySelector('#user_report_user_name');
         user_name_span.innerHTML = user_name;
@@ -355,17 +371,28 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             td.appendChild(document.createTextNode(seconds2time(item_details.Duration)));
             tr.appendChild(td);
 
+            /*
             td = document.createElement("td");
             var btn = document.createElement("BUTTON");
             var i = document.createElement("i");
-            i.className = "md-icon";
+            i.className = "md-icon largeIcon";
             var t = document.createTextNode("remove");
             i.appendChild(t);
             btn.appendChild(i);
             btn.setAttribute("title", "Remove");
             btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
-
             td.appendChild(btn);
+            */
+
+            td = document.createElement("td");
+            var del_icon = document.createElement("i");
+            del_icon.className = "md-icon largeIcon";
+            del_icon.style = "cursor: pointer;font-size:150%;";
+            var icon_name = document.createTextNode("delete");
+            del_icon.appendChild(icon_name);
+            td.appendChild(del_icon);
+            del_icon.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
+
             tr.appendChild(td);
 
             table_body.appendChild(tr);
@@ -417,12 +444,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
     return function (view, params) {
 
         // init code here
-        // https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js
         view.addEventListener('viewshow', function (e) {
 
             mainTabsManager.setTabs(this, getTabIndex("user_playback_report"), getTabs);
 
-            require([Dashboard.getConfigurationResourceUrl('Chart.bundle.min.js')], function (d3) {
+            require([Dashboard.getConfigurationResourceUrl('chart.min.js')], function (d3) {
 
                 var load_status = view.querySelector('#user_stats_chart_status');
                 load_status.innerHTML = "Loading Data...";
