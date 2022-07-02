@@ -45,6 +45,10 @@ function getTabs() {
             name: 'Time'
         },
         {
+            href: Dashboard.getConfigurationPageUrl('played'),
+            name: 'Played'
+        },
+        {
             href: Dashboard.getConfigurationPageUrl('custom_query'),
             name: 'Query'
         },

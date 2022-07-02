@@ -19,6 +19,8 @@
     <None Remove="Pages\hourly_usage_report.js" />
     <None Remove="Pages\playback_report_settings.html" />
     <None Remove="Pages\playback_report_settings.js" />
+    <None Remove="Pages\played.html" />
+    <None Remove="Pages\played.js" />
     <None Remove="Pages\user_playback_report.html" />
     <None Remove="Pages\user_playback_report.js" />
     <None Remove="Pages\user_play_report.html" />
@@ -36,6 +38,8 @@
     <EmbeddedResource Include="Pages\hourly_usage_report.js" />
     <EmbeddedResource Include="Pages\playback_report_settings.html" />
     <EmbeddedResource Include="Pages\playback_report_settings.js" />
+    <EmbeddedResource Include="Pages\played.html" />
+    <EmbeddedResource Include="Pages\played.js" />
     <EmbeddedResource Include="Pages\user_playback_report.html" />
     <EmbeddedResource Include="Pages\user_playback_report.js" />
     <EmbeddedResource Include="Pages\custom_query.html" />

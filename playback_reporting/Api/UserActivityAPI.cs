@@ -32,6 +32,9 @@ using System.Globalization;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Users;
+using MediaBrowser.Model.Entities;
+using MediaBrowser.Controller.Entities.Movies;
+using MediaBrowser.Model.Querying;
 
 namespace playback_reporting.Api
 {
@@ -215,6 +218,37 @@ namespace playback_reporting.Api
         public string end_date { get; set; }
     }
 
+    // http://localhost:8096/emby/user_usage_stats/get_items
+    [Route("/user_usage_stats/get_items", "GET", Summary = "Get a list of items for type and filtered")]
+    [Authenticated]
+    public class GetItems : IReturn<Object>
+    {
+        [ApiMember(Name = "filter", Description = "filter string", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string filter { get; set; }
+        [ApiMember(Name = "item_type", Description = "type of items to return", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
+        public string item_type { get; set; }
+        [ApiMember(Name = "parent", Description = "parentid", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int parent { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/get_item_stats
+    [Route("/user_usage_stats/get_item_stats", "GET", Summary = "Get a list of items for type and filtered")]
+    [Authenticated]
+    public class GetItemStats : IReturn<Object>
+    {
+        [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int id { get; set; }
+    }
+
+    // http://localhost:8096/emby/user_usage_stats/get_item_path
+    [Route("/user_usage_stats/get_item_path", "GET", Summary = "Get a list of items for type and filtered")]
+    [Authenticated]
+    public class GetItemPath : IReturn<Object>
+    {
+        [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
+        public int id { get; set; }
+    }
+
     public class UserActivityAPI : IService, IRequiresRequest
     {
         private readonly ISessionManager _sessionManager;
@@ -223,6 +257,7 @@ namespace playback_reporting.Api
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _config;
         private readonly IUserManager _userManager;
+        private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
         private readonly IAuthorizationContext _ac;
 
@@ -235,7 +270,8 @@ namespace playback_reporting.Api
             IUserManager userManager,
             ILibraryManager libraryManager,
             ISessionManager sessionManager,
-            IAuthorizationContext authContext)
+            IAuthorizationContext authContext,
+            IUserDataManager userDataManager)
         {
             _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
             _jsonSerializer = jsonSerializer;
@@ -245,6 +281,7 @@ namespace playback_reporting.Api
             _libraryManager = libraryManager;
             _sessionManager = sessionManager;
             _ac = authContext;
+            _userDataManager = userDataManager;
 
             _logger.Info("UserActivityAPI Loaded");
             ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
@@ -252,6 +289,141 @@ namespace playback_reporting.Api
         }
 
         public IRequest Request { get; set; }
+
+        public object Get(GetItemPath request)
+        {
+            List<PathItem> item_path = new List<PathItem>();
+
+            Guid item_guid = _libraryManager.GetGuid(request.id);
+            BaseItem item = _libraryManager.GetItemById(item_guid);
+
+            //Folder[] collections = _libraryManager.GetCollectionFolders(item);
+            //BaseItem base_item = item.GetTopParent();
+
+            PathItem pi = new PathItem();
+            pi.Name = item.Name;
+            pi.Id = item.InternalId;
+            item_path.Insert(0, pi);
+            //_logger.Info(item.Name + "(" + item.InternalId + "," + item.IsTopParent + ")");
+
+            while (item != null)
+            {
+                item = item.GetParent();
+                //item = item.DisplayParent;
+                if (item != null)
+                {
+                    //if(item.IsTopParent)
+                    //{
+                    //    break;
+                    //}
+                    pi = new PathItem();
+                    pi.Name = item.Name;
+                    pi.Id = item.InternalId;
+                    item_path.Insert(0, pi);
+                    //item.Name + "(" + item.InternalId + "," + item.IsTopParent + ")");
+                }
+            }
+
+            return item_path;
+        }
+
+        public object Get(GetItemStats request)
+        {
+            List<Dictionary<string, string>> details = new List<Dictionary<string, string>>();
+
+            Guid item_guid = _libraryManager.GetGuid(request.id);
+            BaseItem item = _libraryManager.GetItemById(item_guid);
+
+            UserQuery query = new UserQuery();
+            User[] users = _userManager.GetUserList(query);
+            foreach(User user in users)
+            {
+                UserItemData uid = _userDataManager.GetUserData(user, item);
+
+                Dictionary<string, string> user_info = new Dictionary<string, string>();
+                user_info.Add("name", user.Name);
+                user_info.Add("played", uid.Played.ToString());
+                user_info.Add("play_count", uid.PlayCount.ToString());
+                if (uid.LastPlayedDate != null)
+                {
+                    user_info.Add("last_played", uid.LastPlayedDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                }
+                else
+                {
+                    user_info.Add("last_played", "");
+                }
+                details.Add(user_info);
+            }
+
+            return details;
+        }
+
+        public object Get(GetItems request)
+        {
+            List<ItemInfo> items = new List<ItemInfo>();
+
+            /*
+            types
+                AggregateFolder
+                UserRootFolder
+                Folder
+                CollectionFolder
+                Movie
+                Series
+                Season
+                Episode
+                Audio
+                MusicAlbum
+                MusicArtist
+                MusicGenre
+                Playlist
+                Video
+                Genre
+                Person
+                Studio
+                UserView
+            */
+
+            InternalItemsQuery query = new InternalItemsQuery();
+
+            if(request.parent != 0)
+            {
+                query.ParentIds = new long[] { request.parent };
+            }
+            else if(!string.IsNullOrEmpty(request.filter))
+            {
+                query.IncludeItemTypes = new string[] { "MusicAlbum", "Movie", "Series" };
+                query.SearchTerm = request.filter;
+            }
+            else
+            {
+                //query.IncludeItemTypes = new string[] { "CollectionFolder" };
+                query.Parent = _libraryManager.RootFolder;
+            }
+
+            BaseItem[] results = _libraryManager.GetItemList(query);
+
+            foreach (BaseItem item in results)
+            {
+                _logger.Info(item.Name + "(" + item.InternalId + ")");
+                ItemInfo info = new ItemInfo();
+                info.Id = item.InternalId;
+                // + "(" + item.GetType() + ")" + "(" + item.MediaType + ")" + "(" + item.LocationType + ")" + " (" + item.ExtraType + ")");
+                info.Name = item.Name;
+                info.ItemType = item.GetType().Name;
+
+                if (item.GetType() == typeof(Episode))
+                {
+                    Episode e = (Episode)item;
+                    info.Series = e.SeriesName;
+                    info.Season = e.Season.Name;
+                }
+
+                items.Add(info);
+            }
+
+            return items;
+        }
 
         public object Get(TypeFilterList request)
         {

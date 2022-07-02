@@ -1,0 +1,41 @@
+﻿<div data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-require="emby-button,emby-select,emby-checkbox,emby-linkbutton"
+     data-controller="__plugin/played.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <h2>Played Status</h2>
+
+            <input id="search_text" type="text" /><br />
+            <span>Path:</span><span id="path_string" style="">\</span><br />
+            <table>
+                <tr>
+                    <td style="border:1px solid black; width:350px;" valign="top">
+
+                        <table id="item_list">
+                        </table>
+
+                        <!--
+                        <ul id="item_tree">
+                            <li>
+                                <span class="caret">Beverages</span>
+                                <ul class="nested" id="items_movies">
+                                </ul>
+                            </li>
+                        </ul>
+                        -->
+
+                    </td>
+                    <td valign="top">
+                        <div id="played_item_info">
+                        </div>
+                        <table id="played_users_details">
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+
+
+        </div>
+    </div>
+</div>
