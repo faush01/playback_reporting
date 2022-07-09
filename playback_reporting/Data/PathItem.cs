@@ -8,5 +8,6 @@ namespace playback_reporting.Data
     {
         public string Name { get; set; }
         public long Id { get; set; }
+        public string ItemType { get; set; }
     }
 }

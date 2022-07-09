@@ -41,6 +41,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 // populate the item info
                 var played_item_info = view.querySelector('#played_item_info');
                 var item_display_info = "<strong>" + item_info.Name + "</strong><br>";
+                item_display_info += item_info.ItemType + "<br>";
+                
                 //item_display_info += "Item Id : " + item_info.Id + "<br>";
                 //item_display_info += "Series : " + item_info.Series + "<br>";
 
@@ -77,7 +79,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     tr.appendChild(td);
 
                     td = document.createElement("td");
-                    td.appendChild(document.createTextNode(user_info.name));
+                    var user_info_txt = user_info.name;
+                    if (user_info.child_stats !== "") {
+                        user_info_txt += " (" + user_info.child_stats + ")";
+                    } 
+                    td.appendChild(document.createTextNode(user_info_txt));
                     tr.appendChild(td);
 
                     played_users_details.appendChild(tr);
@@ -86,7 +92,6 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             });
         }
 
-        PopulateSelector(view, item_info, "");
     }
 
     function PopulateSelectedPath(view, item_info) {
@@ -107,7 +112,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         url = ApiClient.getUrl(url);
 
         ApiClient.getApiData(url).then(function (item_path_data) {
-            console.log("Loaded Data: " + JSON.stringify(item_path_data));
+            console.log("Loaded Path Data: " + JSON.stringify(item_path_data));
 
             //var path_link_data = "";
             for (const path_info of item_path_data) {
@@ -119,6 +124,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 span.addEventListener("click", function () {
                     var item_data = { Name: path_info.Name, Id: path_info.Id };
                     PopulateSelector(view, item_data, "");
+                    PopulatePlayedInfo(view, item_data);
+                    PopulateSelectedPath(view, item_data);
                 });
 
                 path_string.appendChild(document.createTextNode("\\"));
@@ -152,8 +159,6 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         url += "&stamp=" + new Date().getTime();
         url = ApiClient.getUrl(url);
 
-        PopulateSelectedPath(view, item_info);
-
         ApiClient.getApiData(url).then(function (item_data) {
             //alert("Loaded Data: " + JSON.stringify(item_data));
 
@@ -171,7 +176,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 var tr = document.createElement("tr");
                 var td = document.createElement("td");
                 td.appendChild(document.createTextNode(item_details.Name));
-                td.addEventListener("click", function () { PopulatePlayedInfo(view, item_details); });
+                td.addEventListener("click", function () {
+                    PopulateSelectedPath(view, item_details);
+                    PopulatePlayedInfo(view, item_details);
+                    PopulateSelector(view, item_details, "");
+                });
                 td.style.cursor = "pointer"; 
                 tr.appendChild(td);
                 item_list.appendChild(tr);
@@ -190,9 +199,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         qr_timeout = setTimeout(function () {
 
             var search_text = search_box.value;
+            search_text = search_text.trim();
             console.log("search: " + search_text);
-
-            PopulateSelector(view, null, search_text);
+            var item_info = { Id: "0" };
+            PopulateSelector(view, item_info, search_text);
 
         }, 500);
 

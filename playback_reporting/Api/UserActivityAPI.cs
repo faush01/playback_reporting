@@ -292,39 +292,108 @@ namespace playback_reporting.Api
 
         public object Get(GetItemPath request)
         {
-            List<PathItem> item_path = new List<PathItem>();
+            _logger.Info("GetItemPath");
+
+            List <PathItem> item_path = new List<PathItem>();
 
             Guid item_guid = _libraryManager.GetGuid(request.id);
             BaseItem item = _libraryManager.GetItemById(item_guid);
 
-            //Folder[] collections = _libraryManager.GetCollectionFolders(item);
+            Folder[] collections = _libraryManager.GetCollectionFolders(item);
+            foreach(var collection in collections)
+            {
+                _logger.Info("GetCollectionFolders: " + collection.Name + "(" + item.InternalId + "," + item.IsTopParent + ")");
+            }
             //BaseItem base_item = item.GetTopParent();
 
+            bool hadTopParent = false;
             PathItem pi = new PathItem();
-            pi.Name = item.Name;
-            pi.Id = item.InternalId;
-            item_path.Insert(0, pi);
-            //_logger.Info(item.Name + "(" + item.InternalId + "," + item.IsTopParent + ")");
-
-            while (item != null)
+            while (item != null && !item.IsTopParent)
             {
+                _logger.Info("AddingPathItem: " + item.Name + "(" + item.InternalId + "," + item.IsTopParent + "," + item.IsResolvedToFolder + ")");
+
+                pi = new PathItem();
+                pi.Name = item.Name;
+                pi.Id = item.InternalId;
+                pi.ItemType = item.GetType().Name;
+                item_path.Insert(0, pi);
+                
                 item = item.GetParent();
-                //item = item.DisplayParent;
-                if (item != null)
+
+                if (item != null && item.IsTopParent)
                 {
-                    //if(item.IsTopParent)
-                    //{
-                    //    break;
-                    //}
-                    pi = new PathItem();
-                    pi.Name = item.Name;
-                    pi.Id = item.InternalId;
-                    item_path.Insert(0, pi);
-                    //item.Name + "(" + item.InternalId + "," + item.IsTopParent + ")");
+                    hadTopParent = true;
+                    _logger.Info("TopParentItem: " + item.Name + "(" + item.InternalId + "," + item.IsTopParent + "," + item.IsResolvedToFolder + ")");
+                }
+            }
+            
+            if (hadTopParent && collections.Length > 0)
+            {
+                item = collections[0];
+
+                _logger.Info("AddingCollectionItem:" + item.Name + "(" + item.InternalId + "," + item.IsTopParent + "," + item.IsResolvedToFolder + ")");
+
+                pi = new PathItem();
+                pi.Name = item.Name;
+                pi.Id = item.InternalId;
+                pi.ItemType = item.GetType().Name;
+                item_path.Insert(0, pi);
+
+                item = item.GetParent();
+
+                pi = new PathItem();
+                pi.Name = item.Name;
+                pi.Id = item.InternalId;
+                pi.ItemType = item.GetType().Name;
+                item_path.Insert(0, pi);
+            }
+            
+
+            return item_path;
+        }
+
+        private ItemChildStats GetChildStats(BaseItem item)
+        {
+            InternalItemsQuery query = new InternalItemsQuery();
+            query.ParentIds = new long[] { item.InternalId };
+            query.IncludeItemTypes = new string[] { "Episode" };
+            query.Recursive = true;
+
+            UserQuery user_query = new UserQuery();
+            User[] users = _userManager.GetUserList(user_query);
+
+            ItemChildStats stats = new ItemChildStats();
+            BaseItem[] results = _libraryManager.GetItemList(query);
+            stats.Total = results.Length;
+
+            foreach(User user in users)
+            {
+                foreach (BaseItem child in results)
+                {
+                    UserItemData uid = _userDataManager.GetUserData(user, child);
+                    if (uid.Played)
+                    {
+                        if (stats.Stats.ContainsKey(user))
+                        {
+                            stats.Stats[user]++;
+                        }
+                        else
+                        {
+                            stats.Stats.Add(user, 1);
+                        }
+                    }
+                    else
+                    {
+                        if (!stats.Stats.ContainsKey(user))
+                        {
+                            stats.Stats.Add(user, 0);
+                        }
+                    }
+
                 }
             }
 
-            return item_path;
+            return stats;
         }
 
         public object Get(GetItemStats request)
@@ -333,6 +402,12 @@ namespace playback_reporting.Api
 
             Guid item_guid = _libraryManager.GetGuid(request.id);
             BaseItem item = _libraryManager.GetItemById(item_guid);
+
+            ItemChildStats child_stats = null;
+            if (item.GetType() == typeof(Series) || item.GetType() == typeof(Season))
+            {
+                child_stats = GetChildStats(item);
+            }
 
             UserQuery query = new UserQuery();
             User[] users = _userManager.GetUserList(query);
@@ -352,6 +427,16 @@ namespace playback_reporting.Api
                 {
                     user_info.Add("last_played", "");
                 }
+
+                if(child_stats != null && child_stats.Stats.ContainsKey(user))
+                {
+                    user_info.Add("child_stats", child_stats.Stats[user] + "/" + child_stats.Total);
+                }
+                else
+                {
+                    user_info.Add("child_stats", "");
+                }
+
                 details.Add(user_info);
             }
 
@@ -397,15 +482,15 @@ namespace playback_reporting.Api
             }
             else
             {
-                //query.IncludeItemTypes = new string[] { "CollectionFolder" };
-                query.Parent = _libraryManager.RootFolder;
+                query.IncludeItemTypes = new string[] { "CollectionFolder" };
+                //query.Parent = _libraryManager.RootFolder;
             }
 
             BaseItem[] results = _libraryManager.GetItemList(query);
 
             foreach (BaseItem item in results)
             {
-                _logger.Info(item.Name + "(" + item.InternalId + ")");
+                //_logger.Info(item.Name + "(" + item.InternalId + ")");
                 ItemInfo info = new ItemInfo();
                 info.Id = item.InternalId;
                 // + "(" + item.GetType() + ")" + "(" + item.MediaType + ")" + "(" + item.LocationType + ")" + " (" + item.ExtraType + ")");
