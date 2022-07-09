@@ -410,6 +410,9 @@ namespace playback_reporting.Api
             }
 
             UserQuery query = new UserQuery();
+            Tuple<string, SortOrder>[] order = new Tuple<string, SortOrder>[1];
+            order[0] = new Tuple<string, SortOrder>("name", SortOrder.Ascending);
+            query.OrderBy = order;
             User[] users = _userManager.GetUserList(query);
             foreach(User user in users)
             {
@@ -471,7 +474,11 @@ namespace playback_reporting.Api
 
             InternalItemsQuery query = new InternalItemsQuery();
 
-            if(request.parent != 0)
+            //(string, SortOrder)[] ord = new (string, SortOrder)[1];
+            //ord[0] = ("name", SortOrder.Ascending);
+            //query.OrderBy = ord;
+
+            if (request.parent != 0)
             {
                 query.ParentIds = new long[] { request.parent };
             }
@@ -502,11 +509,40 @@ namespace playback_reporting.Api
                     Episode e = (Episode)item;
                     info.Series = e.SeriesName;
                     info.Season = e.Season.Name;
+
+                    string epp_name = "";
+                    if(e.IndexNumber != null)
+                    {
+                        epp_name += e.IndexNumber.Value.ToString("D2");
+                    }
+                    else
+                    {
+                        epp_name += "00";
+                    }
+                    epp_name += " - " + e.Name;
+
+                    info.Name = epp_name;
+                }
+                else if(item.GetType() == typeof(Season))
+                {
+                    string season_name = "";
+                    if (item.IndexNumber != null)
+                    {
+                        season_name += item.IndexNumber.Value.ToString("D2");
+                    }
+                    else
+                    {
+                        season_name += "00";
+                    }
+                    season_name += " - " + item.Name;
+                    info.Name = season_name;
                 }
 
                 items.Add(info);
             }
 
+            items.Sort(delegate (ItemInfo c1, ItemInfo c2) { return string.Compare(c1.Name, c2.Name, comparisonType: StringComparison.OrdinalIgnoreCase); });
+            //c1.Name.CompareTo(c2.Name)
             return items;
         }
 
