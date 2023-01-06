@@ -40,7 +40,7 @@ namespace playback_reporting.Api
 {
     // http://localhost:8096/emby/user_usage_stats/session_list
     [Route("/user_usage_stats/session_list", "GET", Summary = "Gets Session Info")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetSessionInfo : IReturn<Object>
     {
 
@@ -48,7 +48,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/user_activity
     [Route("/user_usage_stats/user_activity", "GET", Summary = "Gets a report of the available activity per hour")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUserReport : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -59,7 +59,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/user_usage_stats/user_manage/add/1234-4321-1234
     [Route("/user_usage_stats/user_manage/{Action}/{Id}", "GET", Summary = "Get users")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUserManage : IReturn<Object>
     {
         [ApiMember(Name = "Action", Description = "action to perform", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
@@ -70,21 +70,21 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/user_list
     [Route("/user_usage_stats/user_list", "GET", Summary = "Get users")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUserList : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/type_filter_list", "GET", Summary = "Gets types filter list items")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class TypeFilterList : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/import_backup
     [Route("/user_usage_stats/import_backup", "POST", Summary = "Post a backup for importing")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class ImportBackup : IRequiresRequestStream, IReturnVoid
     {
         public Stream RequestStream { get; set; }
@@ -92,7 +92,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/submit_custom_query
     [Route("/user_usage_stats/submit_custom_query", "POST", Summary = "Submit an SQL query")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class CustomQuery : IReturn<Object>
     {
         public String CustomQueryString { get; set; }
@@ -101,7 +101,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/load_backup
     [Route("/user_usage_stats/load_backup", "GET", Summary = "Loads a backup from a file")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class LoadBackup : IReturn<Object>
     {
         [ApiMember(Name = "backupfile", Description = "File name of file to load", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -110,14 +110,14 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/save_backup
     [Route("/user_usage_stats/save_backup", "GET", Summary = "Saves a backup of the playback report data to the backup path")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class SaveBackup : IReturn<Object>
     {
     }
 
     // http://localhost:8096/emby/user_usage_stats/PlayActivity
     [Route("/user_usage_stats/PlayActivity", "GET", Summary = "Gets play activity for number of days")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUsageStats : IReturn<Object>
     {
         [ApiMember(Name = "days", Description = "Number of Days", IsRequired = false, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -132,7 +132,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/4c0ea7608f3a41629a0a43a2f23fbb4c/2018-03-23/GetItems
     [Route("/user_usage_stats/{UserID}/{Date}/GetItems", "GET", Summary = "Gets activity for {USER} for {Date} formatted as yyyy-MM-dd")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUserReportData : IReturn<Object>
     {
         [ApiMember(Name = "UserID", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
@@ -145,7 +145,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/UserPlaylist
     [Route("/user_usage_stats/UserPlaylist", "GET", Summary = "Gets a report of all played items for a user in a date period")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetUserPlaylist : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -164,7 +164,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/HourlyReport
     [Route("/user_usage_stats/HourlyReport", "GET", Summary = "Gets a report of the available activity per hour")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetHourlyReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -179,7 +179,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/ItemType/BreakdownReport
     [Route("/user_usage_stats/{BreakdownType}/BreakdownReport", "GET", Summary = "Gets a breakdown of a usage metric")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetBreakdownReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -194,7 +194,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/TvShowsReport
     [Route("/user_usage_stats/TvShowsReport", "GET", Summary = "Gets TV Shows counts")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetTvShowsReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -207,7 +207,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/MoviesReport
     [Route("/user_usage_stats/MoviesReport", "GET", Summary = "Gets Movies counts")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetMoviesReport : IReturn<Object>
     {
         [ApiMember(Name = "user_id", Description = "User Id", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -220,7 +220,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/get_items
     [Route("/user_usage_stats/get_items", "GET", Summary = "Get a list of items for type and filtered")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetItems : IReturn<Object>
     {
         [ApiMember(Name = "filter", Description = "filter string", IsRequired = false, DataType = "string", ParameterType = "query", Verb = "GET")]
@@ -233,7 +233,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/get_item_stats
     [Route("/user_usage_stats/get_item_stats", "GET", Summary = "Get a list of items for type and filtered")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetItemStats : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -242,7 +242,7 @@ namespace playback_reporting.Api
 
     // http://localhost:8096/emby/user_usage_stats/get_item_path
     [Route("/user_usage_stats/get_item_path", "GET", Summary = "Get a list of items for type and filtered")]
-    [Authenticated]
+    [Authenticated(Roles = "admin")]
     public class GetItemPath : IReturn<Object>
     {
         [ApiMember(Name = "id", Description = "item id", IsRequired = true, DataType = "int", ParameterType = "query", Verb = "GET")]
@@ -253,34 +253,28 @@ namespace playback_reporting.Api
     {
         private readonly ISessionManager _sessionManager;
         private readonly ILogger _logger;
-        private readonly IJsonSerializer _jsonSerializer;
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _config;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
-        private readonly IAuthorizationContext _ac;
 
         private ActivityRepository repository;
 
         public UserActivityAPI(ILogManager logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
-            IJsonSerializer jsonSerializer,
             IUserManager userManager,
             ILibraryManager libraryManager,
             ISessionManager sessionManager,
-            IAuthorizationContext authContext,
             IUserDataManager userDataManager)
         {
             _logger = logger.GetLogger("PlaybackReporting - UserActivityAPI");
-            _jsonSerializer = jsonSerializer;
             _fileSystem = fileSystem;
             _config = config;
             _userManager = userManager;
             _libraryManager = libraryManager;
             _sessionManager = sessionManager;
-            _ac = authContext;
             _userDataManager = userDataManager;
 
             _logger.Info("UserActivityAPI Loaded");
@@ -542,32 +536,17 @@ namespace playback_reporting.Api
             }
 
             items.Sort(delegate (ItemInfo c1, ItemInfo c2) { return string.Compare(c1.Name, c2.Name, comparisonType: StringComparison.OrdinalIgnoreCase); });
-            //c1.Name.CompareTo(c2.Name)
             return items;
         }
 
         public object Get(TypeFilterList request)
         {
-            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<string>();
-            }
-
             List<string> filter_list = repository.GetTypeFilterList();
             return filter_list;
         }
 
         public object Get(GetUserReport request)
         {
-            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -670,13 +649,6 @@ namespace playback_reporting.Api
 
         public object Get(GetUserManage request)
         {
-            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return -1;
-            }
-
             string action = request.Action;
             string id = request.Id;
 
@@ -699,13 +671,6 @@ namespace playback_reporting.Api
 
         public object Get(GetUserList request)
         {
-            AuthorizationInfo auth_user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(auth_user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             List<string> user_id_list = repository.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
@@ -724,13 +689,6 @@ namespace playback_reporting.Api
 
         public object Get(GetUserReportData report)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             string[] filter_tokens = new string[0];
             if (report.Filter != null)
             {
@@ -762,13 +720,6 @@ namespace playback_reporting.Api
 
         public void Post(ImportBackup request)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return;
-            }
-
             string headers = "";
             foreach (var head in Request.Headers.Keys)
             {
@@ -791,13 +742,6 @@ namespace playback_reporting.Api
 
         public object Get(LoadBackup load_backup)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<string>() { "Not Authorized" };
-            }
-
             FileInfo fi = new FileInfo(load_backup.backupfile);
             if (fi.Exists == false)
             {
@@ -823,13 +767,6 @@ namespace playback_reporting.Api
         }
         public object Get(SaveBackup save_backup)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<string>() { "Not Authorized" };
-            }
-
             BackupManager bum = new BackupManager(_config, _logger, _fileSystem);
             string message = bum.SaveBackup();
 
@@ -838,13 +775,6 @@ namespace playback_reporting.Api
 
         public object Get(GetUsageStats activity)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             string[] filter_tokens = new string[0];
             if (activity.filter != null)
             {
@@ -934,13 +864,6 @@ namespace playback_reporting.Api
 
         public object Get(GetHourlyReport request)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new SortedDictionary<string, int>();
-            }
-
             string[] filter_tokens = new string[0];
             if (request.filter != null)
             {
@@ -977,13 +900,6 @@ namespace playback_reporting.Api
 
         public object Get(GetBreakdownReport request)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -1025,13 +941,6 @@ namespace playback_reporting.Api
 
         public object Get(GetTvShowsReport request)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -1049,13 +958,6 @@ namespace playback_reporting.Api
 
         public object Get(GetMoviesReport request)
         {
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List <Dictionary<string, object>>();
-            }
-
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -1076,13 +978,6 @@ namespace playback_reporting.Api
             _logger.Info("CustomQuery : " + request.CustomQueryString);
 
             Dictionary<string, object> responce = new Dictionary<string, object>();
-
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return responce;
-            }
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
@@ -1131,15 +1026,6 @@ namespace playback_reporting.Api
 
         public object Get(GetUserPlaylist request)
         {
-            
-
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
             DateTime end_date;
             if (string.IsNullOrEmpty(request.end_date))
             {
@@ -1195,13 +1081,6 @@ namespace playback_reporting.Api
         public object Get(GetSessionInfo request)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
-
-            AuthorizationInfo user_info = _ac.GetAuthorizationInfo(Request);
-            UserPolicy policy = _userManager.GetUserPolicy(user_info.User);
-            if (!policy.IsAdministrator)
-            {
-                return report;
-            }
 
             foreach (SessionInfo session in _sessionManager.Sessions)
             {
