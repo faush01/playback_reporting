@@ -16,12 +16,14 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Notifications;
+using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Tasks;
 using playback_reporting.Data;
 using System;
@@ -92,8 +94,9 @@ namespace playback_reporting.Tasks
                 return;
             }
 
+            UserQuery user_query = new UserQuery();
             Dictionary<string, string> user_map = new Dictionary<string, string>();
-            foreach (var user in _userManager.Users)
+            foreach (User user in _userManager.GetUsers(user_query).Items)
             {
                 string user_id = user.Id.ToString("N");
                 string user_name = user.Name;

@@ -654,8 +654,9 @@ namespace playback_reporting.Api
 
             if (action == "remove_unknown")
             {
+                UserQuery user_query = new UserQuery();
                 List<string> user_id_list = new List<string>();
-                foreach (var emby_user in _userManager.Users)
+                foreach (User emby_user in _userManager.GetUsers(user_query).Items)
                 {
                     user_id_list.Add(emby_user.Id.ToString("N"));
                 }
@@ -675,7 +676,8 @@ namespace playback_reporting.Api
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
 
-            foreach (var emby_user in _userManager.Users)
+            UserQuery user_query = new UserQuery();
+            foreach (User emby_user in _userManager.GetUsers(user_query).Items)
             {
                 Dictionary<string, object> user_info = new Dictionary<string, object>();
                 user_info.Add("name", emby_user.Name);
@@ -988,8 +990,9 @@ namespace playback_reporting.Api
             {
                 colums[index_of_user_col] = "UserName";
 
+                UserQuery user_query = new UserQuery();
                 Dictionary<string, string> user_map = new Dictionary<string, string>();
-                foreach (var user in _userManager.Users)
+                foreach (User user in _userManager.GetUsers(user_query).Items)
                 {
                     user_map.Add(user.Id.ToString("N"), user.Name);
                 }
