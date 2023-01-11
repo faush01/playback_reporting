@@ -392,7 +392,7 @@ namespace playback_reporting.Api
 
         public object Get(GetItemStats request)
         {
-            List<Dictionary<string, string>> details = new List<Dictionary<string, string>>();
+            List<Dictionary<string, object>> details = new List<Dictionary<string, object>>();
 
             Guid item_guid = _libraryManager.GetGuid(request.id);
             BaseItem item = _libraryManager.GetItemById(item_guid);
@@ -412,7 +412,7 @@ namespace playback_reporting.Api
             {
                 UserItemData uid = _userDataManager.GetUserData(user, item);
 
-                Dictionary<string, string> user_info = new Dictionary<string, string>();
+                Dictionary<string, object> user_info = new Dictionary<string, object>();
                 user_info.Add("name", user.Name);
                 user_info.Add("played", uid.Played.ToString());
                 user_info.Add("play_count", uid.PlayCount.ToString());
@@ -428,11 +428,13 @@ namespace playback_reporting.Api
                 if(child_stats != null && child_stats.Stats.ContainsKey(user))
                 {
                     user_info.Add("child_stats", child_stats.Stats[user] + "/" + child_stats.Total);
+                    user_info.Add("child_watched", child_stats.Stats[user]);
+                    user_info.Add("child_total", child_stats.Total);
                 }
-                else
-                {
-                    user_info.Add("child_stats", "");
-                }
+                //else
+                //{
+                //    user_info.Add("child_stats", "");
+                //}
 
                 details.Add(user_info);
             }

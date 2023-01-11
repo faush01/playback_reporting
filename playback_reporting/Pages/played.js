@@ -40,7 +40,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 // populate the item info
                 var played_item_info = view.querySelector('#played_item_info');
-                var item_display_info = "<strong>" + item_info.Name + "</strong><br>";
+                var item_display_info = "<span style='font-weight: bold; font-size:120%;'>" + item_info.Name + "</span><br>";
                 item_display_info += item_info.ItemType + "<br>";
                 
                 //item_display_info += "Item Id : " + item_info.Id + "<br>";
@@ -56,31 +56,38 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 for (const user_info of user_data) {
                     var tr = document.createElement("tr");
-
                     var td = document.createElement("td");
-                    if (user_info.played === "True") {
+
+                    var played = user_info.played === "True"
+                    if (user_info.child_watched && user_info.child_total) {
+                        if (user_info.child_watched === user_info.child_total) {
+                            played = true;
+                        }
+                    }
+
+                    if (played) {
                         var i = document.createElement("i");
                         i.className = "md-icon";
                         i.style.fontSize = "25px";
+                        i.style.color = "#00FF00";
                         i.appendChild(document.createTextNode("check_circle_outline"));
                         td.appendChild(i);
-
-                        td.style.backgroundColor = "#00FF00";
+                        //td.style.backgroundColor = "#00FF00";
                     }
                     else {
                         var i = document.createElement("i");
                         i.className = "md-icon";
                         i.style.fontSize = "25px";
+                        i.style.color = "grey";
                         i.appendChild(document.createTextNode("highlight_off"));
                         td.appendChild(i);
-
                         //td.style.backgroundColor = "#FF0000";
                     }
                     tr.appendChild(td);
 
                     td = document.createElement("td");
                     var user_info_txt = user_info.name;
-                    if (user_info.child_stats !== "") {
+                    if (user_info.child_stats) {
                         user_info_txt += " (" + user_info.child_stats + ")";
                     } 
                     td.appendChild(document.createTextNode(user_info_txt));
@@ -214,6 +221,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         view.addEventListener('viewshow', function (e) {
 
             mainTabsManager.setTabs(this, getTabIndex("played"), getTabs);
+
+            var style = document.createElement('style');
+            style.innerHTML = '#item_list tr:hover { background-color: grey; }';
+            var ref = document.querySelector('script');
+            ref.parentNode.insertBefore(style, ref);
 
             var search_box = view.querySelector("#search_text");
             search_box.addEventListener("input", function () { SearchChanged(view, search_box); });
