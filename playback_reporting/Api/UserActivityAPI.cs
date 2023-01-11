@@ -352,6 +352,7 @@ namespace playback_reporting.Api
             query.ParentIds = new long[] { item.InternalId };
             query.IncludeItemTypes = new string[] { "Episode" };
             query.Recursive = true;
+            query.IsVirtualItem = false;
 
             UserQuery user_query = new UserQuery();
             User[] users = _userManager.GetUserList(user_query);
@@ -469,6 +470,7 @@ namespace playback_reporting.Api
             */
 
             InternalItemsQuery query = new InternalItemsQuery();
+            query.IsVirtualItem = false;
 
             //(string, SortOrder)[] ord = new (string, SortOrder)[1];
             //ord[0] = ("name", SortOrder.Ascending);
