@@ -76,12 +76,6 @@ namespace playback_reporting.Tasks
             _userViewManager = userViewManager;
             _appHost = appHost;
 
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                throw new NotImplementedException("This task is not available on this version of Emby");
-            }
-
             _logger.Info("NewMediaReportNotification Loaded");
         }
 
@@ -97,12 +91,6 @@ namespace playback_reporting.Tasks
 
         public async System.Threading.Tasks.Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                return;
-            }
-
             UserViewQuery view_query = new UserViewQuery();
             view_query.IncludeExternalContent = false;
             view_query.IncludeHidden = false;

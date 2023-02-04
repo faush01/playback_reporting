@@ -51,12 +51,6 @@ namespace playback_reporting.Tasks
             _fileSystem = fileSystem;
             _appHost = appHost;
 
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                throw new NotImplementedException("This task is not available on this version of Emby");
-            }
-
             _logger.Info("TaskCleanDb Loaded");
         }
 
@@ -73,12 +67,6 @@ namespace playback_reporting.Tasks
 
         public async System.Threading.Tasks.Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                return;
-            }
-
             await System.Threading.Tasks.Task.Run(() =>
             {
 

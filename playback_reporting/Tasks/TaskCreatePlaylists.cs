@@ -60,12 +60,6 @@ namespace playback_reporting.Tasks
             _libraryManager = libraryManager;
             _config = config;
             _fileSystem = fileSystem;
-
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                throw new NotImplementedException("This task is not available on this version of Emby");
-            }
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
@@ -80,11 +74,6 @@ namespace playback_reporting.Tasks
 
         public async System.Threading.Tasks.Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                _logger.Info("ERROR : Plugin not compatible with this server version");
-                return;
-            }
 
             // query the user playback info for the most active movies
             ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);

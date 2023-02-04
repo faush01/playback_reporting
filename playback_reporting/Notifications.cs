@@ -35,11 +35,6 @@ namespace playback_reporting
 
         public IEnumerable<NotificationTypeInfo> GetNotificationTypes()
         {
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                return new List<NotificationTypeInfo>();
-            }
-
             var knownTypes = new List<NotificationTypeInfo>
             {
                 new NotificationTypeInfo

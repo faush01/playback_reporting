@@ -37,10 +37,6 @@ namespace playback_reporting
         {
             Instance = this;
             _appHost = appHost;
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                plugin_name = plugin_name + "(not compatible)";
-            }
         }
 
         public override string Name => plugin_name;
@@ -51,11 +47,6 @@ namespace playback_reporting
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            if (VersionCheck.IsVersionValid(_appHost.ApplicationVersion, _appHost.SystemUpdateLevel) == false)
-            {
-                return new PluginPageInfo[0];
-            }
-
             return new[]
             {
                 new PluginPageInfo
