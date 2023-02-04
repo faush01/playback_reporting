@@ -91,8 +91,7 @@ namespace playback_reporting
             _logger.Info("_sessionManager_PlaybackStart : Entered");
             lock (syncLock)
             {
-                List<PlaybackInfo> playinfo_list = ProcessSessions();
-                RemoveOldPlayinfo(playinfo_list);
+                ProcessSessions();
             }
         }
 
@@ -101,8 +100,7 @@ namespace playback_reporting
             _logger.Info("_sessionManager_PlaybackStop : Entered");
             lock (syncLock)
             {
-                List<PlaybackInfo> playinfo_list = ProcessSessions();
-                RemoveOldPlayinfo(playinfo_list);
+                ProcessSessions();
             }
         }
 
@@ -118,8 +116,7 @@ namespace playback_reporting
                 {
                     lock (syncLock)
                     {
-                        List<PlaybackInfo> playinfo_list = ProcessSessions();
-                        RemoveOldPlayinfo(playinfo_list);
+                        ProcessSessions();
                     }
 
                     thread_sleep = 20;
@@ -140,7 +137,7 @@ namespace playback_reporting
             }
         }
 
-        private List<PlaybackInfo> ProcessSessions()
+        private void ProcessSessions()
         {
             List<PlaybackInfo> active_playinfo_list = new List<PlaybackInfo>();
 
@@ -175,7 +172,7 @@ namespace playback_reporting
                 _repository.UpdatePlaybackAction(playback_info);
             }
 
-            return active_playinfo_list;
+            RemoveOldPlayinfo(active_playinfo_list);
         }
 
         private void RemoveOldPlayinfo(List<PlaybackInfo> active_list)
@@ -252,7 +249,6 @@ namespace playback_reporting
                 playback_info.ItemId = session_playing_id;
                 playback_info.ItemName = GetItemName(session.NowPlayingItem);
                 playback_info.PlaybackMethod = GetPlaybackMethod(session);
-                playback_info.ItemType = session.NowPlayingItem.Type;
                 playback_info.ItemType = session.NowPlayingItem.Type;
 
                 playback_trackers.Add(key, playback_info);
