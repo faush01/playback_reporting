@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
+define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager, appRouter) {
     'use strict';
 
     ApiClient.getActivity = function (url_to_get) {
@@ -79,38 +79,46 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
-                        if (activity_info.app_icon) {
-                            row_html += "<td><img src='" + activity_info.app_icon + "' width='40px'></td>";
-                        }
-                        else {
-                            row_html += "<td>&nbsp;</td>";
-                        }
-
-                        row_html += "<td>" + activity_info.device_name + "</td>";
-                        row_html += "<td>" + activity_info.client_name + " (" + activity_info.app_version + ")</td>";
-
-                        /*
-                        var user_image = "<i class='md-icon' style='font-size:3em;'></i>";
+                        // add user info
+                        var user_image = "<i class='md-icon' style='font-size:30px;'></i>";
                         if (activity_info.has_image) {
                             var user_img = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
                             user_img = ApiClient.getUrl(user_img);
-                            user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
-                        } 
-                        row_html += "<td valign='middle'>" + user_image + "</td>";
-                        */
-
-                        /*
-                        var test_table = "<table>";
-                        for (var test_x = 0; test_x < 20; test_x++) {
-                            test_table += "<tr><td nowrap align='left'>Video Direct " + test_x + "</td><td nowrap align='left'>Some Test Data</td></tr>";
+                            user_image = "<img src='" + user_img + "' style='width:30px;height:30px;border-radius:10px;'>";
                         }
-                        test_table += "</table>";
-                        row_html += "<td><div class='tooltip'>" + activity_info.user_name + "<span class='tooltiptext'>" + test_table + "</span></div></td>";
-                        */
-                        row_html += "<td>" + activity_info.user_name + "</td>";
+                        row_html += "<td>";
+                        row_html += "<table>"
+                        row_html += "<tr>"
+                        row_html += "<td style='vertical-align: middle; width:35px;' align='center'>" + user_image + "</td>";
+                        row_html += "<td style='vertical-align: middle;'>" + activity_info.user_name + "</td>";
+                        row_html += "</tr>"
+                        row_html += "</table>"
+                        row_html += "</td>"
 
+                        // add device info
+                        row_html += "<td>";
+                        row_html += "<table style='line-height: 1; font-size: 80%;'>";
+                        row_html += "<tr>";
+                        if (activity_info.app_icon) {
+                            row_html += "<td rowspan='2'><img src='" + activity_info.app_icon + "' width='30px'></td>";
+                        }
+                        else {
+                            row_html += "<td rowspan='2'><img src='' width='30px'></td>";
+                        }
+                        row_html += "<td>" + activity_info.device_name + "</td>";
+                        row_html += "</tr>";
+                        row_html += "<tr>";
+                        row_html += "<td>" + activity_info.client_name + " (" + activity_info.app_version + ")</td>";
+                        row_html += "</tr>";
+                        row_html += "</table>";
+                        row_html += "</td>";
+
+
+
+                        // add now playing info
                         if (activity_info.NowPlayingItem) {
 
+                            // add item name
                             var item_name = activity_info.NowPlayingItem.Name;
                             if (activity_info.NowPlayingItem.Type === "Episode") {
                                 item_name = activity_info.NowPlayingItem.SeriesName + " ";
@@ -118,16 +126,29 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                                 item_name += "e" + pad(activity_info.NowPlayingItem.IndexNumber, 2);
                                 item_name += " " + activity_info.NowPlayingItem.Name;
                             }
-                            row_html += "<td>" + item_name + "</td>";
 
+                            // add playback item info
                             var complete_percentage = (activity_info.PlayState.PositionTicks / activity_info.NowPlayingItem.RunTimeTicks) * 100;
                             complete_percentage = Math.round(complete_percentage);
                             var duration = displayTime(activity_info.NowPlayingItem.RunTimeTicks);
                             var current = displayTime(activity_info.PlayState.PositionTicks);
-                            row_html += "<td>" + complete_percentage + "% (" + current + " / " + duration + ")</td>";
 
+                            var name_link = appRouter.getRouteUrl({ Id: activity_info.NowPlayingItem.Id, ServerId: ApiClient._serverInfo.Id });
+                            var item_link = "<a href='" + name_link + "' is='emby-linkbutton' class='button-link' title='View Emby item'>" + item_name + "</a>";
+
+                            var direct_name_link = "/web/index.html#!/item?id=" + activity_info.NowPlayingItem.Id + "&serverId=" + ApiClient._serverInfo.Id;
+                            var new_window = "<i class='md-icon' style='cursor: pointer; font-size:100%;' onClick='window.open(\"" + direct_name_link + "\");' title='Open Emby item in new window'>launch</i>"
+
+                            var item_name_link = item_link + "&nbsp;&nbsp;" + new_window;
+
+                            row_html += "<td>";
+                            row_html += item_name_link;
+                            row_html += "<br />";
+                            row_html += complete_percentage + "% (" + current + " / " + duration + ")";
+                            row_html += "</td>";
+
+                            // add playback details
                             var play_method_details = "";
-
                             play_method_details += "<table cellpadding='0' cellspacing='0'>";
 
                             if (activity_info.NowPlayingItem.MediaStreams && activity_info.NowPlayingItem.MediaStreams.length > 0) {
@@ -211,16 +232,24 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             }
 
                             play_method_details += "</table>";
-                            row_html += "<td><div class='tooltip'>" + activity_info.PlayState.PlayMethod + "<span class='tooltiptext'>" + play_method_details + "</span></div></td>";
+                            row_html += "<td>";
+                            row_html += "<div class='tooltip'>";
+                            row_html += activity_info.PlayState.PlayMethod;
+                            row_html += "<br />";
+                            row_html += "<span class='tooltiptext'>" + play_method_details + "</span>";
+                            row_html += "</div>";
+                            row_html += "</td>";
                         }
                         else {
                             row_html += "<td>&nbsp;</td>";
                             row_html += "<td>&nbsp;</td>";
-                            row_html += "<td>&nbsp;</td>";
                         }
 
-                        row_html += "<td>" + activity_info.last_active + "</td>";
-                        row_html += "<td>" + activity_info.remote_address + "</td>";
+                        row_html += "<td>";
+                        row_html += activity_info.last_active;
+                        row_html += "<br />";
+                        row_html += activity_info.remote_address;
+                        row_html += "</td>";
 
                         row_html += "</tr>";
                     }
