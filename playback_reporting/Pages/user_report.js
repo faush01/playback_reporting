@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
+define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager, appRouter) {
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -103,7 +103,19 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         row_html += "<td>" + user_info.user_name + "</td>";
                         row_html += "<td>" + user_info.last_seen + "</td>";
-                        row_html += "<td>" + user_info.item_name + "</td>";
+
+
+                        var name_link = appRouter.getRouteUrl({ Id: user_info.item_id, ServerId: ApiClient._serverInfo.Id });
+                        var item_link = "<a href='" + name_link + "' is='emby-linkbutton' class='button-link' title='View Emby item'>" + user_info.item_name + "</a>";
+
+                        var direct_name_link = "/web/index.html#!/item?id=" + user_info.item_id + "&serverId=" + ApiClient._serverInfo.Id;
+                        var new_window = "<i class='md-icon' style='cursor: pointer; font-size:100%;' onClick='window.open(\"" + direct_name_link + "\");' title='Open Emby item in new window'>launch</i>"
+
+                        var item_name_link = item_link + "&nbsp;&nbsp;" + new_window;
+
+                        row_html += "<td>" + item_name_link + "</td>";
+
+
                         row_html += "<td>" + user_info.client_name + "</td>";
                         row_html += "<td>" + user_info.total_count + "</td>";
                         row_html += "<td>" + user_info.total_play_time + "</td>";

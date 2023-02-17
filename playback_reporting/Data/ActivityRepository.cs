@@ -887,7 +887,7 @@ namespace playback_reporting.Data
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
             string sql = "";
-            sql += "SELECT x.latest_date, x.UserId, x.play_count, x.total_duarion, y.ItemName, y.DeviceName ";
+            sql += "SELECT x.latest_date, x.UserId, x.play_count, x.total_duarion, y.ItemName, y.DeviceName, y.ItemId ";
             sql += "FROM( ";
             sql += "SELECT MAX(DateCreated) AS latest_date, UserId, COUNT(1) AS play_count, SUM(PlayDuration - PauseDuration) AS total_duarion ";
             sql += "FROM PlaybackActivity ";
@@ -927,6 +927,9 @@ namespace playback_reporting.Data
 
                             string client_name = row.GetString(5);
                             row_data.Add("client_name", client_name);
+
+                            int item_id = row.GetInt(6);
+                            row_data.Add("item_id", item_id);
 
                             report.Add(row_data);
                         }
