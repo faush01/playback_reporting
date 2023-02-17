@@ -82,9 +82,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                         // add user info
                         var user_image = "<i class='md-icon' style='font-size:30px;'></i>";
                         if (activity_info.has_image) {
-                            var user_img = "Users/" + activity_info.user_id + "/Images/Primary?width=50";
+                            var user_img = "Users/" + activity_info.user_id + "/Images/Primary?height=152&&quality=90";
                             user_img = ApiClient.getUrl(user_img);
-                            user_image = "<img src='" + user_img + "' style='width:30px;height:30px;border-radius:10px;'>";
+                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
                         }
                         row_html += "<td>";
                         row_html += "<table>"
