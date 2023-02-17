@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
+define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager, appRouter) {
     'use strict';
 
     var my_bar_chart = null;
@@ -223,6 +223,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }
                 },
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         stacked: true,
@@ -242,7 +243,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 },
                 onClick: function (e) {
                     var activePoint = my_bar_chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
-                    if (!activePoint) {
+                    if (activePoint === undefined || activePoint.length === 0 || activePoint[0] === undefined) {
                         return;
                     }
                     
@@ -334,6 +335,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
         var table_body = view.querySelector('#user_usage_report_results');
 
+        /*
         while (table_body.firstChild) {
             table_body.removeChild(table_body.firstChild);
         }
@@ -348,7 +350,21 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             tr.appendChild(td);
 
             td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Name));
+
+            //var name_link = ApiClient._serverAddress + "/web/index.html#!/item?id=" + item_details.Id + "&serverId=" + ApiClient._serverInfo.Id;
+            //var span_tag = document.createElement("span");
+            //span_tag.appendChild(document.createTextNode(item_details.Name));
+            //span_tag.addEventListener("click", function () { window.open(name_link); });
+            //td.appendChild(span_tag);
+            //tr.appendChild(td);
+
+            var name_link = appRouter.getRouteUrl({ Id: item_details.Id, ServerId: ApiClient._serverInfo.Id });
+            var a_tag = document.createElement("a");
+            a_tag.href = name_link;
+            a_tag.appendChild(document.createTextNode(item_details.Name));
+            a_tag.setAttribute("is", "emby-linkbutton");
+            a_tag.className = "button-link emby-button emby-button-backdropfilter";
+            td.appendChild(a_tag);
             tr.appendChild(td);
 
             td = document.createElement("td");
@@ -371,18 +387,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             td.appendChild(document.createTextNode(seconds2time(item_details.Duration)));
             tr.appendChild(td);
 
-            /*
-            td = document.createElement("td");
-            var btn = document.createElement("BUTTON");
-            var i = document.createElement("i");
-            i.className = "md-icon largeIcon";
-            var t = document.createTextNode("remove");
-            i.appendChild(t);
-            btn.appendChild(i);
-            btn.setAttribute("title", "Remove");
-            btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
-            td.appendChild(btn);
-            */
+            //td = document.createElement("td");
+            //var btn = document.createElement("BUTTON");
+            //var i = document.createElement("i");
+            //i.className = "md-icon largeIcon";
+            //var t = document.createTextNode("remove");
+            //i.appendChild(t);
+            //btn.appendChild(i);
+            //btn.setAttribute("title", "Remove");
+            //btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
+            //td.appendChild(btn);
 
             td = document.createElement("td");
             var del_icon = document.createElement("i");
@@ -397,25 +411,43 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
             table_body.appendChild(tr);
         });
+        */
 
-        /*
         var row_html = "";
-
         for (var index = 0; index < usage_data.length; ++index) {
             var item_details = usage_data[index];
             row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
 
             row_html += "<td>" + item_details.Time + "</td>";
-            row_html += "<td>" + item_details.Name + "</td>";
+
+            var name_link = appRouter.getRouteUrl({ Id: item_details.Id, ServerId: ApiClient._serverInfo.Id });
+            var item_link = "<a href='" + name_link + "' is='emby-linkbutton' class='button-link' title='View Emby item'>" + item_details.Name + "</a>";
+
+            var direct_name_link = "/web/index.html#!/item?id=" + item_details.Id + "&serverId=" + ApiClient._serverInfo.Id;
+            var new_window = "<i class='md-icon' style='cursor: pointer; font-size:100%;' onClick='window.open(\"" + direct_name_link + "\");' title='Open Emby item in new window'>launch</i>"
+
+            row_html += "<td>" + item_link + "&nbsp;&nbsp;" + new_window + "</td>";
+
             row_html += "<td>" + item_details.Type + "</td>";
             row_html += "<td>" + item_details.Client + "</td>";
             row_html += "<td>" + item_details.Device + "</td>";
             row_html += "<td>" + item_details.Method + "</td>";
             row_html += "<td>" + seconds2time(item_details.Duration) + "</td>";
+
+            var but_id = "del_but_row_" + item_details.RowId
+            var del_link = "<i class='md-icon largeIcon' style='cursor: pointer;font-size:150%;' id='" + but_id + "' title='Delete this entry'>delete</i>"
+            row_html += "<td>" + del_link + "</td>";
+
             row_html += "</tr>";
         }
         table_body.innerHTML = row_html;
-        */
+
+        usage_data.forEach(function (item_details, index) {
+            var but_id = "del_but_row_" + item_details.RowId
+            var del_icon = view.querySelector('#' + but_id);
+            del_icon.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
+        });
+
     }
 
     function seconds2time(seconds) {
