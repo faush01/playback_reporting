@@ -193,7 +193,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 responsive: true,
                 scales: {
                     x: {
-                        stacked: false
+                        stacked: false,
+                        grid: {
+                            color: '#99999944'
+                        }
                     },
                     y: {
                         stacked: false,
@@ -201,6 +204,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     }
                 }
@@ -241,7 +247,10 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 responsive: true,
                 scales: {
                     x: {
-                        stacked: false
+                        stacked: false,
+                        grid: {
+                            color: '#99999944'
+                        }
                     },
                     y: {
                         stacked: false,
@@ -249,6 +258,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     }
                 }
@@ -293,6 +305,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         stacked: false,
                         ticks: {
                             //autoSkip: false
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     },
                     y: {
@@ -301,6 +316,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     }
                 }

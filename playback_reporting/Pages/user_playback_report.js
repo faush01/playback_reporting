@@ -230,6 +230,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                         ticks: {
                             autoSkip: false,
                             maxTicksLimit: 10000
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     },
                     y: {
@@ -238,6 +241,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                             autoSkip: true,
                             beginAtZero: true,
                             callback: y_axis_labels
+                        },
+                        grid: {
+                            color: '#99999944'
                         }
                     }
                 },
