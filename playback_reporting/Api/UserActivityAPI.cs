@@ -702,6 +702,8 @@ namespace playback_reporting.Api
             }
             List<Dictionary<string, string>> results = repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
 
+            Dictionary<string, object> user_details = new Dictionary<string, object>();
+
             List<Dictionary<string, object>> user_activity = new List<Dictionary<string, object>>();
 
             foreach (Dictionary<string, string> item_data in results)
@@ -721,7 +723,26 @@ namespace playback_reporting.Api
                 user_activity.Add(item_info);
             }
 
-            return user_activity;
+            string user_name = "unknown";
+            bool has_image = false;
+            try
+            {
+                Guid user_guid = new Guid(report.UserID);
+                User user = _userManager.GetUserById(user_guid);
+                if (user != null)
+                {
+                    user_name = user.Name;
+                    has_image = user.HasImage(MediaBrowser.Model.Entities.ImageType.Primary);
+                }
+            }
+            catch(Exception) { }
+
+            user_details["has_image"] = has_image;
+            user_details["user_name"] = user_name;
+            user_details["user_id"] = report.UserID;
+            user_details["activity"] = user_activity;
+
+            return user_details;
         }
 
         public void Post(ImportBackup request)

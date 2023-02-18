@@ -288,9 +288,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
         url_to_get = ApiClient.getUrl(url_to_get);
         console.log("User Report Details Url: " + url_to_get);
 
-        ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
-            //alert("Loaded Data: " + JSON.stringify(usage_data));
-            populate_report(user_name, user_id, data_label, usage_data, view);
+        ApiClient.getUserActivity(url_to_get).then(function (user_details) {
+            //console.log("Loaded User Data: " + JSON.stringify(user_details));
+            populate_report(user_name, user_id, data_label, user_details, view);
         });
 
     }
@@ -318,101 +318,35 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
         });
     }
 
-    function populate_report(user_name, user_id, data_label, usage_data, view) {
+    function populate_report(user_name, user_id, data_label, user_details, view) {
 
-        if (!usage_data) {
+        if (user_details === undefined) {
             alert("No Data!");
             return;
         }
 
+        var usage_data = user_details.activity;
+
         //console.log("Processing User Report: " + JSON.stringify(usage_data));
 
-        var user_name_span = view.querySelector('#user_report_user_name');
-        user_name_span.innerHTML = user_name;
+        var user_image = "<i class='md-icon' style='font-size:30px;width:30px;height:30px;'></i>";
+        if (user_details.has_image) {
+            var user_img = "Users/" + user_id + "/Images/Primary?height=152&&quality=90";
+            user_img = ApiClient.getUrl(user_img);
+            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
+        }
+        var user_report_image = view.querySelector('#user_report_user_img');
+        user_report_image.innerHTML = user_image;
 
-        var user_report_on_date = view.querySelector('#user_report_on_date');
-        user_report_on_date.innerHTML = "(" + data_label + ")";
+        var user_report_name = view.querySelector('#user_report_user_name');
+        user_report_name.innerHTML = user_name;
+
+        var user_report_date = view.querySelector('#user_report_on_date');
+        user_report_date.innerHTML = "(" + data_label + ")";
 
         var table_body = view.querySelector('#user_usage_report_results');
 
-        /*
-        while (table_body.firstChild) {
-            table_body.removeChild(table_body.firstChild);
-        }
-
-        usage_data.forEach(function (item_details, index) {
-
-            var tr = document.createElement("tr");
-            tr.className = "detailTableBodyRow detailTableBodyRow-shaded";
-
-            var td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Time));
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-
-            //var name_link = ApiClient._serverAddress + "/web/index.html#!/item?id=" + item_details.Id + "&serverId=" + ApiClient._serverInfo.Id;
-            //var span_tag = document.createElement("span");
-            //span_tag.appendChild(document.createTextNode(item_details.Name));
-            //span_tag.addEventListener("click", function () { window.open(name_link); });
-            //td.appendChild(span_tag);
-            //tr.appendChild(td);
-
-            var name_link = appRouter.getRouteUrl({ Id: item_details.Id, ServerId: ApiClient._serverInfo.Id });
-            var a_tag = document.createElement("a");
-            a_tag.href = name_link;
-            a_tag.appendChild(document.createTextNode(item_details.Name));
-            a_tag.setAttribute("is", "emby-linkbutton");
-            a_tag.className = "button-link emby-button emby-button-backdropfilter";
-            td.appendChild(a_tag);
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Type));
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Client));
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Device));
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-            td.appendChild(document.createTextNode(item_details.Method));
-            tr.appendChild(td);
-
-            td = document.createElement("td");
-            td.appendChild(document.createTextNode(seconds2time(item_details.Duration)));
-            tr.appendChild(td);
-
-            //td = document.createElement("td");
-            //var btn = document.createElement("BUTTON");
-            //var i = document.createElement("i");
-            //i.className = "md-icon largeIcon";
-            //var t = document.createTextNode("remove");
-            //i.appendChild(t);
-            //btn.appendChild(i);
-            //btn.setAttribute("title", "Remove");
-            //btn.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
-            //td.appendChild(btn);
-
-            td = document.createElement("td");
-            var del_icon = document.createElement("i");
-            del_icon.className = "md-icon largeIcon";
-            del_icon.style = "cursor: pointer;font-size:150%;";
-            var icon_name = document.createTextNode("delete");
-            del_icon.appendChild(icon_name);
-            td.appendChild(del_icon);
-            del_icon.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
-
-            tr.appendChild(td);
-
-            table_body.appendChild(tr);
-        });
-        */
-
+        // build report table
         var row_html = "";
         for (var index = 0; index < usage_data.length; ++index) {
             var item_details = usage_data[index];
@@ -442,12 +376,16 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
         }
         table_body.innerHTML = row_html;
 
+        // add delete actions
         usage_data.forEach(function (item_details, index) {
             var but_id = "del_but_row_" + item_details.RowId
             var del_icon = view.querySelector('#' + but_id);
             del_icon.addEventListener("click", function () { remove_item(item_details.RowId, user_name, user_id, data_label, view); });
         });
 
+        // show user activity content
+        var user_report_content = view.querySelector('#user_report_content');
+        user_report_content.style.display = "block";
     }
 
     function seconds2time(seconds) {
@@ -528,6 +466,10 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                     process_click();
 
                     function process_click() {
+                        // hide user activity content
+                        var user_report_content = view.querySelector('#user_report_content');
+                        user_report_content.style.display = "none";
+                        // clear user report table
                         var table_body = view.querySelector('#user_usage_report_results');
                         table_body.innerHTML = "";
 

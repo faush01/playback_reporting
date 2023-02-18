@@ -87,13 +87,13 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                             user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
                         }
                         row_html += "<td>";
-                        row_html += "<table>"
-                        row_html += "<tr>"
+                        row_html += "<table>";
+                        row_html += "<tr>";
                         row_html += "<td style='vertical-align: middle; width:35px;' align='center'>" + user_image + "</td>";
                         row_html += "<td style='vertical-align: middle;'>" + activity_info.user_name + "</td>";
-                        row_html += "</tr>"
-                        row_html += "</table>"
-                        row_html += "</td>"
+                        row_html += "</tr>";
+                        row_html += "</table>";
+                        row_html += "</td>";
 
                         // add device info
                         row_html += "<td>";
