@@ -75,7 +75,12 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                     for (var index = 0; index < user_data.length; ++index) {
                         var user_info = user_data[index];
 
-                        row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+                        var row_bg_col = "#77777700";
+                        if (index % 2 == 0) {
+                            row_bg_col = "#7777771c";
+                        }
+
+                        row_html += "<tr style='background:" + row_bg_col + ";'>";
 
                         var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&user=" + encodeURI(user_info.user_name);
                         var summary_link = "<a is='emby-linkbutton' style='padding: 1px;' href='" + summary_url + "' title='Summary'>" +
@@ -96,7 +101,7 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                         if (user_info.has_image) {
                             var user_img = "Users/" + user_info.user_id + "/Images/Primary?height=152&&quality=90";
                             user_img = ApiClient.getUrl(user_img);
-                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
+                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;vertical-align:top;'>";
                         }                      
                         row_html += "<td>";
                         row_html += "<table>";
@@ -107,7 +112,7 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                         row_html += "</table>";
                         row_html += "</td>";
 
-                        row_html += "<td>" + user_info.last_seen + "</td>";
+                        row_html += "<td style='font-size:80%;'>" + user_info.last_seen + "</td>";
 
 
                         var name_link = appRouter.getRouteUrl({ Id: user_info.item_id, ServerId: ApiClient._serverInfo.Id });
@@ -123,7 +128,7 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
 
                         row_html += "<td>" + user_info.client_name + "</td>";
                         row_html += "<td>" + user_info.total_count + "</td>";
-                        row_html += "<td>" + user_info.total_play_time + "</td>";
+                        row_html += "<td style='font-size:80%;'>" + user_info.total_play_time + "</td>";
 
                         row_html += "</tr>";
                     }

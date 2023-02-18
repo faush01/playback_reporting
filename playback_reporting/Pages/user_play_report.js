@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager) {
+define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigurationResourceUrl('helper_function.js')], function (mainTabsManager, appRouter) {
     'use strict';
 
     ApiClient.getUserActivity = function (url_to_get) {
@@ -156,27 +156,60 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                 ApiClient.getUserActivity(url_to_get).then(function (usage_data) {
                     load_status.innerHTML = "&nbsp;";
-                    //alert("Loaded Data: " + JSON.stringify(usage_data));
+                    //console.log("Loaded UserPlaylist Data: " + JSON.stringify(usage_data));
 
                     var row_html = "";
                     var last_date_string = "";
+                    var row_count = 0
                     usage_data.forEach(function (item_details, index) {
 
                         if (last_date_string !== item_details.date) {
                             last_date_string = item_details.date;
                             row_html += "<tr class=''>";
-                            row_html += "<td colspan='3'><strong>" + last_date_string + "</strong></td>";
+                            row_html += "<td colspan='4'><strong>" + last_date_string + "</strong></td>";
                             row_html += "</tr>";
+                            row_count = 0
                         }
 
-                        row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
-                        row_html += "<td style='padding-left:30px;padding-right:15px;'>" + item_details.user + "</td>";
-                        if (!aggregate) {
-                            row_html += "<td style='padding-left:15px;padding-right:15px;'>" + item_details.time + "</td>";
+                        var row_bg_col = "#77777700";
+                        if (row_count % 2 == 0) {
+                            row_bg_col = "#7777771c";
                         }
-                        row_html += "<td style='padding-left:15px;padding-right:15px;'>" + item_details.type + "</td>";
-                        row_html += "<td>" + item_details.name + "</td>";
-                        row_html += "<td>" + seconds2time(item_details.duration) + "</td>";
+                        row_count += 1
+                        row_html += "<tr>";
+
+                        row_html += "<td style='width:30px;'>&nbsp;</td>"
+
+                        var user_image = "<i class='md-icon' style='font-size:30px;width:30px;height:30px;'></i>";
+                        if (item_details.user_has_image) {
+                            var user_img = "Users/" + item_details.user_id + "/Images/Primary?height=152&&quality=90";
+                            user_img = ApiClient.getUrl(user_img);
+                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;vertical-align:top;'>";
+                        }
+                        row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>";
+                        row_html += "<table style='padding: 0px; border-spacing: 0px;'>";
+                        row_html += "<tr>";
+                        row_html += "<td style='vertical-align: middle; width:35px; padding: 0px;' align='center'>" + user_image + "</td>";
+                        row_html += "<td style='vertical-align: middle; padding: 0px;'>" + item_details.user_name + "</td>";
+                        row_html += "</tr>";
+                        row_html += "</table>";
+                        row_html += "</td>";
+
+                        if (!aggregate) {
+                            row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + item_details.time + "</td>";
+                        }
+                        row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + item_details.item_type + "</td>";
+
+                        var name_link = appRouter.getRouteUrl({ Id: item_details.item_id, ServerId: ApiClient._serverInfo.Id });
+                        var item_link = "<a href='" + name_link + "' is='emby-linkbutton' class='button-link' title='View Emby item'>" + item_details.item_name + "</a>";
+
+                        var direct_name_link = "/web/index.html#!/item?id=" + item_details.item_id + "&serverId=" + ApiClient._serverInfo.Id;
+                        var new_window = "<i class='md-icon' style='cursor: pointer; font-size:100%;' onClick='window.open(\"" + direct_name_link + "\");' title='Open Emby item in new window'>launch</i>"
+
+                        var item_name_link = item_link + "&nbsp;&nbsp;" + new_window;
+                        row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + item_name_link + "</td>";
+
+                        row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + seconds2time(item_details.duration) + "</td>";
                         row_html += "</tr>";
                     });
 

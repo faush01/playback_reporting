@@ -600,7 +600,7 @@ namespace playback_reporting.Api
                 string time_played = GetLastSeenString(total_time);
                 if (time_played == "")
                 {
-                    time_played = "< 1 minute";
+                    time_played = "< 1m";
                 }
                 user_info.Add("total_play_time", time_played);
 
@@ -615,27 +615,27 @@ namespace playback_reporting.Api
 
             if (span.TotalDays > 365)
             {
-                last_seen += GetTimePart((int)(span.TotalDays / 365), "year");
+                last_seen += GetTimePart((int)(span.TotalDays / 365), "y");
             }
 
             if ((int)(span.TotalDays % 365) > 7)
             {
-                last_seen += GetTimePart((int)((span.TotalDays % 365) / 7), "week");
+                last_seen += GetTimePart((int)((span.TotalDays % 365) / 7), "w");
             }
 
             if ((int)(span.TotalDays % 7) > 0)
             {
-                last_seen += GetTimePart((int)(span.TotalDays % 7), "day");
+                last_seen += GetTimePart((int)(span.TotalDays % 7), "d");
             }
 
             if (span.Hours > 0)
             {
-                last_seen += GetTimePart(span.Hours, "hour");
+                last_seen += GetTimePart(span.Hours, "h");
             }
 
             if (span.Minutes > 0)
             {
-                last_seen += GetTimePart(span.Minutes, "minute");
+                last_seen += GetTimePart(span.Minutes, "m");
             }
 
             return last_seen;
@@ -643,11 +643,11 @@ namespace playback_reporting.Api
 
         private string GetTimePart(int value, string name)
         {
-            string part = value + " " + name;
-            if (value > 1)
-            {
-                part += "s";
-            }
+            string part = value + name;
+            //if (value > 1)
+            //{
+            //    part += "s";
+            //}
             return part + " ";
         }
 
@@ -1069,7 +1069,7 @@ namespace playback_reporting.Api
 
             foreach (var row in report)
             {
-                string user_id = row["user"] as string;
+                string user_id = row["user_id"] as string;
                 MediaBrowser.Controller.Entities.User user = null;
                 if (!string.IsNullOrEmpty(user_id))
                 {
@@ -1079,11 +1079,13 @@ namespace playback_reporting.Api
 
                 if (user != null)
                 {
-                    row["user"] = user.Name;
+                    row["user_name"] = user.Name;
+                    row["user_has_image"] = user.HasImage(MediaBrowser.Model.Entities.ImageType.Primary);
                 }
                 else
                 {
-                    row["user"] = "unknown";
+                    row["user_name"] = "unknown";
+                    row["user_has_image"] = false;
                 }
             }
 

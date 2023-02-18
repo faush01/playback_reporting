@@ -77,14 +77,19 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                     for (var index = 0; index < activity_data.length; ++index) {
                         var activity_info = activity_data[index];
 
-                        row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+                        var row_bg_col = "#77777700";
+                        if (index % 2 == 0) {
+                            row_bg_col = "#7777771c";
+                        }
+
+                        row_html += "<tr style='background:" + row_bg_col + ";'>";
 
                         // add user info
                         var user_image = "<i class='md-icon' style='font-size:30px;'></i>";
                         if (activity_info.has_image) {
                             var user_img = "Users/" + activity_info.user_id + "/Images/Primary?height=152&&quality=90";
                             user_img = ApiClient.getUrl(user_img);
-                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
+                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;vertical-align:top;'>";
                         }
                         row_html += "<td>";
                         row_html += "<table>";

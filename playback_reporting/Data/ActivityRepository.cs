@@ -953,12 +953,12 @@ namespace playback_reporting.Data
             if (aggregate_data)
             {
                 sql += "MIN(strftime('%H:%M:%S', DateCreated)) AS PlayTime, ";
-                sql += "UserId, ItemName, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
+                sql += "UserId, ItemName, ItemId, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
             }
             else
             {
                 sql += "strftime('%H:%M:%S', DateCreated) AS PlayTime, ";
-                sql += "UserId, ItemName, ItemType, PlayDuration - PauseDuration AS Duration ";
+                sql += "UserId, ItemName, ItemId, ItemType, PlayDuration - PauseDuration AS Duration ";
             }
 
             sql += "FROM PlaybackActivity ";
@@ -978,7 +978,7 @@ namespace playback_reporting.Data
 
             if (aggregate_data)
             {
-                sql += "GROUP BY PlayDate, UserId, ItemName, ItemType ";
+                sql += "GROUP BY PlayDate, UserId, ItemName, ItemId, ItemType ";
                 sql += "ORDER BY PlayDate DESC, PlayTime DESC";
             }
             else
@@ -1008,15 +1008,18 @@ namespace playback_reporting.Data
                             row_data.Add("time", play_time);
 
                             string user = row.GetString(2);
-                            row_data.Add("user", user);
+                            row_data.Add("user_id", user);
 
                             string item_name = row.GetString(3);
-                            row_data.Add("name", item_name);
+                            row_data.Add("item_name", item_name);
 
-                            string item_type = row.GetString(4);
-                            row_data.Add("type", item_type);
+                            int item_id = row.GetInt(4);
+                            row_data.Add("item_id", item_id);
 
-                            string client_name = row.GetString(5);
+                            string item_type = row.GetString(5);
+                            row_data.Add("item_type", item_type);
+
+                            string client_name = row.GetString(6);
                             row_data.Add("duration", client_name);
 
                             report.Add(row_data);
