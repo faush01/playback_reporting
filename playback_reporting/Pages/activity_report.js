@@ -77,9 +77,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                     for (var index = 0; index < activity_data.length; ++index) {
                         var activity_info = activity_data[index];
 
-                        var row_bg_col = "#99999900";
+                        var row_bg_col = "#BBBBBB00";
                         if (index % 2 == 0) {
-                            row_bg_col = "#9999991c";
+                            row_bg_col = "#BBBBBB1C";
                         }
 
                         row_html += "<tr style='background:" + row_bg_col + ";'>";

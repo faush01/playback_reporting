@@ -171,9 +171,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                             row_count = 0
                         }
 
-                        var row_bg_col = "#99999900";
+                        var row_bg_col = "#BBBBBB00";
                         if (row_count % 2 == 0) {
-                            row_bg_col = "#9999991c";
+                            row_bg_col = "#BBBBBB1C";
                         }
                         row_count += 1
                         row_html += "<tr>";

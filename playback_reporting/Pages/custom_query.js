@@ -420,9 +420,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         for (var index2 = 0; index2 < result_data_rows.length; ++index2) {
                             var row_data = result_data_rows[index2];
 
-                            var row_bg_col = "#99999900";
+                            var row_bg_col = "#BBBBBB00";
                             if (index2 % 2 == 0) {
-                                row_bg_col = "#9999991c";
+                                row_bg_col = "#BBBBBB1C";
                             }
 
                             table_row_html += "<tr style='background:" + row_bg_col + ";'>";
