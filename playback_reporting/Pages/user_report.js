@@ -91,17 +91,22 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
 
                         row_html += "<td valign='middle' align='left' width='10' nowrap>" + summary_link + breakdown_link + time_link + "</td>";
                         
-                        /*
-                        var user_image = "<i class='md-icon' style='font-size:3em;'></i>";                   
+                        
+                        var user_image = "<i class='md-icon' style='font-size:30px;'></i>";                   
                         if (user_info.has_image) {
-                            var user_img = "Users/" + user_info.user_id + "/Images/Primary?width=50";
+                            var user_img = "Users/" + user_info.user_id + "/Images/Primary?height=152&&quality=90";
                             user_img = ApiClient.getUrl(user_img);
-                            user_image = "<img src='" + user_img + "' style='width:50px;height:50px;border-radius:10px;'>";
-                        }
-                        row_html += "<td valign='middle'>" + user_image + "</td>";
-                        */
+                            user_image = "<img src='" + user_img + "' style='object-fit:cover;width:30px;height:30px;border-radius:1000px;'>";
+                        }                      
+                        row_html += "<td>";
+                        row_html += "<table>"
+                        row_html += "<tr>"
+                        row_html += "<td style='vertical-align: middle; width:35px;' align='center'>" + user_image + "</td>";
+                        row_html += "<td style='vertical-align: middle;'>" + user_info.user_name + "</td>";
+                        row_html += "</tr>"
+                        row_html += "</table>"
+                        row_html += "</td>"
 
-                        row_html += "<td>" + user_info.user_name + "</td>";
                         row_html += "<td>" + user_info.last_seen + "</td>";
 
 
