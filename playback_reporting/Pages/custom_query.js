@@ -408,7 +408,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
 
                         // add table heading
                         var result_ladels = result["colums"];
-                        table_row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+                        table_row_html += "<tr>";
                         for (var index = 0; index < result_ladels.length; ++index) {
                             var colum_name = result_ladels[index];
                             table_row_html += "<td style='white-space: nowrap;'><strong>" + colum_name + "</strong></td>";
@@ -419,7 +419,13 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         var result_data_rows = result["results"];
                         for (var index2 = 0; index2 < result_data_rows.length; ++index2) {
                             var row_data = result_data_rows[index2];
-                            table_row_html += "<tr class='detailTableBodyRow detailTableBodyRow-shaded'>";
+
+                            var row_bg_col = "#99999900";
+                            if (index2 % 2 == 0) {
+                                row_bg_col = "#9999991c";
+                            }
+
+                            table_row_html += "<tr style='background:" + row_bg_col + ";'>";
 
                             for (var index3 = 0; index3 < row_data.length; ++index3) {
                                 var cell_data = row_data[index3];

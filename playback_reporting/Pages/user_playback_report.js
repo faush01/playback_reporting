@@ -351,9 +351,9 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
         for (var index = 0; index < usage_data.length; ++index) {
             var item_details = usage_data[index];
 
-            var row_bg_col = "#77777700";
+            var row_bg_col = "#99999900";
             if (index % 2 == 0) {
-                row_bg_col = "#7777771c";
+                row_bg_col = "#9999991c";
             }
 
             row_html += "<tr style='background:" + row_bg_col + ";'>";
