@@ -30,6 +30,7 @@ namespace playback_reporting
         public List<PlaylistDetails> ActivityPlaylists { set; get; } = new List<PlaylistDetails>();
         public HashSet<string> ColourPalette { set; get; } = new HashSet<string>();
         public List<CustomQueryDetails> CustomQueries { set; get; } = new List<CustomQueryDetails>();
+        public int IgnoreSmallerThan { set; get; } = 0;
     }
 
     public class PlaylistDetails

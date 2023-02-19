@@ -95,12 +95,25 @@
 			<br />
 
 			<fieldset>
-				<legend style="font-weight:bold;font-size:large;">Ignored user list</legend>
-				<p>
-					Users can be set to ignored so you can have test users and admins that are not included in any of the reports.
-				</p>
-				<select id="user_list_for_add"></select> <button id="add_user_to_list">Add</button> <button id="remove_user_from_list">Remove</button>
+				<legend style="font-weight:bold;font-size:large;">Ignored</legend>
+				Ignore sessions from users
+				<select id="user_list_for_add"></select> <button id="add_user_to_list">Add</button>
 				<ul id="user_list_items"></ul>
+
+				Ignore play sessions less than
+				<select id="ignore_shorter_than">
+					<option value="0">0</option>
+					<option value="10">10</option>
+					<option value="20">20</option>
+					<option value="30">30</option>
+					<option value="40">40</option>
+					<option value="50">50</option>
+					<option value="60">60</option>
+					<option value="90">90</option>
+					<option value="120">120</option>
+					<option value="180">180</option>
+				</select>
+				seconds in duration
 			</fieldset>
 
 			<br />

@@ -95,6 +95,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         var backup_files_to_keep = view.querySelector('#files_to_keep');
         backup_files_to_keep.value = config.MaxBackupFiles;
 
+        var ignore_shorter_than = view.querySelector('#ignore_shorter_than');
+        ignore_shorter_than.value = config.IgnoreSmallerThan;
+
         var backup_path_label = view.querySelector('#backup_path_label');
         backup_path_label.innerHTML = config.BackupPath;
 
@@ -180,6 +183,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
         });
     }
 
+    function removeIgnoredUser(view, user_id) {
+        console.log("Removing User : " + user_id);
+        var url = "user_usage_stats/user_manage/remove/" + user_id + "?stamp=" + new Date().getTime();
+        url = ApiClient.getUrl(url);
+        ApiClient.getUserActivity(url).then(function (result) {
+            //alert(result);
+            showUserList(view);
+        });
+    }
+
     function showUserList(view) {
 
         var url = "user_usage_stats/user_list?stamp=" + new Date().getTime();
@@ -192,21 +205,33 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var item_details;
             for (index = 0; index < user_list.length; ++index) {
                 item_details = user_list[index];
-                //if (item_details.in_list == false) {
+                if (item_details.in_list == false) {
                     options_html += "<option value='" + item_details.id + "'>" + item_details.name + "</option>";
-                //}
+                }
             }
             add_user_list.innerHTML = options_html;
 
             var user_list_items = view.querySelector('#user_list_items');
-            var list_html = "";
-            for (index = 0; index < user_list.length; ++index) {
-                item_details = user_list[index];
-                if (item_details.in_list === true) {
-                    list_html += "<li>" + item_details.name + "</li>";
-                }
+            while (user_list_items.firstChild) {
+                user_list_items.removeChild(user_list_items.firstChild);
             }
-            user_list_items.innerHTML = list_html;
+            user_list.forEach(function (item_details, index) {
+                if (item_details.in_list === true) {
+                    var li = document.createElement("li");
+                    var li_span = document.createElement("span");
+                    li_span.appendChild(document.createTextNode(item_details.name + " "));
+                    var del_icon = document.createElement("i");
+                    del_icon.title = "Remove ignored user";
+                    del_icon.className = "md-icon";
+                    del_icon.style = "cursor: pointer;font-size:100%;";
+                    var icon_name = document.createTextNode("delete");
+                    del_icon.appendChild(icon_name);
+                    del_icon.addEventListener("click", function () { removeIgnoredUser(view, item_details.id); });
+                    li_span.appendChild(del_icon);
+                    li.appendChild(li_span);
+                    user_list_items.appendChild(li);
+                }
+            });
 
         });
     }
@@ -383,6 +408,9 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
             var colour_slider_blue = view.querySelector('#colour_slider_blue');
             colour_slider_blue.addEventListener("input", colour_slider_changed);
 
+            var ignore_shorter_than = view.querySelector('#ignore_shorter_than');
+            ignore_shorter_than.addEventListener("change", ignore_shorter_than_changed);
+
             //playback activity lists
             var activity_playlist_add = view.querySelector('#activity_playlist_add');
             var activity_playlist_name = view.querySelector('#activity_playlist_name');
@@ -510,6 +538,15 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 });
             }
 
+            function ignore_shorter_than_changed() {
+                var shorter_than = ignore_shorter_than.value;
+                ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
+                    config.IgnoreSmallerThan = shorter_than;
+                    console.log("New Config Settings : " + JSON.stringify(config));
+                    ApiClient.updateNamedConfiguration('playback_reporting', config);
+                });
+            }
+
             function setting_changed() {
                 var max_age = max_data_age_select.value;
                 ApiClient.getNamedConfiguration('playback_reporting').then(function (config) {
@@ -575,18 +612,6 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     showUserList(view);
                 });
                 
-            });
-
-            var remove_button = view.querySelector('#remove_user_from_list');
-            remove_button.addEventListener("click", function () {
-                var add_user_list = view.querySelector('#user_list_for_add');
-                var selected_user_id = add_user_list.options[add_user_list.selectedIndex].value;
-                var url = "user_usage_stats/user_manage/remove/" + selected_user_id + "?stamp=" + new Date().getTime();
-                url = ApiClient.getUrl(url);
-                ApiClient.getUserActivity(url).then(function (result) {
-                    //alert(result);
-                    showUserList(view);
-                });
             });
 
             showUserList(view);
