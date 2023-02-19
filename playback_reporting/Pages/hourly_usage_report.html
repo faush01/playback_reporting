@@ -3,7 +3,7 @@
 	 data-controller="__plugin/hourly_usage_report.js">
 	<div data-role="content">
 		<div class="content-primary" style="padding-top:2px;">
-			<h2 style="margin-top: 0px;margin-bottom: 0px;">Breakdown By Time</h2>
+			<h2 style="margin-top: 0px;margin-bottom: 0px;">Server usage</h2>
 
 			<table style="border: 1px solid #808080; padding: 1px;" cellpadding="1" cellspacing="1">
 				<tr>
@@ -32,17 +32,21 @@
 
 			<div id="usage_duration_report_status">Loading Data...</div>
 
-			<div style="width: 75%">
-				<canvas id="daily_usage_chart_canvas"></canvas>
+			<h2>Hourly usage across the week</h2>
+			<div style="width: 100%">
+				<canvas style="width: 95% !important; height: 300px !important;" id="weekly_usage_chart_canvas"></canvas>
 			</div>
 
-			<div style="width: 75%">
-				<canvas id="hourly_usage_chart_canvas"></canvas>
+			<h2>Daily usage across the week</h2>
+			<div style="width: 100%">
+				<canvas style="width: 95% !important; height: 300px !important;" id="daily_usage_chart_canvas"></canvas>
 			</div>
 
-			<div style="width: 75%">
-				<canvas id="weekly_usage_chart_canvas"></canvas>
+			<h2>Hourly usage across the day</h2>
+			<div style="width: 100%">
+				<canvas style="width: 95% !important; height: 300px !important;" id="hourly_usage_chart_canvas"></canvas>
 			</div>
+
 		</div>
 	</div>
 </div>

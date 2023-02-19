@@ -179,8 +179,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         display: false
                     },
                     title: {
-                        display: true,
-                        text: "Usage by Day"
+                        display: false,
+                        text: ""
                     },
                     tooltip: {
                         mode: 'index',
@@ -233,8 +233,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         display: false
                     },
                     title: {
-                        display: true,
-                        text: "Usage by Hour"
+                        display: false,
+                        text: ""
                     },
                     tooltip: {
                         mode: 'index',
@@ -287,8 +287,8 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                         display: false
                     },
                     title: {
-                        display: true,
-                        text: "Usage by Week"
+                        display: false,
+                        text: ""
                     },
                     tooltip: {
                         mode: 'index',
