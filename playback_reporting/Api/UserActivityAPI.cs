@@ -700,7 +700,13 @@ namespace playback_reporting.Api
             {
                 filter_tokens = report.Filter.Split(',');
             }
-            List<Dictionary<string, string>> results = repository.GetUsageForUser(report.Date, report.UserID, filter_tokens);
+
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            List<Dictionary<string, string>> results = repository.GetUsageForUser(
+                report.Date, 
+                report.UserID, 
+                filter_tokens,
+                config);
 
             Dictionary<string, object> user_details = new Dictionary<string, object>();
 
@@ -818,8 +824,9 @@ namespace playback_reporting.Api
                 _logger.Info("End_Date: " + activity.end_date);
                 end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
-            
-            Dictionary<String, Dictionary<string, int>> results = repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type);
+
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            Dictionary<String, Dictionary<string, int>> results = repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type, config);
 
             // add empty user for labels
             results.Add("labels_user", new Dictionary<string, int>());
@@ -908,7 +915,13 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(request.user_id, request.days, end_date, filter_tokens);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(
+                request.user_id, 
+                request.days, 
+                end_date, 
+                filter_tokens,
+                config);
 
             for (int day = 0; day < 7; day++)
             {
@@ -938,7 +951,13 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetBreakdownReport(request.user_id, request.days, end_date, request.BreakdownType);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            List<Dictionary<string, object>> report = repository.GetBreakdownReport(
+                request.user_id, 
+                request.days, 
+                end_date, 
+                request.BreakdownType,
+                config);
 
             if (request.BreakdownType == "UserId")
             {
@@ -979,7 +998,13 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetTvShowReport(request.user_id, request.days, end_date);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            List<Dictionary<string, object>> report = repository.GetTvShowReport(
+                request.user_id, 
+                request.days, 
+                end_date,
+                config);
+
             return report;
         }
 
@@ -996,7 +1021,13 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetMoviesReport(request.user_id, request.days, end_date);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            List<Dictionary<string, object>> report = repository.GetMoviesReport(
+                    request.user_id, 
+                    request.days, 
+                    end_date,
+                    config);
+
             return report;
         }
 
@@ -1065,7 +1096,15 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(request.days, end_date, request.user_id, request.filter_name, request.aggregate_data, null);
+            ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
+            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(
+                request.days, 
+                end_date, 
+                request.user_id, 
+                request.filter_name, 
+                request.aggregate_data, 
+                null,
+                config);
 
             foreach (var row in report)
             {

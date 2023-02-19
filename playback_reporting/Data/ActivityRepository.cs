@@ -535,7 +535,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types)
+        public List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] types, ReportPlaybackOptions config)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -543,12 +543,18 @@ namespace playback_reporting.Data
                 filters.Add("'" + filter + "'");
             }
 
-            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, (PlayDuration - PauseDuration) AS PlayDuration , rowid " +
-                               "FROM PlaybackActivity " +
-                               "WHERE DateCreated >= @date_from AND DateCreated <= @date_to " +
-                               "AND UserId = @user_id " +
-                               "AND ItemType IN (" + string.Join(",", filters) + ") " +
-                               "ORDER BY DateCreated";
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, (PlayDuration - PauseDuration) AS PlayDuration , rowid ";
+            sql_query += "FROM PlaybackActivity ";
+            sql_query += "WHERE DateCreated >= @date_from AND DateCreated <= @date_to ";
+            sql_query += "AND UserId = @user_id ";
+            sql_query += "AND ItemType IN (" + string.Join(",", filters) + ") ";
+
+            if(config.IgnoreSmallerThan > 0)
+            {
+                sql_query += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
+            }
+
+            sql_query += "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
             using (lock_manager.getLockItem().Read())
@@ -584,7 +590,12 @@ namespace playback_reporting.Data
             return items;
         }
 
-        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type)
+        public Dictionary<String, Dictionary<string, int>> GetUsageForDays(
+            int days, 
+            DateTime end_date, 
+            string[] types, 
+            string data_type, 
+            ReportPlaybackOptions config)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -605,6 +616,12 @@ namespace playback_reporting.Data
             sql_query += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql_query += "AND ItemType IN (" + string.Join(",", filters) + ") ";
             sql_query += "AND UserId not IN (select UserId from UserList) ";
+
+            if(config.IgnoreSmallerThan > 0)
+            {
+                sql_query += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
+            }
+
             sql_query += "GROUP BY UserId, date ORDER BY UserId, date ASC";
 
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
@@ -648,7 +665,7 @@ namespace playback_reporting.Data
             return usage;
         }
 
-        public SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types)
+        public SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types, ReportPlaybackOptions config)
         {
             List<string> filters = new List<string>();
             foreach (string filter in types)
@@ -660,7 +677,7 @@ namespace playback_reporting.Data
 
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
 
-            string sql = "SELECT DateCreated, PlayDuration ";
+            string sql = "SELECT DateCreated, (PlayDuration - PauseDuration) as Duration ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated >= @start_date AND DateCreated <= @end_date ";
             sql += "AND UserId not IN (select UserId from UserList) ";
@@ -669,6 +686,11 @@ namespace playback_reporting.Data
             if (!string.IsNullOrEmpty(user_id))
             {
                 sql += " AND UserId = @user_id";
+            }
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += " AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan;
             }
 
             using (lock_manager.getLockItem().Read())
@@ -725,7 +747,7 @@ namespace playback_reporting.Data
             }
         }
 
-        public List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type)
+        public List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type, ReportPlaybackOptions config)
         {
             // UserId ItemType PlaybackMethod ClientName DeviceName
 
@@ -742,6 +764,11 @@ namespace playback_reporting.Data
             if (!string.IsNullOrEmpty(user_id))
             {
                 sql += "AND UserId = @user_id ";
+            }
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
             }
 
             sql += "GROUP BY " + type;
@@ -775,7 +802,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date, ReportPlaybackOptions config)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -794,6 +821,11 @@ namespace playback_reporting.Data
             if (!string.IsNullOrEmpty(user_id))
             {
                 sql += "AND UserId = @user_id ";
+            }
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
             }
 
             sql += "GROUP BY name";
@@ -827,7 +859,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date)
+        public List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date, ReportPlaybackOptions config)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -846,6 +878,11 @@ namespace playback_reporting.Data
             if (!string.IsNullOrEmpty(user_id))
             {
                 sql += "AND UserId = @user_id ";
+            }
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
             }
 
             sql += "GROUP BY name";
@@ -940,7 +977,7 @@ namespace playback_reporting.Data
             return report;
         }
 
-        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, bool aggregate_data, string[] types)
+        public List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, bool aggregate_data, string[] types, ReportPlaybackOptions config)
         {
             List<Dictionary<string, object>> report = new List<Dictionary<string, object>>();
 
@@ -974,6 +1011,11 @@ namespace playback_reporting.Data
             {
                 filter_name = filter_name.Replace("*", "%");
                 sql += "AND ItemName like @filter_name ";
+            }
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
             }
 
             if (aggregate_data)

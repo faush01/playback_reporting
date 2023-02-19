@@ -32,14 +32,14 @@ namespace playback_reporting.Data
         void DeleteOldData(DateTime? del_before);
         void AddPlaybackAction(PlaybackInfo play_info);
         void UpdatePlaybackAction(PlaybackInfo play_info);
-        List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] filter);
-        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type);
-        SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types);
-        List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type);
-        List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date);
-        List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date);
+        List<Dictionary<string, string>> GetUsageForUser(string date, string user_id, string[] filter, ReportPlaybackOptions config);
+        Dictionary<String, Dictionary<string, int>> GetUsageForDays(int days, DateTime end_date, string[] types, string data_type, ReportPlaybackOptions config);
+        SortedDictionary<string, int> GetHourlyUsageReport(string user_id, int days, DateTime end_date, string[] types, ReportPlaybackOptions config);
+        List<Dictionary<string, object>> GetBreakdownReport(string user_id, int days, DateTime end_date, string type, ReportPlaybackOptions config);
+        List<Dictionary<string, object>> GetTvShowReport(string user_id, int days, DateTime end_date, ReportPlaybackOptions config);
+        List<Dictionary<string, object>> GetMoviesReport(string user_id, int days, DateTime end_date, ReportPlaybackOptions config);
         List<Dictionary<string, object>> GetUserReport(int days, DateTime end_date);
         string RunCustomQuery(string query_string, List<string> col_names, List<List<object>> results);
-        List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, bool aggregate_data, string[] types);
+        List<Dictionary<string, object>> GetUserPlayListReport(int days, DateTime end_date, string user_id, string filter_name, bool aggregate_data, string[] types, ReportPlaybackOptions config);
     }
 }
