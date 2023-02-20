@@ -104,6 +104,7 @@ namespace playback_reporting.Tasks
             sql += "SELECT UserId, ItemType, ItemName, SUM(PlayDuration - PauseDuration) AS PlayTime ";
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated > '" + date_from + "' "; // datetime('now', '-1 day', 'localtime') ";
+            sql += "AND UserId not IN (select UserId from UserList) ";
             sql += "GROUP BY UserId, ItemType, ItemName";
 
             _logger.Info("Activity Query : " + sql);
@@ -163,6 +164,7 @@ namespace playback_reporting.Tasks
             }
 
             _logger.Info("User activity Message : ItemCount : " + item_count);
+            //_logger.Info(message);
 
             if (item_count > 0)
             {
