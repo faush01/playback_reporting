@@ -95,9 +95,19 @@ namespace playback_reporting.Tasks
                 sql += "FROM PlaybackActivity ";
                 sql += "WHERE ItemType = '" + list_type + "' ";
                 sql += "AND DateCreated > datetime('now', '-" + list_days + " day', 'localtime') ";
+
+                sql += "AND UserId not IN (select UserId from UserList) ";
+
+                if (config.IgnoreSmallerThan > 0)
+                {
+                    sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
+                }
+
                 sql += "GROUP BY ItemId ";
                 sql += "ORDER BY count DESC, av_age ASC ";
                 sql += "LIMIT " + list_size;
+
+                _logger.Info("Activity Query : " + sql);
 
                 List<string> cols = new List<string>();
                 List<List<Object>> query_results = new List<List<object>>();

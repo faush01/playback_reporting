@@ -105,6 +105,12 @@ namespace playback_reporting.Tasks
             sql += "FROM PlaybackActivity ";
             sql += "WHERE DateCreated > '" + date_from + "' "; // datetime('now', '-1 day', 'localtime') ";
             sql += "AND UserId not IN (select UserId from UserList) ";
+
+            if (config.IgnoreSmallerThan > 0)
+            {
+                sql += "AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan + " ";
+            }
+
             sql += "GROUP BY UserId, ItemType, ItemName";
 
             _logger.Info("Activity Query : " + sql);
