@@ -47,9 +47,11 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 if (group_type === "TvShows") {
                     filter_name += " - *";
                 }
-                var encoded_uri = encodeURI(filter_name);
+                var encoded_uri = encodeURIComponent(filter_name);
                 encoded_uri = encoded_uri.replace("'", "%27");
                 encoded_uri = encoded_uri.replace("\"", "%22");
+                console.log(filter_name)
+                console.log(encoded_uri)
                 var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encoded_uri;
                 label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;' title='" + chart.data.labels[i] + "'>" + chart.data.labels[i] + "</a>";
             }
@@ -74,11 +76,16 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                 if (group_type === "TvShows") {
                     filter_name += " - *";
                 }
-                var encoded_uri = encodeURI(filter_name);
+                var encoded_uri = encodeURIComponent(filter_name);
                 encoded_uri = encoded_uri.replace("'", "%27");
                 encoded_uri = encoded_uri.replace("\"", "%22");
+
+                var lable_title_value = chart.data.labels[i];
+                lable_title_value = lable_title_value.replace("'", "%27");
+                lable_title_value = lable_title_value.replace("\"", "%22");
+
                 var summary_url = Dashboard.getConfigurationPageUrl('user_play_report') + "&filter_name=" + encoded_uri;
-                label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;' title='" + chart.data.labels[i] + "'>" + chart.data.labels[i] + "</a>";
+                label_data = "<a href='" + summary_url + "' is='emby-linkbutton' style='padding: 0px;font-weight:normal;' title='" + lable_title_value + "'>" + chart.data.labels[i] + "</a>";
             }
             legendHtml.push('<td style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + label_data + '</td>');
             legendHtml.push('<td style="width: 10px; text-align: right; white-space: nowrap;">' + seconds2time(item.data[i]) + '</td>');

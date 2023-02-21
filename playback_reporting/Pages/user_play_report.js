@@ -60,13 +60,12 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                     var paramName = parts[0];
                     var paramValue = typeof (parts[1]) === 'undefined' ? true : parts[1];
                     if (!parameters[paramName]) {
-                        parameters[paramName] = decodeURI(paramValue);
+                        parameters[paramName] = decodeURIComponent(paramValue);
                     }
                 }
             }
 
-            //alert(parameters["user"]);
-            //alert(parameters["filter_name"]);
+            console.log("url parameters : " + JSON.stringify(parameters));
 
             var user_name = "";
             if (parameters["user"]) {
@@ -133,7 +132,7 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                 //}
 
                 var filter_name = filter_name_input.value;
-                var encoded_filter_name = encodeURI(filter_name);
+                var encoded_filter_name = encodeURIComponent(filter_name);
 
                 var aggregate = aggregate_data.checked;
 
