@@ -191,6 +191,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }
                 },
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         stacked: false,
@@ -245,6 +246,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }
                 },
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         stacked: false,
@@ -299,6 +301,7 @@ define(['mainTabsManager', Dashboard.getConfigurationResourceUrl('helper_functio
                     }
                 },
                 responsive: true,
+                maintainAspectRatio: false,
                 scaleShowValues: true,
                 scales: {
                     x: {
