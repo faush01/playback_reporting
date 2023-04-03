@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace playback_reporting.Tasks
 {
@@ -174,6 +175,7 @@ namespace playback_reporting.Tasks
 
             if (item_count > 0)
             {
+                /*
                 var notification = new NotificationRequest
                 {
                     NotificationType = "UserActivityReportNotification",
@@ -182,6 +184,16 @@ namespace playback_reporting.Tasks
                     Description = message
                 };
                 await _notificationManager.SendNotification(notification, CancellationToken.None).ConfigureAwait(false);
+                */
+
+                Emby.Notifications.NotificationRequest notify_req = new Emby.Notifications.NotificationRequest();
+                notify_req.Date = DateTime.UtcNow;
+                notify_req.Description = message;
+                notify_req.CancellationToken = CancellationToken.None;
+                notify_req.EventId = "51fa5550-15e6-493e-8e76-21a544d0dde1";
+                notify_req.Title = "User Activity Report Notification";
+
+                await Task.Run(() => _notificationManager.SendNotification(notify_req));
             }
 
             config.LastUserActivityCheck = DateTime.Now;

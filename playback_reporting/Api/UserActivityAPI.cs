@@ -290,8 +290,9 @@ namespace playback_reporting.Api
 
             List <PathItem> item_path = new List<PathItem>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Tuple<Guid, string> item_info = _libraryManager.GetGuidAndPath(request.id);
+            //Guid item_guid = item_info.Item1;
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             Folder[] collections = _libraryManager.GetCollectionFolders(item);
             foreach(var collection in collections)
@@ -395,8 +396,9 @@ namespace playback_reporting.Api
         {
             List<Dictionary<string, object>> details = new List<Dictionary<string, object>>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Tuple<Guid, string> item_info = _libraryManager.GetGuidAndPath(request.id);
+            //Guid item_guid = item_info.Item1;
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             ItemChildStats child_stats = null;
             if (item.GetType() == typeof(Series) || item.GetType() == typeof(Season))

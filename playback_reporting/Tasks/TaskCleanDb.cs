@@ -20,7 +20,6 @@ using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Model.Activity;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Playlists;
 using MediaBrowser.Model.Tasks;
 using playback_reporting.Data;
 using System;
