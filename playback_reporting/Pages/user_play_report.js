@@ -208,6 +208,8 @@ define(['mainTabsManager', 'appRouter', 'emby-linkbutton', Dashboard.getConfigur
                         var item_name_link = item_link + "&nbsp;&nbsp;" + new_window;
                         row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + item_name_link + "</td>";
 
+                        row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + item_details.remote_address + "</td>";
+
                         row_html += "<td style='padding-left:15px;padding-right:15px;background:" + row_bg_col + ";'>" + seconds2time(item_details.duration) + "</td>";
                         row_html += "</tr>";
                     });

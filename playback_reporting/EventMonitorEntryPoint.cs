@@ -250,6 +250,7 @@ namespace playback_reporting
                 playback_info.ItemName = GetItemName(session.NowPlayingItem);
                 playback_info.PlaybackMethod = GetPlaybackMethod(session);
                 playback_info.ItemType = session.NowPlayingItem.Type;
+                playback_info.RemoteAddress = session.RemoteEndPoint.ToString();
 
                 playback_trackers.Add(key, playback_info);
             }

@@ -725,7 +725,8 @@ namespace playback_reporting.Api
                 item_info["Device"] = item_data["DeviceName"];
                 item_info["Duration"] = item_data["PlayDuration"];
                 item_info["RowId"] = item_data["RowId"];
-
+                item_info["RemoteAddress"] = item_data["RemoteAddress"];
+                
                 user_activity.Add(item_info);
             }
 

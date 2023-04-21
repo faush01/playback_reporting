@@ -77,7 +77,7 @@ namespace playback_reporting.Data
                         }
                     }
                     string actual_schema = string.Join("|", cols);
-                    string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int";
+                    string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int|remoteaddress:text";
                     if (required_schema != actual_schema)
                     {
                         _logger.Info("PlaybackActivity table schema miss match!");
@@ -115,7 +115,8 @@ namespace playback_reporting.Data
                                     "ClientName TEXT, " +
                                     "DeviceName TEXT, " +
                                     "PlayDuration INT, " +
-                                    "PauseDuration INT" +
+                                    "PauseDuration INT, " +
+                                    "RemoteAddress TEXT" +
                                     ")");
 
                     connection.Execute("create table if not exists UserList (UserId TEXT)");
@@ -354,7 +355,7 @@ namespace playback_reporting.Data
                     {
                         string[] tokens = line.Split('\t');
                         _logger.Info("Line Length : " + tokens.Length);
-                        if (tokens.Length != 10)
+                        if (tokens.Length < 10)
                         {
                             line = sr.ReadLine();
                             continue;
@@ -370,6 +371,12 @@ namespace playback_reporting.Data
                         string device_name = tokens[7];
                         string play_duration = tokens[8];
                         string paused_duration = tokens[9];
+
+                        string remote_address = "";
+                        if (tokens.Length > 10)
+                        {
+                            remote_address = tokens[10];
+                        }
 
                         //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
 
@@ -392,9 +399,9 @@ namespace playback_reporting.Data
                                 _logger.Info("Not Found, Adding");
 
                                 string sql_add = "insert into PlaybackActivity " +
-                                    "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration) " +
+                                    "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress) " +
                                     "values " +
-                                    "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration)";
+                                    "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
 
                                 connection.RunInTransaction(db =>
                                 {
@@ -410,6 +417,7 @@ namespace playback_reporting.Data
                                         add_statment.TryBind("@DeviceName", device_name);
                                         add_statment.TryBind("@PlayDuration", play_duration);
                                         add_statment.TryBind("@PauseDuration", paused_duration);
+                                        add_statment.TryBind("@RemoteAddress", remote_address);
                                         add_statment.MoveNext();
                                     }
                                 }, TransactionMode);
@@ -483,9 +491,9 @@ namespace playback_reporting.Data
         public void AddPlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "insert into PlaybackActivity " +
-                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration) " +
+                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress) " +
                 "values " +
-                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration)";
+                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
 
             using (lock_manager.getLockItem().Write())
             {
@@ -505,6 +513,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@DeviceName", play_info.DeviceName);
                             statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
                             statement.TryBind("@PauseDuration", play_info.PausedDuration);
+                            statement.TryBind("@RemoteAddress", play_info.RemoteAddress);
                             statement.MoveNext();
                         }
                     }, TransactionMode);
@@ -543,7 +552,7 @@ namespace playback_reporting.Data
                 filters.Add("'" + filter + "'");
             }
 
-            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, (PlayDuration - PauseDuration) AS PlayDuration , rowid ";
+            string sql_query = "SELECT DateCreated, ItemId, ItemType, ItemName, ClientName, PlaybackMethod, DeviceName, (PlayDuration - PauseDuration) AS PlayDuration, rowid, RemoteAddress ";
             sql_query += "FROM PlaybackActivity ";
             sql_query += "WHERE DateCreated >= @date_from AND DateCreated <= @date_to ";
             sql_query += "AND UserId = @user_id ";
@@ -580,6 +589,7 @@ namespace playback_reporting.Data
                             item["DeviceName"] = row.GetString(6);
                             item["PlayDuration"] = row.GetString(7);
                             item["RowId"] = row.GetString(8);
+                            item["RemoteAddress"] = row.GetString(9);
 
                             items.Add(item);
                         }
@@ -990,12 +1000,14 @@ namespace playback_reporting.Data
             if (aggregate_data)
             {
                 sql += "MIN(strftime('%H:%M:%S', DateCreated)) AS PlayTime, ";
-                sql += "UserId, ItemName, ItemId, ItemType, SUM(PlayDuration - PauseDuration) AS Duration ";
+                sql += "UserId, ItemName, ItemId, ItemType, SUM(PlayDuration - PauseDuration) AS Duration, ";
+                sql += "MAX(RemoteAddress) AS RemoteAddress ";
             }
             else
             {
                 sql += "strftime('%H:%M:%S', DateCreated) AS PlayTime, ";
-                sql += "UserId, ItemName, ItemId, ItemType, PlayDuration - PauseDuration AS Duration ";
+                sql += "UserId, ItemName, ItemId, ItemType, PlayDuration - PauseDuration AS Duration, ";
+                sql += "RemoteAddress ";
             }
 
             sql += "FROM PlaybackActivity ";
@@ -1063,6 +1075,9 @@ namespace playback_reporting.Data
 
                             string client_name = row.GetString(6);
                             row_data.Add("duration", client_name);
+
+                            string remote_address = row.GetString(7);
+                            row_data.Add("remote_address", remote_address);
 
                             report.Add(row_data);
                         }
