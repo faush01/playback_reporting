@@ -14,32 +14,25 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Api;
 using MediaBrowser.Controller;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
 using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Globalization;
-using System.Threading;
+
 
 namespace playback_reporting.Data
 {
-    public class ActivityRepository : BaseSqliteRepository, IActivityRepository
+    public class ActivityRepository
     {
         private readonly ILogger _logger;
-        protected IFileSystem FileSystem { get; private set; }
+        private string db_file_name = "";
 
-        static protected ReaderWriterLockSlim WriteLock2;
-
-        public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
+        public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths)
         {
-            DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
-            FileSystem = fileSystem;
+            db_file_name = Path.Combine(appPaths.DataPath, "playback_reporting.db");
             _logger = logger;
         }
 
@@ -52,17 +45,15 @@ namespace playback_reporting.Data
 
             catch (Exception ex)
             {
-                Logger.ErrorException("Error loading PlaybackActivity database file.", ex);
-                //FileSystem.DeleteFile(DbFilePath);
-                //InitializeInternal();
+                _logger.ErrorException("Error loading PlaybackActivity database file.", ex);
             }
         }
 
         private void InitializeInternal()
         {
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection())
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     _logger.Info("Initialize PlaybackActivity Repository");
 
@@ -140,9 +131,9 @@ namespace playback_reporting.Data
             //Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
 
             Dictionary<string, KeyValuePair<DateTime, int>> actions = new Dictionary<string, KeyValuePair<DateTime, int>>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -202,9 +193,9 @@ namespace playback_reporting.Data
         {
             string message = "";
             int change_count = 0;
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     try
                     {
@@ -256,14 +247,14 @@ namespace playback_reporting.Data
                                "where UserId not in ('" + string.Join("', '", known_user_ids) + "') or UserId is null or UserId = ''";
 
             int change_count = 0;
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection())
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     connection.RunInTransaction(db =>
                     {
                         db.Execute(sql_query);
-                    }, TransactionMode);
+                    }, TransactionMode.Exclusive);
                     change_count = connection.TotalChanges;
                 }
             }
@@ -281,9 +272,9 @@ namespace playback_reporting.Data
             {
                 sql = "delete from UserList where UserId = @id";
             }
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     connection.RunInTransaction(db =>
                     {
@@ -292,7 +283,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@id", id);
                             statement.MoveNext();
                         }
-                    }, TransactionMode);
+                    }, TransactionMode.Exclusive);
                 }
             }
         }
@@ -300,9 +291,9 @@ namespace playback_reporting.Data
         public List<string> GetUserList()
         {
             List<string> user_id_list = new List<string>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     string sql_query = "select UserId from UserList";
                     using (var statement = connection.PrepareStatement(sql_query))
@@ -322,9 +313,9 @@ namespace playback_reporting.Data
         public List<string> GetTypeFilterList()
         {
             List<string> filter_Type_list = new List<string>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     string sql_query = "select distinct ItemType from PlaybackActivity";
                     using (var statement = connection.PrepareStatement(sql_query))
@@ -344,9 +335,9 @@ namespace playback_reporting.Data
         {
             int count = 0;
             _logger.Info("Loading Data");
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     StringReader sr = new StringReader(data);
 
@@ -420,7 +411,7 @@ namespace playback_reporting.Data
                                         add_statment.TryBind("@RemoteAddress", remote_address);
                                         add_statment.MoveNext();
                                     }
-                                }, TransactionMode);
+                                }, TransactionMode.Exclusive);
                                 count++;
                             }
                             else
@@ -441,9 +432,9 @@ namespace playback_reporting.Data
             StringWriter sw = new StringWriter();
 
             string sql_raw = "SELECT * FROM PlaybackActivity ORDER BY DateCreated";
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql_raw))
                     {
@@ -468,22 +459,22 @@ namespace playback_reporting.Data
         public void DeleteOldData(DateTime? del_before)
         {
             string sql = "delete from PlaybackActivity";
-            if (del_before != null)
+            if (del_before.HasValue)
             {
-                DateTime date = (DateTime)del_before;
+                DateTime date = del_before.Value;
                 sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
             }
 
             _logger.Info("DeleteOldData : " + sql);
 
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection())
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     connection.RunInTransaction(db =>
                     {
                         db.Execute(sql);
-                    }, TransactionMode);
+                    }, TransactionMode.Exclusive);
                 }
             }
         }
@@ -495,9 +486,9 @@ namespace playback_reporting.Data
                 "values " +
                 "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
 
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection())
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     connection.RunInTransaction(db =>
                     {
@@ -516,7 +507,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@RemoteAddress", play_info.RemoteAddress);
                             statement.MoveNext();
                         }
-                    }, TransactionMode);
+                    }, TransactionMode.Exclusive);
                 }
             }
         }
@@ -524,9 +515,9 @@ namespace playback_reporting.Data
         public void UpdatePlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration, PauseDuration = @PauseDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection())
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     connection.RunInTransaction(db =>
                     {
@@ -539,7 +530,7 @@ namespace playback_reporting.Data
                             statement.TryBind("@PauseDuration", play_info.PausedDuration);
                             statement.MoveNext();
                         }
-                    }, TransactionMode);
+                    }, TransactionMode.Exclusive);
                 }
             }
         }
@@ -566,9 +557,9 @@ namespace playback_reporting.Data
             sql_query += "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
@@ -637,9 +628,9 @@ namespace playback_reporting.Data
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
@@ -703,9 +694,9 @@ namespace playback_reporting.Data
                 sql += " AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan;
             }
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -783,9 +774,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY " + type;
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -840,9 +831,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY name";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -897,9 +888,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY name";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -945,9 +936,9 @@ namespace playback_reporting.Data
             sql += "INNER JOIN PlaybackActivity AS y ON x.latest_date = y.DateCreated AND x.UserId = y.UserId ";
             sql += "ORDER BY x.latest_date DESC";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -1040,9 +1031,9 @@ namespace playback_reporting.Data
                 sql += "ORDER BY PlayDate DESC, PlayTime DESC";
             }
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance(_logger))
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = BaseSqliteHelpers.CreateConnection(_logger, db_file_name))
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {

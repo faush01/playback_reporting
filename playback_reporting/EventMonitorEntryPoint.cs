@@ -76,7 +76,7 @@ namespace playback_reporting
         {
             _logger.Info("EventMonitorEntryPoint Running");
 
-            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            _repository = new ActivityRepository(_logger, _config.ApplicationPaths);
             _repository.Initialize();
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;

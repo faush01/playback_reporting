@@ -84,13 +84,13 @@ namespace playback_reporting.Tasks
                 else if(max_data_age == 0)
                 {
                     _logger.Info("Removing all data");
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths);
                     repo.DeleteOldData(null);
                 }
                 else
                 {
                     DateTime del_defore = DateTime.Now.AddMonths(max_data_age * -1);
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths);
                     repo.DeleteOldData(del_defore);
                 }
             }, cancellationToken);
