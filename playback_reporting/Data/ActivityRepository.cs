@@ -14,11 +14,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using MediaBrowser.Controller;
-using MediaBrowser.Model.Logging;
 using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -49,6 +48,43 @@ namespace playback_reporting.Data
 
     public class ActivityRepository
     {
+        private static string[] _datetimeFormats = new string[] {
+            "THHmmssK",
+            "THHmmK",
+            "HH:mm:ss.FFFFFFFK",
+            "HH:mm:ssK",
+            "HH:mmK",
+            "yyyy-MM-dd HH:mm:ss.FFFFFFFK", /* NOTE: UTC default (5). */
+            "yyyy-MM-dd HH:mm:ssK",
+            "yyyy-MM-dd HH:mmK",
+            "yyyy-MM-ddTHH:mm:ss.FFFFFFFK",
+            "yyyy-MM-ddTHH:mmK",
+            "yyyy-MM-ddTHH:mm:ssK",
+            "yyyyMMddHHmmssK",
+            "yyyyMMddHHmmK",
+            "yyyyMMddTHHmmssFFFFFFFK",
+            "THHmmss",
+            "THHmm",
+            "HH:mm:ss.FFFFFFF",
+            "HH:mm:ss",
+            "HH:mm",
+            "yyyy-MM-dd HH:mm:ss.FFFFFFF", /* NOTE: Non-UTC default (19). */
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "yyyy-MM-ddTHH:mm:ss.FFFFFFF",
+            "yyyy-MM-ddTHH:mm",
+            "yyyy-MM-ddTHH:mm:ss",
+            "yyyyMMddHHmmss",
+            "yyyyMMddHHmm",
+            "yyyyMMddTHHmmssFFFFFFF",
+            "yyyy-MM-dd",
+            "yyyyMMdd",
+            "yy-MM-dd"
+        };
+
+        private string _datetimeFormatUtc = _datetimeFormats[5];
+        private string _datetimeFormatLocal = _datetimeFormats[19];
+
         private string db_file_name = "";
 
         public ActivityRepository(string db_path)
@@ -61,6 +97,58 @@ namespace playback_reporting.Data
             InitializeInternal();
         }
 
+        private void TryBind(IStatement statement, string name, int value)
+        {
+            IBindParameter bindParam;
+            if (statement.BindParameters.TryGetValue(name, out bindParam))
+            {
+                bindParam.Bind(value);
+            }
+        }
+
+        public void TryBind(IStatement statement, string name, string value)
+        {
+            IBindParameter bindParam;
+            if (statement.BindParameters.TryGetValue(name, out bindParam))
+            {
+                if (value == null)
+                {
+                    bindParam.BindNull();
+                }
+                else
+                {
+                    bindParam.Bind(value);
+                }
+            }
+        }
+
+        private string GetDateTimeKindFormat(DateTimeKind kind)
+        {
+            return (kind == DateTimeKind.Utc) ? _datetimeFormatUtc : _datetimeFormatLocal;
+        }
+
+        public DateTime ReadDateTime(string dateText)
+        {
+            return DateTime.ParseExact(
+                dateText, 
+                _datetimeFormats,
+                DateTimeFormatInfo.InvariantInfo,
+                DateTimeStyles.None).ToUniversalTime();
+        }
+
+        public string ToDateTimeParamValue(DateTime dateValue)
+        {
+            var kind = DateTimeKind.Utc;
+            if (dateValue.Kind == DateTimeKind.Unspecified) // if Unspecified force UTC
+            {
+                return DateTime.SpecifyKind(dateValue, kind).ToString(GetDateTimeKindFormat(kind), CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                return dateValue.ToString(GetDateTimeKindFormat(dateValue.Kind), CultureInfo.InvariantCulture);
+            }
+        }
+
         private IDatabaseConnection CreateConnection()
         {
             ConnectionFlags connectionFlags;
@@ -71,7 +159,7 @@ namespace playback_reporting.Data
             connectionFlags |= ConnectionFlags.PrivateCache;
             connectionFlags |= ConnectionFlags.NoMutex;
 
-            var db = SQLite3.Open(db_file_name, connectionFlags, null, false);
+            SQLiteDatabaseConnection db = SQLite3.Open(db_file_name, connectionFlags, null, false);
 
             try
             {
@@ -103,8 +191,9 @@ namespace playback_reporting.Data
                     List<string> cols = new List<string>();
                     using (var statement = connection.PrepareStatement(sql_info))
                     {
-                        foreach (var row in statement.ExecuteQuery())
+                        while(statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string table_schema = row.GetString(1).ToLower() + ":" + row.GetString(2).ToLower();
                             cols.Add(table_schema);
                         }
@@ -159,12 +248,13 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_time", start_date_sql.ToString("yyyy-MM-dd HH:mm:ss"));
+                        TryBind(statement, "@start_time", start_date_sql.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string item_id = row.GetString(0);
-                            DateTime start_time = row.ReadDateTime(1).ToLocalTime();
+                            DateTime start_time = ReadDateTime(row.GetString(1)).ToLocalTime();
                             int duration = row.GetInt(2);
                             DateTime end_time = start_time.AddSeconds(duration);
 
@@ -220,17 +310,10 @@ namespace playback_reporting.Data
                     {
                         using (var statement = connection.PrepareStatement(query_string))
                         {
-                            var result_set = statement.ExecuteQuery();
-
-                            foreach (var col in statement.Columns)
+                            while(statement.MoveNext())
                             {
-                                col_names.Add(col.Name);
-                            }
-
-                            int col_count = statement.Columns.Count;
-
-                            foreach (var row in result_set)
-                            {
+                                int col_count = statement.Columns.Count;
+                                var row = statement.Current;
                                 List<object> row_date = new List<object>();
                                 for(int x = 0; x < col_count; x++)
                                 {
@@ -239,6 +322,12 @@ namespace playback_reporting.Data
                                 }
                                 results.Add(row_date);
                             }
+
+                            foreach (var col in statement.Columns)
+                            {
+                                col_names.Add(col.Name);
+                            }
+
                             change_count = connection.TotalChanges;
                         }
                     }
@@ -293,8 +382,8 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@id", id);
-                        statement.ExecuteQuery();
+                        TryBind(statement, "@id", id);
+                        statement.MoveNext();
                     }
                 }
             }
@@ -310,8 +399,9 @@ namespace playback_reporting.Data
                     string sql_query = "select UserId from UserList";
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string type = row.GetString(0);
                             user_id_list.Add(type);
                         }
@@ -332,8 +422,9 @@ namespace playback_reporting.Data
                     string sql_query = "select distinct ItemType from PlaybackActivity";
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string type = row.GetString(0);
                             filter_Type_list.Add(type);
                         }
@@ -383,11 +474,11 @@ namespace playback_reporting.Data
                         using (var statement = connection.PrepareStatement(sql))
                         {
 
-                            statement.TryBind("@DateCreated", date);
-                            statement.TryBind("@UserId", user_id);
-                            statement.TryBind("@ItemId", item_id);
+                            TryBind(statement, "@DateCreated", date);
+                            TryBind(statement, "@UserId", user_id);
+                            TryBind(statement, "@ItemId", item_id);
                             bool found = false;
-                            foreach (var row in statement.ExecuteQuery())
+                            if (statement.MoveNext())
                             {
                                 found = true;
                                 break;
@@ -402,19 +493,18 @@ namespace playback_reporting.Data
 
                                 using (var add_statment = connection.PrepareStatement(sql_add))
                                 {
-                                    add_statment.TryBind("@DateCreated", date);
-                                    add_statment.TryBind("@UserId", user_id);
-                                    add_statment.TryBind("@ItemId", item_id);
-                                    add_statment.TryBind("@ItemType", item_type);
-                                    add_statment.TryBind("@ItemName", item_name);
-                                    add_statment.TryBind("@PlaybackMethod", play_method);
-                                    add_statment.TryBind("@ClientName", client_name);
-                                    add_statment.TryBind("@DeviceName", device_name);
-                                    add_statment.TryBind("@PlayDuration", play_duration);
-                                    add_statment.TryBind("@PauseDuration", paused_duration);
-                                    add_statment.TryBind("@RemoteAddress", remote_address);
-                                    //add_statment.MoveNext();
-                                    add_statment.ExecuteQuery();
+                                    TryBind(add_statment, "@DateCreated", date);
+                                    TryBind(add_statment, "@UserId", user_id);
+                                    TryBind(add_statment, "@ItemId", item_id);
+                                    TryBind(add_statment, "@ItemType", item_type);
+                                    TryBind(add_statment, "@ItemName", item_name);
+                                    TryBind(add_statment, "@PlaybackMethod", play_method);
+                                    TryBind(add_statment, "@ClientName", client_name);
+                                    TryBind(add_statment, "@DeviceName", device_name);
+                                    TryBind(add_statment, "@PlayDuration", play_duration);
+                                    TryBind(add_statment, "@PauseDuration", paused_duration);
+                                    TryBind(add_statment, "@RemoteAddress", remote_address);
+                                    add_statment.MoveNext();
                                 }
                                 count++;
                             }
@@ -437,12 +527,12 @@ namespace playback_reporting.Data
                 using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql_raw))
-                    {
-                        var row_set = statement.ExecuteQuery();
-                        int col_count = statement.Columns.Count;
-                        foreach (var row in row_set)
+                    {                      
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             List<string> row_data = new List<string>();
+                            int col_count = statement.Columns.Count;
                             for (int x = 0; x < col_count; x++)
                             {
                                 row_data.Add(row.GetString(x));
@@ -462,7 +552,7 @@ namespace playback_reporting.Data
             if (del_before.HasValue)
             {
                 DateTime date = del_before.Value;
-                sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
+                sql += " where DateCreated < '" + ToDateTimeParamValue(date) + "'";
             }
 
             lock (BaseSqliteLock.GetInstance())
@@ -487,19 +577,18 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_add))
                     {
-                        statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                        statement.TryBind("@UserId", play_info.UserId);
-                        statement.TryBind("@ItemId", play_info.ItemId);
-                        statement.TryBind("@ItemType", play_info.ItemType);
-                        statement.TryBind("@ItemName", play_info.ItemName);
-                        statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
-                        statement.TryBind("@ClientName", play_info.ClientName);
-                        statement.TryBind("@DeviceName", play_info.DeviceName);
-                        statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
-                        statement.TryBind("@PauseDuration", play_info.PausedDuration);
-                        statement.TryBind("@RemoteAddress", play_info.RemoteAddress);
-                        //statement.MoveNext();
-                        statement.ExecuteQuery();
+                        TryBind(statement, "@DateCreated", ToDateTimeParamValue(play_info.Date));
+                        TryBind(statement, "@UserId", play_info.UserId);
+                        TryBind(statement, "@ItemId", play_info.ItemId);
+                        TryBind(statement, "@ItemType", play_info.ItemType);
+                        TryBind(statement, "@ItemName", play_info.ItemName);
+                        TryBind(statement, "@PlaybackMethod", play_info.PlaybackMethod);
+                        TryBind(statement, "@ClientName", play_info.ClientName);
+                        TryBind(statement, "@DeviceName", play_info.DeviceName);
+                        TryBind(statement, "@PlayDuration", play_info.PlaybackDuration);
+                        TryBind(statement, "@PauseDuration", play_info.PausedDuration);
+                        TryBind(statement, "@RemoteAddress", play_info.RemoteAddress);
+                        statement.MoveNext();
                     }
                 }
             }
@@ -514,13 +603,12 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_add))
                     {
-                        statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                        statement.TryBind("@UserId", play_info.UserId);
-                        statement.TryBind("@ItemId", play_info.ItemId);
-                        statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
-                        statement.TryBind("@PauseDuration", play_info.PausedDuration);
-                        //statement.MoveNext();
-                        statement.ExecuteQuery();
+                        TryBind(statement, "@DateCreated", ToDateTimeParamValue(play_info.Date));
+                        TryBind(statement, "@UserId", play_info.UserId);
+                        TryBind(statement, "@ItemId", play_info.ItemId);
+                        TryBind(statement, "@PlayDuration", play_info.PlaybackDuration);
+                        TryBind(statement, "@PauseDuration", play_info.PausedDuration);
+                        statement.MoveNext();
                     }
                 }
             }
@@ -554,15 +642,16 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@date_from", date + " 00:00:00");
-                        statement.TryBind("@date_to", date + " 23:59:59");
-                        statement.TryBind("@user_id", user_id);
-                        foreach (var row in statement.ExecuteQuery())
+                        TryBind(statement, "@date_from", date + " 00:00:00");
+                        TryBind(statement, "@date_to", date + " 23:59:59");
+                        TryBind(statement, "@user_id", user_id);
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             //string item_id = row.GetString(1);
 
                             Dictionary<string, string> item = new Dictionary<string, string>();
-                            item["Time"] = row.ReadDateTime(0).ToLocalTime().ToString("HH:mm");
+                            item["Time"] = ReadDateTime(row.GetString(0)).ToLocalTime().ToString("HH:mm");
                             item["Id"] = row.GetString(1);
                             item["Type"] = row.GetString(2);
                             item["ItemName"] = row.GetString(3);
@@ -625,11 +714,12 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string user_id = row.GetString(0);
                             if (string.IsNullOrEmpty(user_id))
                             {
@@ -691,13 +781,14 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-                        statement.TryBind("@user_id", user_id);
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@user_id", user_id);
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
-                            DateTime date = row.ReadDateTime(0).ToLocalTime();
+                            var row = statement.Current;
+                            DateTime date = ReadDateTime(row.GetString(0)).ToLocalTime();
                             int duration = row.GetInt(1);
 
                             int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
@@ -769,12 +860,13 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-                        statement.TryBind("@user_id", user_id);
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@user_id", user_id);
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string item_label = row.GetString(0);
                             int action_count = row.GetInt(1);
                             int seconds_sum = row.GetInt(2);
@@ -826,12 +918,13 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-                        statement.TryBind("@user_id", user_id);
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@user_id", user_id);
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string item_label = row.GetString(0);
                             int action_count = row.GetInt(1);
                             int seconds_sum = row.GetInt(2);
@@ -883,12 +976,13 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-                        statement.TryBind("@user_id", user_id);
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@user_id", user_id);
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             string item_label = row.GetString(0);
                             int action_count = row.GetInt(1);
                             int seconds_sum = row.GetInt(2);
@@ -931,14 +1025,15 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
 
-                            DateTime latest_date = row.ReadDateTime(0).ToLocalTime();
+                            DateTime latest_date = ReadDateTime(row.GetString(0)).ToLocalTime();
                             row_data.Add("latest_date", latest_date);
 
                             string user_id = row.GetString(1);
@@ -1026,13 +1121,14 @@ namespace playback_reporting.Data
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
-                        statement.TryBind("@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
-                        statement.TryBind("@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
-                        statement.TryBind("@user_id", user_id);
-                        statement.TryBind("@filter_name", filter_name);
+                        TryBind(statement, "@start_date", start_date.ToString("yyyy-MM-dd 00:00:00"));
+                        TryBind(statement, "@end_date", end_date.ToString("yyyy-MM-dd 23:59:59"));
+                        TryBind(statement, "@user_id", user_id);
+                        TryBind(statement, "@filter_name", filter_name);
 
-                        foreach (var row in statement.ExecuteQuery())
+                        while (statement.MoveNext())
                         {
+                            var row = statement.Current;
                             Dictionary<string, object> row_data = new Dictionary<string, object>();
 
                             string play_date = row.GetString(0);
