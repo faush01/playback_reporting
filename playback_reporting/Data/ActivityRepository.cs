@@ -14,58 +14,91 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
-using playback_reporting.Api;
 using MediaBrowser.Controller;
-using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
-using MediaBrowser.Model.Querying;
 using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Globalization;
-using System.Threading;
+
 
 namespace playback_reporting.Data
 {
-    public class ActivityRepository : BaseSqliteRepository, IActivityRepository
+    public sealed class BaseSqliteLock
     {
-        private readonly ILogger _logger;
-        protected IFileSystem FileSystem { get; private set; }
+        private static BaseSqliteLock instance = null;
+        private static readonly object _padlock = new object();
 
-        static protected ReaderWriterLockSlim WriteLock2;
-
-        public ActivityRepository(ILogger logger, IServerApplicationPaths appPaths, IFileSystem fileSystem) : base(logger)
+        private BaseSqliteLock()
         {
-            DbFilePath = Path.Combine(appPaths.DataPath, "playback_reporting.db");
-            FileSystem = fileSystem;
-            _logger = logger;
+        }
+
+        public static BaseSqliteLock GetInstance()
+        {
+            lock (_padlock)
+            {
+                if (instance == null)
+                {
+                    instance = new BaseSqliteLock();
+                }
+                return instance;
+            }
+        }
+    }
+
+    public class ActivityRepository
+    {
+        private string db_file_name = "";
+
+        public ActivityRepository(string db_path)
+        {
+            db_file_name = Path.Combine(db_path, "playback_reporting.db");
         }
 
         public void Initialize()
         {
+            InitializeInternal();
+        }
+
+        private IDatabaseConnection CreateConnection()
+        {
+            ConnectionFlags connectionFlags;
+
+            //Logger.Info("Opening write connection");
+            connectionFlags = ConnectionFlags.Create;
+            connectionFlags |= ConnectionFlags.ReadWrite;
+            connectionFlags |= ConnectionFlags.PrivateCache;
+            connectionFlags |= ConnectionFlags.NoMutex;
+
+            var db = SQLite3.Open(db_file_name, connectionFlags, null, false);
+
             try
             {
-                InitializeInternal();
+                var queries = new List<string>
+                {
+                    //"PRAGMA cache size=-10000"
+                    //"PRAGMA read_uncommitted = true",
+                    "PRAGMA synchronous=Normal",
+                    "PRAGMA temp_store=file"
+                };
+
+                db.ExecuteAll(string.Join(";", queries.ToArray()));
+            }
+            catch
+            {
+                throw;
             }
 
-            catch (Exception ex)
-            {
-                Logger.ErrorException("Error loading PlaybackActivity database file.", ex);
-                //FileSystem.DeleteFile(DbFilePath);
-                //InitializeInternal();
-            }
+            return db;
         }
 
         private void InitializeInternal()
         {
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
                 using (var connection = CreateConnection())
                 {
-                    _logger.Info("Initialize PlaybackActivity Repository");
-
                     string sql_info = "pragma table_info('PlaybackActivity')";
                     List<string> cols = new List<string>();
                     using (var statement = connection.PrepareStatement(sql_info))
@@ -79,29 +112,9 @@ namespace playback_reporting.Data
                     string actual_schema = string.Join("|", cols);
                     string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int|remoteaddress:text";
                     if (required_schema != actual_schema)
-                    {
-                        _logger.Info("PlaybackActivity table schema miss match!");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
-                        
+                    {                       
                         string new_table_name = "PlaybackActivity_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                        _logger.Info("Renaming table to : " + new_table_name);
-                        try
-                        {
-                            connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
-                        }
-                        catch(Exception e)
-                        {
-                            _logger.ErrorException("Error Renaming PlaybackActivity Table to : " + new_table_name, e);
-                        }
-                        //_logger.Info("Dropping and recreating PlaybackActivity table");
-                        //connection.Execute("drop table if exists PlaybackActivity");
-                    }
-                    else
-                    {
-                        _logger.Info("PlaybackActivity table schema OK");
-                        _logger.Info("Expected : " + required_schema);
-                        _logger.Info("Received : " + actual_schema);
+                        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
                     }
 
                     // ROWID 
@@ -140,9 +153,9 @@ namespace playback_reporting.Data
             //Dictionary<DateTime, int> actions = new Dictionary<DateTime, int>();
 
             Dictionary<string, KeyValuePair<DateTime, int>> actions = new Dictionary<string, KeyValuePair<DateTime, int>>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -159,8 +172,6 @@ namespace playback_reporting.Data
                             KeyValuePair<DateTime, int> data_start = new KeyValuePair<DateTime, int>(start_time, 1);
                             string end_key = end_time.ToString("yyyy-MM-dd HH:mm:ss.fffff") + "-" + item_id + "-B";
                             KeyValuePair<DateTime, int> data_end = new KeyValuePair<DateTime, int>(end_time, 0);
-
-                            _logger.Info("Play Action : " + start_key + " - " + end_key);
 
                             actions.Add(start_key, data_start);
                             actions.Add(end_key, data_end);
@@ -191,7 +202,6 @@ namespace playback_reporting.Data
                     data_timestamp = start_date_sql;
                 }
 
-                _logger.Info("Play Count : " + key + " | " + data.Value + " | " + data_timestamp.ToString("yyyy-MM-dd HH:mm:ss") + " | " + count);
                 results.Add(new KeyValuePair<string, int>(data_timestamp.ToString("yyyy-MM-dd HH:mm:ss"), count));
             }
 
@@ -202,9 +212,9 @@ namespace playback_reporting.Data
         {
             string message = "";
             int change_count = 0;
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     try
                     {
@@ -234,7 +244,6 @@ namespace playback_reporting.Data
                     }
                     catch(Exception e)
                     {
-                        _logger.ErrorException("Error in SQL", e);
                         message = "Error Running Query</br>" + e.Message;
                         message += "<pre>" + e.ToString() + "</pre>";
                     }
@@ -256,14 +265,11 @@ namespace playback_reporting.Data
                                "where UserId not in ('" + string.Join("', '", known_user_ids) + "') or UserId is null or UserId = ''";
 
             int change_count = 0;
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
                 using (var connection = CreateConnection())
                 {
-                    connection.RunInTransaction(db =>
-                    {
-                        db.Execute(sql_query);
-                    }, TransactionMode);
+                    connection.Execute(sql_query);
                     change_count = connection.TotalChanges;
                 }
             }
@@ -281,18 +287,15 @@ namespace playback_reporting.Data
             {
                 sql = "delete from UserList where UserId = @id";
             }
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
-                    connection.RunInTransaction(db =>
+                    using (var statement = connection.PrepareStatement(sql))
                     {
-                        using (var statement = db.PrepareStatement(sql))
-                        {
-                            statement.TryBind("@id", id);
-                            statement.MoveNext();
-                        }
-                    }, TransactionMode);
+                        statement.TryBind("@id", id);
+                        statement.ExecuteQuery();
+                    }
                 }
             }
         }
@@ -300,9 +303,9 @@ namespace playback_reporting.Data
         public List<string> GetUserList()
         {
             List<string> user_id_list = new List<string>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     string sql_query = "select UserId from UserList";
                     using (var statement = connection.PrepareStatement(sql_query))
@@ -322,9 +325,9 @@ namespace playback_reporting.Data
         public List<string> GetTypeFilterList()
         {
             List<string> filter_Type_list = new List<string>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     string sql_query = "select distinct ItemType from PlaybackActivity";
                     using (var statement = connection.PrepareStatement(sql_query))
@@ -343,10 +346,9 @@ namespace playback_reporting.Data
         public int ImportRawData(string data)
         {
             int count = 0;
-            _logger.Info("Loading Data");
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     StringReader sr = new StringReader(data);
 
@@ -354,7 +356,6 @@ namespace playback_reporting.Data
                     while (line != null)
                     {
                         string[] tokens = line.Split('\t');
-                        _logger.Info("Line Length : " + tokens.Length);
                         if (tokens.Length < 10)
                         {
                             line = sr.ReadLine();
@@ -378,8 +379,6 @@ namespace playback_reporting.Data
                             remote_address = tokens[10];
                         }
 
-                        //_logger.Info(date + "\t" + user_id + "\t" + item_id + "\t" + item_type + "\t" + item_name + "\t" + play_method + "\t" + client_name + "\t" + device_name + "\t" + duration);
-
                         string sql = "select rowid from PlaybackActivity where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
                         using (var statement = connection.PrepareStatement(sql))
                         {
@@ -396,36 +395,28 @@ namespace playback_reporting.Data
 
                             if (found == false)
                             {
-                                _logger.Info("Not Found, Adding");
-
                                 string sql_add = "insert into PlaybackActivity " +
                                     "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress) " +
                                     "values " +
                                     "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
 
-                                connection.RunInTransaction(db =>
+                                using (var add_statment = connection.PrepareStatement(sql_add))
                                 {
-                                    using (var add_statment = db.PrepareStatement(sql_add))
-                                    {
-                                        add_statment.TryBind("@DateCreated", date);
-                                        add_statment.TryBind("@UserId", user_id);
-                                        add_statment.TryBind("@ItemId", item_id);
-                                        add_statment.TryBind("@ItemType", item_type);
-                                        add_statment.TryBind("@ItemName", item_name);
-                                        add_statment.TryBind("@PlaybackMethod", play_method);
-                                        add_statment.TryBind("@ClientName", client_name);
-                                        add_statment.TryBind("@DeviceName", device_name);
-                                        add_statment.TryBind("@PlayDuration", play_duration);
-                                        add_statment.TryBind("@PauseDuration", paused_duration);
-                                        add_statment.TryBind("@RemoteAddress", remote_address);
-                                        add_statment.MoveNext();
-                                    }
-                                }, TransactionMode);
+                                    add_statment.TryBind("@DateCreated", date);
+                                    add_statment.TryBind("@UserId", user_id);
+                                    add_statment.TryBind("@ItemId", item_id);
+                                    add_statment.TryBind("@ItemType", item_type);
+                                    add_statment.TryBind("@ItemName", item_name);
+                                    add_statment.TryBind("@PlaybackMethod", play_method);
+                                    add_statment.TryBind("@ClientName", client_name);
+                                    add_statment.TryBind("@DeviceName", device_name);
+                                    add_statment.TryBind("@PlayDuration", play_duration);
+                                    add_statment.TryBind("@PauseDuration", paused_duration);
+                                    add_statment.TryBind("@RemoteAddress", remote_address);
+                                    //add_statment.MoveNext();
+                                    add_statment.ExecuteQuery();
+                                }
                                 count++;
-                            }
-                            else
-                            {
-                                //_logger.Info("Found, ignoring");
                             }
                         }
 
@@ -441,9 +432,9 @@ namespace playback_reporting.Data
             StringWriter sw = new StringWriter();
 
             string sql_raw = "SELECT * FROM PlaybackActivity ORDER BY DateCreated";
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql_raw))
                     {
@@ -468,22 +459,17 @@ namespace playback_reporting.Data
         public void DeleteOldData(DateTime? del_before)
         {
             string sql = "delete from PlaybackActivity";
-            if (del_before != null)
+            if (del_before.HasValue)
             {
-                DateTime date = (DateTime)del_before;
+                DateTime date = del_before.Value;
                 sql += " where DateCreated < '" + date.ToDateTimeParamValue() + "'";
             }
 
-            _logger.Info("DeleteOldData : " + sql);
-
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
                 using (var connection = CreateConnection())
                 {
-                    connection.RunInTransaction(db =>
-                    {
-                        db.Execute(sql);
-                    }, TransactionMode);
+                    connection.Execute(sql);
                 }
             }
         }
@@ -495,28 +481,26 @@ namespace playback_reporting.Data
                 "values " +
                 "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
 
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
                 using (var connection = CreateConnection())
                 {
-                    connection.RunInTransaction(db =>
+                    using (var statement = connection.PrepareStatement(sql_add))
                     {
-                        using (var statement = db.PrepareStatement(sql_add))
-                        {
-                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                            statement.TryBind("@UserId", play_info.UserId);
-                            statement.TryBind("@ItemId", play_info.ItemId);
-                            statement.TryBind("@ItemType", play_info.ItemType);
-                            statement.TryBind("@ItemName", play_info.ItemName);
-                            statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
-                            statement.TryBind("@ClientName", play_info.ClientName);
-                            statement.TryBind("@DeviceName", play_info.DeviceName);
-                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
-                            statement.TryBind("@PauseDuration", play_info.PausedDuration);
-                            statement.TryBind("@RemoteAddress", play_info.RemoteAddress);
-                            statement.MoveNext();
-                        }
-                    }, TransactionMode);
+                        statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
+                        statement.TryBind("@UserId", play_info.UserId);
+                        statement.TryBind("@ItemId", play_info.ItemId);
+                        statement.TryBind("@ItemType", play_info.ItemType);
+                        statement.TryBind("@ItemName", play_info.ItemName);
+                        statement.TryBind("@PlaybackMethod", play_info.PlaybackMethod);
+                        statement.TryBind("@ClientName", play_info.ClientName);
+                        statement.TryBind("@DeviceName", play_info.DeviceName);
+                        statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                        statement.TryBind("@PauseDuration", play_info.PausedDuration);
+                        statement.TryBind("@RemoteAddress", play_info.RemoteAddress);
+                        //statement.MoveNext();
+                        statement.ExecuteQuery();
+                    }
                 }
             }
         }
@@ -524,22 +508,20 @@ namespace playback_reporting.Data
         public void UpdatePlaybackAction(PlaybackInfo play_info)
         {
             string sql_add = "update PlaybackActivity set PlayDuration = @PlayDuration, PauseDuration = @PauseDuration where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
-            using (lock_manager.getLockItem().Write())
+            lock (BaseSqliteLock.GetInstance())
             {
                 using (var connection = CreateConnection())
                 {
-                    connection.RunInTransaction(db =>
+                    using (var statement = connection.PrepareStatement(sql_add))
                     {
-                        using (var statement = db.PrepareStatement(sql_add))
-                        {
-                            statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
-                            statement.TryBind("@UserId", play_info.UserId);
-                            statement.TryBind("@ItemId", play_info.ItemId);
-                            statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
-                            statement.TryBind("@PauseDuration", play_info.PausedDuration);
-                            statement.MoveNext();
-                        }
-                    }, TransactionMode);
+                        statement.TryBind("@DateCreated", play_info.Date.ToDateTimeParamValue());
+                        statement.TryBind("@UserId", play_info.UserId);
+                        statement.TryBind("@ItemId", play_info.ItemId);
+                        statement.TryBind("@PlayDuration", play_info.PlaybackDuration);
+                        statement.TryBind("@PauseDuration", play_info.PausedDuration);
+                        //statement.MoveNext();
+                        statement.ExecuteQuery();
+                    }
                 }
             }
         }
@@ -566,9 +548,9 @@ namespace playback_reporting.Data
             sql_query += "ORDER BY DateCreated";
 
             List<Dictionary<string, string>> items = new List<Dictionary<string, string>>();
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
@@ -577,7 +559,7 @@ namespace playback_reporting.Data
                         statement.TryBind("@user_id", user_id);
                         foreach (var row in statement.ExecuteQuery())
                         {
-                            string item_id = row.GetString(1);
+                            //string item_id = row.GetString(1);
 
                             Dictionary<string, string> item = new Dictionary<string, string>();
                             item["Time"] = row.ReadDateTime(0).ToLocalTime().ToString("HH:mm");
@@ -637,9 +619,9 @@ namespace playback_reporting.Data
             DateTime start_date = end_date.Subtract(new TimeSpan(days, 0, 0, 0));
             Dictionary<String, Dictionary<string, int>> usage = new Dictionary<String, Dictionary<string, int>>();
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql_query))
                     {
@@ -703,9 +685,9 @@ namespace playback_reporting.Data
                 sql += " AND (PlayDuration - PauseDuration) > " + config.IgnoreSmallerThan;
             }
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -719,7 +701,6 @@ namespace playback_reporting.Data
                             int duration = row.GetInt(1);
 
                             int seconds_left_in_hour = 3600 - ((date.Minute * 60) + date.Second);
-                            _logger.Info("Processing - date: " + date.ToString() + " duration: " + duration + " seconds_left_in_hour: " + seconds_left_in_hour);
                             while (duration > 0)
                             {
                                 string hour_id = (int)date.DayOfWeek + "-" + date.ToString("HH");
@@ -746,7 +727,6 @@ namespace playback_reporting.Data
 
         private void AddTimeToHours(SortedDictionary<string, int> report_data, string key, int count)
         {
-            _logger.Info("Adding Time : " + key + " - " + count);
             if (report_data.ContainsKey(key))
             {
                 report_data[key] += count;
@@ -783,9 +763,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY " + type;
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -840,9 +820,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY name";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -897,9 +877,9 @@ namespace playback_reporting.Data
 
             sql += "GROUP BY name";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -945,9 +925,9 @@ namespace playback_reporting.Data
             sql += "INNER JOIN PlaybackActivity AS y ON x.latest_date = y.DateCreated AND x.UserId = y.UserId ";
             sql += "ORDER BY x.latest_date DESC";
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -1040,9 +1020,9 @@ namespace playback_reporting.Data
                 sql += "ORDER BY PlayDate DESC, PlayTime DESC";
             }
 
-            using (lock_manager.getLockItem().Read())
+            lock (BaseSqliteLock.GetInstance())
             {
-                using (var connection = CreateConnection(true))
+                using (var connection = CreateConnection())
                 {
                     using (var statement = connection.PrepareStatement(sql))
                     {
