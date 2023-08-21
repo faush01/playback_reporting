@@ -75,7 +75,7 @@ namespace playback_reporting
         {
             _logger.Info("EventMonitorEntryPoint Running");
 
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             db_repo.Initialize();
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
@@ -168,7 +168,7 @@ namespace playback_reporting
                 TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
                 playback_info.PlaybackDuration = (int)diff.TotalSeconds;
 
-                ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
                 db_repo.UpdatePlaybackAction(playback_info);
             }
 
@@ -200,7 +200,7 @@ namespace playback_reporting
                         playback_info.PausedDuration += (int)pause_diff.TotalSeconds;
                     }
 
-                    ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+                    ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
                     db_repo.UpdatePlaybackAction(playback_info);
 
                     _logger.Info("Removing Old Key from playback_trackers : " + key);
@@ -214,7 +214,7 @@ namespace playback_reporting
             if (playback_info.StartupSaved == false)
             {
                 _logger.Info("Saving PlaybackInfo to DB");
-                ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
                 db_repo.AddPlaybackAction(playback_info);
                 playback_info.StartupSaved = true;
             }

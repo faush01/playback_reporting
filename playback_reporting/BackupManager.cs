@@ -55,7 +55,7 @@ namespace playback_reporting
                 return "Backup path does not exist or is not a directory";
             }
 
-            ActivityRepository repository = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository repository = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             string raw_data = repository.ExportRawData();
 
             String fileName = "PlaybackReportingBackup-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".tsv";

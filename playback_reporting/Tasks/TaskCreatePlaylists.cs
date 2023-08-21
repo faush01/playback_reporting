@@ -76,7 +76,7 @@ namespace playback_reporting.Tasks
         {
 
             // query the user playback info for the most active movies
-            ActivityRepository repository = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository repository = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
             foreach(var activity_playlist in config.ActivityPlaylists)

@@ -541,7 +541,7 @@ namespace playback_reporting.Api
 
         public object Get(TypeFilterList request)
         {
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<string> filter_list = db_repo.GetTypeFilterList();
             return filter_list;
         }
@@ -559,7 +559,7 @@ namespace playback_reporting.Api
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, object>> report = db_repo.GetUserReport(request.days, end_date);
 
             foreach(var user_info in report)
@@ -654,7 +654,7 @@ namespace playback_reporting.Api
             string action = request.Action;
             string id = request.Id;
 
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
 
             if (action == "remove_unknown")
             {
@@ -676,7 +676,7 @@ namespace playback_reporting.Api
 
         public object Get(GetUserList request)
         {
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<string> user_id_list = db_repo.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
@@ -703,7 +703,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, string>> results = db_repo.GetUsageForUser(
                 report.Date, 
                 report.UserID, 
@@ -792,7 +792,7 @@ namespace playback_reporting.Api
                 {
                     load_data = sr.ReadToEnd();
                 }
-                ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
                 count = db_repo.ImportRawData(load_data);
             }
             catch (Exception e)
@@ -830,7 +830,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             Dictionary<String, Dictionary<string, int>> results = db_repo.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type, config);
 
             // add empty user for labels
@@ -921,7 +921,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             SortedDictionary<string, int> report = db_repo.GetHourlyUsageReport(
                 request.user_id, 
                 request.days, 
@@ -958,7 +958,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, object>> report = db_repo.GetBreakdownReport(
                 request.user_id, 
                 request.days, 
@@ -1006,7 +1006,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, object>> report = db_repo.GetTvShowReport(
                 request.user_id, 
                 request.days, 
@@ -1030,7 +1030,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, object>> report = db_repo.GetMoviesReport(
                     request.user_id, 
                     request.days, 
@@ -1048,7 +1048,7 @@ namespace playback_reporting.Api
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             string message = db_repo.RunCustomQuery(request.CustomQueryString, colums, result);
 
             int index_of_user_col = colums.IndexOf("UserId");
@@ -1107,7 +1107,7 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             List<Dictionary<string, object>> report = db_repo.GetUserPlayListReport(
                 request.days, 
                 end_date, 

@@ -82,7 +82,7 @@ namespace playback_reporting.Tasks
                     return;
                 }
 
-                ActivityRepository db_repo = new ActivityRepository(_config.ApplicationPaths.DataPath);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
                 if (max_data_age == 0)
                 {
                     _logger.Info("Removing all data");
