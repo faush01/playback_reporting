@@ -217,7 +217,11 @@ namespace playback_reporting.Data
                 if (required_schema != actual_schema)
                 {                       
                     string new_table_name = "PlaybackActivity_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                    try
+                    {
+                        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                    }
+                    catch{ }
                 }
 
                 // ROWID 
