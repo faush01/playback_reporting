@@ -132,7 +132,7 @@ namespace playback_reporting
                     _logger.Info("PlaybackMonitoringTask New Thread Sleep : " + thread_sleep);
                 }
 
-                await System.Threading.Tasks.Task.Delay(200);
+                await System.Threading.Tasks.Task.Delay(thread_sleep * 1000);
             }
         }
 
