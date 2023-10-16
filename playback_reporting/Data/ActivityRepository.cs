@@ -221,7 +221,7 @@ namespace playback_reporting.Data
                     {
                         connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
                     }
-                    catch { }
+                    catch{ }
                 }
 
                 // ROWID 
