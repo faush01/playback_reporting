@@ -45,7 +45,6 @@ namespace playback_reporting
 
         private readonly object syncLock = new object();
         private Dictionary<string, PlaybackInfo> playback_trackers = null;
-        private ActivityRepository _repository;
 
         public EventMonitorEntryPoint(ISessionManager sessionManager,
             ILibraryManager libraryManager,
@@ -76,8 +75,8 @@ namespace playback_reporting
         {
             _logger.Info("EventMonitorEntryPoint Running");
 
-            _repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            _repository.Initialize();
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            db_repo.Initialize();
 
             _sessionManager.PlaybackStart += _sessionManager_PlaybackStart;
             _sessionManager.PlaybackStopped += _sessionManager_PlaybackStop;
@@ -169,7 +168,8 @@ namespace playback_reporting
                 TimeSpan diff = DateTime.Now.Subtract(playback_info.Date);
                 playback_info.PlaybackDuration = (int)diff.TotalSeconds;
 
-                _repository.UpdatePlaybackAction(playback_info);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+                db_repo.UpdatePlaybackAction(playback_info);
             }
 
             RemoveOldPlayinfo(active_playinfo_list);
@@ -200,7 +200,8 @@ namespace playback_reporting
                         playback_info.PausedDuration += (int)pause_diff.TotalSeconds;
                     }
 
-                    _repository.UpdatePlaybackAction(playback_info);
+                    ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+                    db_repo.UpdatePlaybackAction(playback_info);
 
                     _logger.Info("Removing Old Key from playback_trackers : " + key);
                     playback_trackers.Remove(key);
@@ -213,7 +214,8 @@ namespace playback_reporting
             if (playback_info.StartupSaved == false)
             {
                 _logger.Info("Saving PlaybackInfo to DB");
-                _repository.AddPlaybackAction(playback_info);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+                db_repo.AddPlaybackAction(playback_info);
                 playback_info.StartupSaved = true;
             }
         }

@@ -259,8 +259,6 @@ namespace playback_reporting.Api
         private readonly IUserDataManager _userDataManager;
         private readonly ILibraryManager _libraryManager;
 
-        private ActivityRepository repository;
-
         public UserActivityAPI(ILogManager logger,
             IFileSystem fileSystem,
             IServerConfigurationManager config,
@@ -276,10 +274,6 @@ namespace playback_reporting.Api
             _libraryManager = libraryManager;
             _sessionManager = sessionManager;
             _userDataManager = userDataManager;
-
-            _logger.Info("UserActivityAPI Loaded");
-            ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-            repository = repo;
         }
 
         public IRequest Request { get; set; }
@@ -290,8 +284,9 @@ namespace playback_reporting.Api
 
             List <PathItem> item_path = new List<PathItem>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Tuple<Guid, string> item_info = _libraryManager.GetGuidAndPath(request.id);
+            //Guid item_guid = item_info.Item1;
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             Folder[] collections = _libraryManager.GetCollectionFolders(item);
             foreach(var collection in collections)
@@ -395,8 +390,9 @@ namespace playback_reporting.Api
         {
             List<Dictionary<string, object>> details = new List<Dictionary<string, object>>();
 
-            Guid item_guid = _libraryManager.GetGuid(request.id);
-            BaseItem item = _libraryManager.GetItemById(item_guid);
+            //Tuple<Guid, string> item_info = _libraryManager.GetGuidAndPath(request.id);
+            //Guid item_guid = item_info.Item1;
+            BaseItem item = _libraryManager.GetItemById(request.id);
 
             ItemChildStats child_stats = null;
             if (item.GetType() == typeof(Series) || item.GetType() == typeof(Season))
@@ -545,7 +541,8 @@ namespace playback_reporting.Api
 
         public object Get(TypeFilterList request)
         {
-            List<string> filter_list = repository.GetTypeFilterList();
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<string> filter_list = db_repo.GetTypeFilterList();
             return filter_list;
         }
 
@@ -558,11 +555,12 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
-            List<Dictionary<string, object>> report = repository.GetUserReport(request.days, end_date);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, object>> report = db_repo.GetUserReport(request.days, end_date);
 
             foreach(var user_info in report)
             {
@@ -656,6 +654,8 @@ namespace playback_reporting.Api
             string action = request.Action;
             string id = request.Id;
 
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+
             if (action == "remove_unknown")
             {
                 UserQuery user_query = new UserQuery();
@@ -664,19 +664,20 @@ namespace playback_reporting.Api
                 {
                     user_id_list.Add(emby_user.Id.ToString("N"));
                 }
-                int removed_count = repository.RemoveUnknownUsers(user_id_list);
+                int removed_count = db_repo.RemoveUnknownUsers(user_id_list);
                 return removed_count;
             }
             else
             {
-                repository.ManageUserList(action, id);
+                db_repo.ManageUserList(action, id);
                 return 1;
             }
         }
 
         public object Get(GetUserList request)
         {
-            List<string> user_id_list = repository.GetUserList();
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<string> user_id_list = db_repo.GetUserList();
 
             List<Dictionary<string, object>> users = new List<Dictionary<string, object>>();
 
@@ -702,7 +703,8 @@ namespace playback_reporting.Api
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            List<Dictionary<string, string>> results = repository.GetUsageForUser(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, string>> results = db_repo.GetUsageForUser(
                 report.Date, 
                 report.UserID, 
                 filter_tokens,
@@ -790,7 +792,8 @@ namespace playback_reporting.Api
                 {
                     load_data = sr.ReadToEnd();
                 }
-                count = repository.ImportRawData(load_data);
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+                count = db_repo.ImportRawData(load_data);
             }
             catch (Exception e)
             {
@@ -822,12 +825,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + activity.end_date);
+                _logger.Debug("End_Date: " + activity.end_date);
                 end_date = DateTime.ParseExact(activity.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            Dictionary<String, Dictionary<string, int>> results = repository.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type, config);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            Dictionary<String, Dictionary<string, int>> results = db_repo.GetUsageForDays(activity.days, end_date, filter_tokens, activity.data_type, config);
 
             // add empty user for labels
             results.Add("labels_user", new Dictionary<string, int>());
@@ -912,12 +916,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            SortedDictionary<string, int> report = repository.GetHourlyUsageReport(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            SortedDictionary<string, int> report = db_repo.GetHourlyUsageReport(
                 request.user_id, 
                 request.days, 
                 end_date, 
@@ -948,12 +953,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            List<Dictionary<string, object>> report = repository.GetBreakdownReport(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, object>> report = db_repo.GetBreakdownReport(
                 request.user_id, 
                 request.days, 
                 end_date, 
@@ -995,12 +1001,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            List<Dictionary<string, object>> report = repository.GetTvShowReport(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, object>> report = db_repo.GetTvShowReport(
                 request.user_id, 
                 request.days, 
                 end_date,
@@ -1018,12 +1025,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            List<Dictionary<string, object>> report = repository.GetMoviesReport(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, object>> report = db_repo.GetMoviesReport(
                     request.user_id, 
                     request.days, 
                     end_date,
@@ -1034,13 +1042,14 @@ namespace playback_reporting.Api
 
         public object Post(CustomQuery request)
         {
-            _logger.Info("CustomQuery : " + request.CustomQueryString);
+            _logger.Debug("CustomQuery : " + request.CustomQueryString);
 
             Dictionary<string, object> responce = new Dictionary<string, object>();
 
             List<List<object>> result = new List<List<object>>();
             List<string> colums = new List<string>();
-            string message = repository.RunCustomQuery(request.CustomQueryString, colums, result);
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            string message = db_repo.RunCustomQuery(request.CustomQueryString, colums, result);
 
             int index_of_user_col = colums.IndexOf("UserId");
             if (request.ReplaceUserId && index_of_user_col > -1)
@@ -1093,12 +1102,13 @@ namespace playback_reporting.Api
             }
             else
             {
-                _logger.Info("End_Date: " + request.end_date);
+                _logger.Debug("End_Date: " + request.end_date);
                 end_date = DateTime.ParseExact(request.end_date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
 
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
-            List<Dictionary<string, object>> report = repository.GetUserPlayListReport(
+            ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+            List<Dictionary<string, object>> report = db_repo.GetUserPlayListReport(
                 request.days, 
                 end_date, 
                 request.user_id, 

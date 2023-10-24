@@ -94,7 +94,7 @@ namespace playback_reporting.Tasks
                 }
             }
 
-            ActivityRepository repository = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
+            ActivityRepository repository = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
             ReportPlaybackOptions config = _config.GetReportPlaybackOptions();
 
             DateTime last_checked = config.LastUserActivityCheck;
