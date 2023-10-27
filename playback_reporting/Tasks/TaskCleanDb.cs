@@ -81,17 +81,17 @@ namespace playback_reporting.Tasks
                     _logger.Info("Keep data forever, not doing any data cleanup");
                     return;
                 }
-                else if(max_data_age == 0)
+
+                ActivityRepository db_repo = ActivityRepository.GetInstance(_config.ApplicationPaths.DataPath, _logger);
+                if (max_data_age == 0)
                 {
                     _logger.Info("Removing all data");
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-                    repo.DeleteOldData(null);
+                    db_repo.DeleteOldData(null);
                 }
                 else
                 {
                     DateTime del_defore = DateTime.Now.AddMonths(max_data_age * -1);
-                    ActivityRepository repo = new ActivityRepository(_logger, _config.ApplicationPaths, _fileSystem);
-                    repo.DeleteOldData(del_defore);
+                    db_repo.DeleteOldData(del_defore);
                 }
             }, cancellationToken);
         }
