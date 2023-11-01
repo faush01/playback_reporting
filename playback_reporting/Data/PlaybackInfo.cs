@@ -30,6 +30,7 @@ namespace playback_reporting.Data
         public string ItemType { get; set; }
         public string ItemName { get; set; }
         public string PlaybackMethod { get; set; }
+        public string TranscodeReasons { get; set; }
         public string ClientName { get; set; }
         public string DeviceName { get; set; }
         public string RemoteAddress {  get; set; }

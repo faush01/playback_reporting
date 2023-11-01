@@ -201,29 +201,7 @@ namespace playback_reporting.Data
         {
             lock (connection)
             {
-                string sql_info = "pragma table_info('PlaybackActivity')";
-                List<string> cols = new List<string>();
-                using (var statement = connection.PrepareStatement(sql_info))
-                {
-                    while(statement.MoveNext())
-                    {
-                        var row = statement.Current;
-                        string table_schema = row.GetString(1).ToLower() + ":" + row.GetString(2).ToLower();
-                        cols.Add(table_schema);
-                    }
-                }
-                string actual_schema = string.Join("|", cols);
-                string required_schema = "datecreated:datetime|userid:text|itemid:text|itemtype:text|itemname:text|playbackmethod:text|clientname:text|devicename:text|playduration:int|pauseduration:int|remoteaddress:text";
-                if (required_schema != actual_schema)
-                {                       
-                    string new_table_name = "PlaybackActivity_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    try
-                    {
-                        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
-                    }
-                    catch{ }
-                }
-
+                // create tables if they dont already exist
                 // ROWID 
                 connection.Execute("create table if not exists PlaybackActivity (" +
                                 "DateCreated DATETIME NOT NULL, " +
@@ -236,10 +214,67 @@ namespace playback_reporting.Data
                                 "DeviceName TEXT, " +
                                 "PlayDuration INT, " +
                                 "PauseDuration INT, " +
-                                "RemoteAddress TEXT" +
+                                "RemoteAddress TEXT, " +
+                                "TranscodeReasons TEXT" +
                                 ")");
-
                 connection.Execute("create table if not exists UserList (UserId TEXT)");
+
+                // check schema on PlaybackActivity table
+                string sql_info = "pragma table_info('PlaybackActivity')";
+                HashSet<string> actual_cols = new HashSet<string>();
+                using (var statement = connection.PrepareStatement(sql_info))
+                {
+                    while(statement.MoveNext())
+                    {
+                        var row = statement.Current;
+                        string table_schema = row.GetString(1) + " " + row.GetString(2);
+                        actual_cols.Add(table_schema);
+                    }
+                }
+                _logger.Info("Table Actual Cols : " + string.Join(", ", actual_cols));
+
+                HashSet<string> required_fields = new HashSet<string>();
+                required_fields.Add("DateCreated DATETIME");
+                required_fields.Add("UserId TEXT");
+                required_fields.Add("ItemId TEXT");
+                required_fields.Add("ItemType TEXT");
+                required_fields.Add("ItemName TEXT");
+                required_fields.Add("PlaybackMethod TEXT");
+                required_fields.Add("ClientName TEXT");
+                required_fields.Add("DeviceName TEXT");
+                required_fields.Add("PlayDuration INT");
+                required_fields.Add("PauseDuration INT");
+                required_fields.Add("RemoteAddress TEXT");
+                required_fields.Add("TranscodeReasons TEXT");
+
+                string add_missing_sql = "";
+                foreach (var field in required_fields)
+                {
+                    if(!actual_cols.Contains(field))
+                    {
+                        add_missing_sql += "ALTER TABLE PlaybackActivity ADD " + field + ";";
+                    }
+                }
+                _logger.Info("Table Alter SQL : " + add_missing_sql);
+                if (!string.IsNullOrEmpty(add_missing_sql))
+                {
+                    connection.ExecuteAll(add_missing_sql);
+                }
+
+                // for now dont drop cols
+                //string drop_cols = "ALTER TABLE PlaybackActivity DROP COLUMN ClientName";
+                //connection.Execute(drop_cols);
+
+                // users cant handel using tables to import old data so dont rename the old table
+                //if (required_fields.Count != actual_cols.Count)
+                //{                       
+                //    string new_table_name = "PlaybackActivity_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                //    try
+                //    {
+                //        connection.Execute("ALTER TABLE PlaybackActivity RENAME TO " + new_table_name);
+                //    }
+                //    catch{ }
+                //}
             }
         }
 
@@ -557,10 +592,32 @@ namespace playback_reporting.Data
 
         public void AddPlaybackAction(PlaybackInfo play_info)
         {
-            string sql_add = "insert into PlaybackActivity " +
-                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress) " +
-                "values " +
-                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
+            string sql_add = "INSERT INTO PlaybackActivity " +
+                "(DateCreated, " +
+                "UserId, " +
+                "ItemId, " +
+                "ItemType, " +
+                "ItemName, " +
+                "PlaybackMethod, " +
+                "ClientName, " +
+                "DeviceName, " +
+                "PlayDuration, " +
+                "PauseDuration, " +
+                "RemoteAddress, " +
+                "TranscodeReasons) " +
+                "VALUES " +
+                "(@DateCreated, " +
+                "@UserId, " +
+                "@ItemId, " +
+                "@ItemType, " +
+                "@ItemName, " +
+                "@PlaybackMethod, " +
+                "@ClientName, " +
+                "@DeviceName, " +
+                "@PlayDuration, " +
+                "@PauseDuration, " +
+                "@RemoteAddress, " +
+                "@TranscodeReasons)";
 
             lock (connection)
             {
@@ -577,6 +634,7 @@ namespace playback_reporting.Data
                     TryBind(statement, "@PlayDuration", play_info.PlaybackDuration);
                     TryBind(statement, "@PauseDuration", play_info.PausedDuration);
                     TryBind(statement, "@RemoteAddress", play_info.RemoteAddress);
+                    TryBind(statement, "@TranscodeReasons", play_info.TranscodeReasons);
                     statement.MoveNext();
                 }
             }
