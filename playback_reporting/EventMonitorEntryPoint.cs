@@ -29,6 +29,7 @@ using MediaBrowser.Model.Dto;
 using System.Diagnostics;
 using System.Linq;
 using System.IO;
+using MediaBrowser.Model.Session;
 
 namespace playback_reporting
 {
@@ -227,8 +228,9 @@ namespace playback_reporting
             string deviceName = session.DeviceName;
             string clientName = session.Client;
             string session_playing_id = session.NowPlayingItem.Id;
+            string play_method = GetPlaybackMethod(session);
 
-            string key = deviceId + "-" + userId + "-" + session_playing_id;
+            string key = deviceId + "|" + userId + "|" + session_playing_id + "|" + play_method;
 
             PlaybackInfo playback_info = null;
             if (playback_trackers.ContainsKey(key))
@@ -241,7 +243,21 @@ namespace playback_reporting
                 _logger.Info("Adding PlaybackInfo to playback_trackers : " + key);
                 playback_info = new PlaybackInfo();
 
-                BaseItemDto item = session.NowPlayingItem;
+                //BaseItemDto item = session.NowPlayingItem;
+
+                string transcode_reasons = "";
+                if (session.TranscodingInfo != null &&
+                    session.TranscodingInfo.TranscodeReasons != null &&
+                    session.TranscodingInfo.TranscodeReasons.Length > 0)
+                {
+                    List<string> reasons = new List<string>();
+                    foreach (var reason in session.TranscodingInfo.TranscodeReasons)
+                    {
+                        reasons.Add(reason.ToString());
+                    }
+                    reasons.Sort();
+                    transcode_reasons = string.Join(" ", reasons);
+                }
 
                 playback_info.Key = key;
                 playback_info.Date = DateTime.Now;
@@ -250,7 +266,8 @@ namespace playback_reporting
                 playback_info.ClientName = clientName;
                 playback_info.ItemId = session_playing_id;
                 playback_info.ItemName = GetItemName(session.NowPlayingItem);
-                playback_info.PlaybackMethod = GetPlaybackMethod(session);
+                playback_info.PlaybackMethod = play_method;
+                playback_info.TranscodeReasons = transcode_reasons;
                 playback_info.ItemType = session.NowPlayingItem.Type;
                 playback_info.RemoteAddress = session.RemoteEndPoint.ToString();
 
