@@ -16,6 +16,7 @@ along with this program. If not, see<http://www.gnu.org/licenses/>.
 
 using MediaBrowser.Controller.LiveTv;
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Session;
 using SQLitePCL.pretty;
 using System;
 using System.Collections.Generic;
@@ -503,6 +504,12 @@ namespace playback_reporting.Data
                         remote_address = tokens[10];
                     }
 
+                    string transcode_reason = "";
+                    if (tokens.Length > 11)
+                    {
+                        transcode_reason = tokens[11];
+                    }
+
                     string sql = "select rowid from PlaybackActivity where DateCreated = @DateCreated and UserId = @UserId and ItemId = @ItemId";
                     using (var statement = connection.PrepareStatement(sql))
                     {
@@ -520,9 +527,9 @@ namespace playback_reporting.Data
                         if (found == false)
                         {
                             string sql_add = "insert into PlaybackActivity " +
-                                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress) " +
+                                "(DateCreated, UserId, ItemId, ItemType, ItemName, PlaybackMethod, ClientName, DeviceName, PlayDuration, PauseDuration, RemoteAddress, TranscodeReasons) " +
                                 "values " +
-                                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress)";
+                                "(@DateCreated, @UserId, @ItemId, @ItemType, @ItemName, @PlaybackMethod, @ClientName, @DeviceName, @PlayDuration, @PauseDuration, @RemoteAddress, @TranscodeReasons)";
 
                             using (var add_statment = connection.PrepareStatement(sql_add))
                             {
@@ -537,6 +544,7 @@ namespace playback_reporting.Data
                                 TryBind(add_statment, "@PlayDuration", play_duration);
                                 TryBind(add_statment, "@PauseDuration", paused_duration);
                                 TryBind(add_statment, "@RemoteAddress", remote_address);
+                                TryBind(add_statment, "@TranscodeReasons", transcode_reason);
                                 add_statment.MoveNext();
                             }
                             count++;
