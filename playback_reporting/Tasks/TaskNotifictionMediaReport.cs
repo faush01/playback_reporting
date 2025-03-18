@@ -28,12 +28,14 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Library;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Notifications;
+using MediaBrowser.Model.Services;
 using MediaBrowser.Model.Tasks;
 using playback_reporting.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace playback_reporting.Tasks
 {
@@ -186,6 +188,7 @@ namespace playback_reporting.Tasks
 
             if (added_count > 0)
             {
+                /*
                 var notification = new NotificationRequest
                 {
                     NotificationType = "NewMediaReportNotification",
@@ -194,6 +197,17 @@ namespace playback_reporting.Tasks
                     Description = message
                 };
                 await _notificationManager.SendNotification(notification, CancellationToken.None).ConfigureAwait(false);
+                */
+
+                Emby.Notifications.NotificationRequest notify_req = new Emby.Notifications.NotificationRequest();
+                notify_req.Date = DateTime.UtcNow;
+                notify_req.Description = message;
+                notify_req.CancellationToken = CancellationToken.None;
+                notify_req.EventId = "80a89810-e7d7-4c41-8c46-d1ef6040b6f9";
+                notify_req.Title = "New Media Report Notification";
+
+                await Task.Run(() => _notificationManager.SendNotification(notify_req));
+
             }
 
             config.LastNewMediaCheck = DateTime.Now;

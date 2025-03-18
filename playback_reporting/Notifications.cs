@@ -14,6 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see<http://www.gnu.org/licenses/>.
 */
 
+using Emby.Notifications;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Notifications;
@@ -33,28 +34,27 @@ namespace playback_reporting
             _appHost = appHost;
         }
 
-        public IEnumerable<NotificationTypeInfo> GetNotificationTypes()
+        public List<NotificationTypeInfo> GetNotificationTypes(string language)
         {
             var knownTypes = new List<NotificationTypeInfo>
             {
                 new NotificationTypeInfo
                 {
-                     Type = "UserActivityReportNotification",
+                     Id = "51fa5550-15e6-493e-8e76-21a544d0dde1",
                      Name = "User Activity Report",
-                     Category = "Playback Reporting",
-                     Enabled = true,
-                     IsBasedOnUserEvent = false
+                     CategoryId = "bb04c31d-4752-4470-93b9-a7e7f659e1da",
+                     CategoryName = "Playback Reporting"
                 },
                 new NotificationTypeInfo
                 {
-                     Type = "NewMediaReportNotification",
+                     Id = "80a89810-e7d7-4c41-8c46-d1ef6040b6f9",
                      Name = "New Media Report",
-                     Category = "Playback Reporting",
-                     Enabled = true,
-                     IsBasedOnUserEvent = false
+                     CategoryId = "bb04c31d-4752-4470-93b9-a7e7f659e1da",
+                     CategoryName = "Playback Reporting"
                 }
             };
             return knownTypes;
         }
+
     }
 }
