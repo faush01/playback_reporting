@@ -20,6 +20,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Videos;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Model.Activity;
@@ -122,7 +123,7 @@ namespace playback_reporting.Tasks
                 _logger.Info("Checking for new items in : " + folder.ToString());
 
                 InternalItemsQuery query = new InternalItemsQuery();
-                query.IncludeItemTypes = new string[] {"Movie", "Episode", "Audio"};
+                query.IncludeItemTypes = new string[] {"Movie", "Episode", "Audio", "Video"};
                 query.Parent = folder;
                 query.Recursive = true;
                 query.IsVirtualItem = false;
@@ -169,6 +170,11 @@ namespace playback_reporting.Tasks
                         string album = audio.Album;
                         string artist = audio.Artists.Length > 0 ? audio.Artists[0] : "Unknown Artist";
                         view_message_data += " - (" + type + ") " + artist + " - " + name + " - " + album + " (" + item.ProductionYear + ")\r\n";
+                    }
+                    else if (typeof(Video).Equals(item.GetType()))
+                    {
+                        Video video = item as Video;
+                        view_message_data += " - (" + type + ") " + " - " + name + "\r\n";
                     }
                     else
                     {
